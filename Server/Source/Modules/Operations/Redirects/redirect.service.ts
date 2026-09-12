@@ -76,6 +76,15 @@ export class RedirectServ implements RedirectService {
     );
   }
 
+  /** Deliberately uncached — it writes (increments hits) on every call, and
+   * this runs on real visitor traffic, so a cached/stale answer here would
+   * mean either serving a stale redirect or under-counting hits. */
+  async resolveRedirect(fromPath: string): Promise<Redirect | null> {
+    if (!fromPath) throw new ServiceError("from_path must be provided", 400);
+
+    return this.repo.resolveRedirect(fromPath);
+  }
+
   async deleteRedirect(id: string): Promise<void> {
     if (!id) throw new ServiceError("Redirect id must be provided", 404);
 

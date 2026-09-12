@@ -33,15 +33,15 @@ export type UpdateServiceDTO = Partial<createServiceDTO>;
 export interface ServiceRepository {
   createService: (details: createServiceDTO) => Promise<Service>;
   editService: (id: string, details: UpdateServiceDTO) => Promise<Service>;
-  getService: (id: string) => Promise<Service | null>;
-  getServices: () => Promise<Service[]>;
+  getService: (id: string, publicOnly?: boolean) => Promise<Service | null>;
+  getServices: (publicOnly?: boolean) => Promise<Service[]>;
   deleteService: (id: string) => Promise<void>;
 }
 
 export interface ServiceService {
   createService: (details: createServiceDTO) => Promise<Service>;
   editService: (id: string, details: UpdateServiceDTO) => Promise<Service>;
-  getService: (id: string) => Promise<Service>;
-  getServices: () => Promise<Service[]>;
+  getService: (id: string, publicOnly?: boolean) => Promise<Service>;
+  getServices: (publicOnly?: boolean) => Promise<Service[]>;
   deleteService: (id: string) => Promise<void>;
 }

@@ -39,7 +39,7 @@ export const UserController = async (
 
     switch (request.method) {
       case "GET":
-        const userId = PathnameValidator(pathnames),
+        const userId = pathnames[2],
           result = userId
             ? await service.getUser(userId)
             : await service.getUsers();

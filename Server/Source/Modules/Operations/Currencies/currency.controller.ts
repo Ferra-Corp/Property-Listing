@@ -7,7 +7,6 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
 
 export const CurrencyController = async (
@@ -21,8 +20,6 @@ export const CurrencyController = async (
   const service = currencyService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
       case "GET":
         const currencies = await service.getCurrencies();
@@ -30,7 +27,7 @@ export const CurrencyController = async (
         sendResponseMessage(200, false, currencies, response);
         break;
       case "POST":
-        await Authorized(request, "Create currency");
+        const postUser = await Authorized(request, "Create currency");
 
         const postRequestBody: any = await getRequestBody(request),
           newCurrency = await service.createCurrency(postRequestBody);
@@ -39,7 +36,7 @@ export const CurrencyController = async (
           action: "Currency creation",
           entity_id: newCurrency.code,
           entity_type: "Currency",
-          user_id: user.id,
+          user_id: postUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: newCurrency,
@@ -48,7 +45,7 @@ export const CurrencyController = async (
         sendResponseMessage(201, false, newCurrency, response);
         break;
       case "PATCH":
-        await Authorized(request, "Edit currency");
+        const patchUser = await Authorized(request, "Edit currency");
 
         const patchCurrencyCode = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
@@ -61,7 +58,7 @@ export const CurrencyController = async (
           action: "Currency update",
           entity_id: patchCurrency.code,
           entity_type: "Currency",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchCurrency,
@@ -70,7 +67,7 @@ export const CurrencyController = async (
         sendResponseMessage(200, false, patchCurrency, response);
         break;
       case "DELETE":
-        await Authorized(request, "Delete currency");
+        const deleteUser = await Authorized(request, "Delete currency");
 
         const deleteCurrencyCode = PathnameValidator(pathnames);
 
@@ -80,7 +77,7 @@ export const CurrencyController = async (
           action: "Currency deletion",
           entity_id: deleteCurrencyCode,
           entity_type: "Currency",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

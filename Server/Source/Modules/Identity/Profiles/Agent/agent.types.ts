@@ -76,8 +76,11 @@ export interface AgentRepository {
     id: string,
     details: UpdateAgentProfileDTO,
   ) => Promise<AgentProfile>;
-  getAgentProfile: (id: string) => Promise<AgentProfile | null>;
-  getAgentProfiles: () => Promise<AgentProfile[]>;
+  getAgentProfile: (
+    id: string,
+    publicOnly?: boolean,
+  ) => Promise<AgentProfile | null>;
+  getAgentProfiles: (publicOnly?: boolean) => Promise<AgentProfile[]>;
   deleteAgentProfile: (id: string) => Promise<void>;
 }
 
@@ -87,7 +90,7 @@ export interface AgentService {
     id: string,
     details: UpdateAgentProfileDTO,
   ) => Promise<AgentProfile>;
-  getAgentProfile: (id: string) => Promise<AgentProfile>;
-  getAgentProfiles: () => Promise<AgentProfile[]>;
+  getAgentProfile: (id: string, publicOnly?: boolean) => Promise<AgentProfile>;
+  getAgentProfiles: (publicOnly?: boolean) => Promise<AgentProfile[]>;
   deleteAgentProfile: (id: string) => Promise<void>;
 }

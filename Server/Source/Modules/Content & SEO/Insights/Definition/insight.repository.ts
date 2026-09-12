@@ -71,7 +71,10 @@ export class InsightRepo implements InsightRepository {
     }
   }
 
-  async getInsight(id: string): Promise<InsightWithTags | null> {
+  async getInsight(
+    id: string,
+    publicOnly = false,
+  ): Promise<InsightWithTags | null> {
     try {
       const sqlString: string = `
           SELECT
@@ -84,6 +87,7 @@ export class InsightRepo implements InsightRepository {
           LEFT JOIN insight_tags it ON it.insight_id = i.id
           LEFT JOIN tags t ON t.id = it.tag_id
           WHERE i.id = $1 AND i.deleted_at IS NULL
+          ${publicOnly ? "AND i.status = 'published'" : ""}
           GROUP BY i.id
         `,
         sqlQuery = await this.db.query(sqlString, [id]),
@@ -95,7 +99,7 @@ export class InsightRepo implements InsightRepository {
     }
   }
 
-  async getInsights(): Promise<InsightWithTags[]> {
+  async getInsights(publicOnly = false): Promise<InsightWithTags[]> {
     try {
       const sqlString: string = `
           SELECT
@@ -108,6 +112,7 @@ export class InsightRepo implements InsightRepository {
           LEFT JOIN insight_tags it ON it.insight_id = i.id
           LEFT JOIN tags t ON t.id = it.tag_id
           WHERE i.deleted_at IS NULL
+          ${publicOnly ? "AND i.status = 'published'" : ""}
           GROUP BY i.id
         `,
         sqlQuery = await this.db.query(sqlString),

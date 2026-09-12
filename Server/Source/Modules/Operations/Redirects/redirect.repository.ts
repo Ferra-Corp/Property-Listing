@@ -64,6 +64,23 @@ export class RedirectRepo implements RedirectRepository {
     }
   }
 
+  /** Looks up a redirect by its exact from_path and counts the hit in the
+   * same statement — resolving a redirect *is* a hit, so there is no
+   * separate increment step to keep in sync. Returns null when there is
+   * no rule for that path (nothing to increment). */
+  async resolveRedirect(fromPath: string): Promise<Redirect | null> {
+    try {
+      const sqlString: string =
+          "UPDATE redirects SET hits = hits + 1 WHERE from_path = $1 RETURNING *",
+        sqlQuery = await this.db.query(sqlString, [fromPath]),
+        redirectQuery = sqlQuery as QueryResult<Redirect>;
+
+      return redirectQuery.rows[0] ?? null;
+    } catch (error) {
+      throw new RepositoryError((error as Error).message, error);
+    }
+  }
+
   async deleteRedirect(id: string): Promise<void> {
     try {
       const sqlString: string = "DELETE FROM redirects WHERE id=$1";

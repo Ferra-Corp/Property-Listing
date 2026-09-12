@@ -19,6 +19,7 @@ export interface RedirectRepository {
   createRedirect: (details: createRedirectDTO) => Promise<Redirect>;
   editRedirect: (id: string, details: UpdateRedirectDTO) => Promise<Redirect>;
   getRedirects: () => Promise<Redirect[]>;
+  resolveRedirect: (fromPath: string) => Promise<Redirect | null>;
   deleteRedirect: (id: string) => Promise<void>;
 }
 
@@ -26,5 +27,6 @@ export interface RedirectService {
   createRedirect: (details: createRedirectDTO) => Promise<Redirect>;
   editRedirect: (id: string, details: UpdateRedirectDTO) => Promise<Redirect>;
   getRedirects: () => Promise<Redirect[]>;
+  resolveRedirect: (fromPath: string) => Promise<Redirect | null>;
   deleteRedirect: (id: string) => Promise<void>;
 }

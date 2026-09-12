@@ -7,7 +7,7 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
+import { OptionalAuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
 
 export const ServiceController = async (
@@ -21,19 +21,18 @@ export const ServiceController = async (
   const service = serviceService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
       case "GET":
-        const id = pathnames[2],
+        const viewer = await OptionalAuthToken(request),
+          id = pathnames[2],
           result = id
-            ? await service.getService(id)
-            : await service.getServices();
+            ? await service.getService(id, !viewer)
+            : await service.getServices(!viewer);
 
         sendResponseMessage(200, false, result, response);
         break;
       case "POST":
-        await Authorized(request, "Create service");
+        const postUser = await Authorized(request, "Create service");
 
         const postRequestBody: any = await getRequestBody(request),
           newService = await service.createService(postRequestBody);
@@ -42,7 +41,7 @@ export const ServiceController = async (
           action: "Service creation",
           entity_id: newService.id,
           entity_type: "Service",
-          user_id: user.id,
+          user_id: postUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: newService,
@@ -51,7 +50,7 @@ export const ServiceController = async (
         sendResponseMessage(201, false, newService, response);
         break;
       case "PATCH":
-        await Authorized(request, "Edit service");
+        const patchUser = await Authorized(request, "Edit service");
 
         const patchId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
@@ -61,7 +60,7 @@ export const ServiceController = async (
           action: "Service update",
           entity_id: patchedService.id,
           entity_type: "Service",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchedService,
@@ -70,7 +69,7 @@ export const ServiceController = async (
         sendResponseMessage(200, false, patchedService, response);
         break;
       case "DELETE":
-        await Authorized(request, "Delete service");
+        const deleteUser = await Authorized(request, "Delete service");
 
         const deleteId = PathnameValidator(pathnames);
 
@@ -80,7 +79,7 @@ export const ServiceController = async (
           action: "Service deletion",
           entity_id: deleteId,
           entity_type: "Service",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

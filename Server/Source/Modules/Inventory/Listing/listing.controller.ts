@@ -7,8 +7,8 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
+import { OptionalAuthToken } from "../../../Middleware/Authentication.js";
 
 export const ListingController = async (
   request: IncomingMessage,
@@ -21,19 +21,18 @@ export const ListingController = async (
   const service = listingService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
       case "GET":
-        const listingId = pathnames[2],
+        const viewer = await OptionalAuthToken(request),
+          listingId = pathnames[2],
           result = listingId
-            ? await service.getListing(listingId)
-            : await service.getListings();
+            ? await service.getListing(listingId, !viewer)
+            : await service.getListings(!viewer);
 
         sendResponseMessage(200, false, result, response);
         break;
       case "POST":
-        await Authorized(request, "Create listing");
+        const postUser = await Authorized(request, "Create listing");
 
         const postRequestBody: any = await getRequestBody(request),
           newListing = await service.createListing(postRequestBody);
@@ -42,7 +41,7 @@ export const ListingController = async (
           action: "Listing creation",
           entity_id: newListing.id,
           entity_type: "Listing",
-          user_id: user.id,
+          user_id: postUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: newListing,
@@ -51,7 +50,7 @@ export const ListingController = async (
         sendResponseMessage(201, false, newListing, response);
         break;
       case "PATCH":
-        await Authorized(request, "Edit listing");
+        const patchUser = await Authorized(request, "Edit listing");
 
         const patchListingId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
@@ -64,7 +63,7 @@ export const ListingController = async (
           action: "Listing update",
           entity_id: patchedListing.id,
           entity_type: "Listing",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchedListing,
@@ -73,7 +72,7 @@ export const ListingController = async (
         sendResponseMessage(200, false, patchedListing, response);
         break;
       case "DELETE":
-        await Authorized(request, "Delete listing");
+        const deleteUser = await Authorized(request, "Delete listing");
 
         const deleteListingId = PathnameValidator(pathnames);
 
@@ -83,7 +82,7 @@ export const ListingController = async (
           action: "Listing deletion",
           entity_id: deleteListingId,
           entity_type: "Listing",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

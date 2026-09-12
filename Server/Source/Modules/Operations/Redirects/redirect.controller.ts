@@ -20,15 +20,29 @@ export const RedirectController = async (
   const service = redirectService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
       case "GET":
+        const lookupPath = requestUrl.searchParams.get("path");
+
+        if (lookupPath) {
+          // Public — this is the actual redirect-serving lookup, called by
+          // the Next.js proxy on every visitor request. Resolving a path
+          // IS the hit, so the increment happens atomically inside this
+          // same call rather than a separate "record a hit" request.
+          const resolved = await service.resolveRedirect(lookupPath);
+
+          sendResponseMessage(200, false, resolved, response);
+          break;
+        }
+
+        // Public — used by the admin dashboard's redirect list.
         const redirects = await service.getRedirects();
 
         sendResponseMessage(200, false, redirects, response);
         break;
       case "POST":
+        const postUser = await AuthToken(request);
+
         const postRequestBody: any = await getRequestBody(request),
           newRedirect = await service.createRedirect(postRequestBody);
 
@@ -36,7 +50,7 @@ export const RedirectController = async (
           action: "Redirect creation",
           entity_id: newRedirect.id,
           entity_type: "Redirect",
-          user_id: user.id,
+          user_id: postUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: newRedirect,
@@ -45,6 +59,8 @@ export const RedirectController = async (
         sendResponseMessage(201, false, newRedirect, response);
         break;
       case "PATCH":
+        const patchUser = await AuthToken(request);
+
         const patchRedirectId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
           patchedRedirect = await service.editRedirect(
@@ -56,7 +72,7 @@ export const RedirectController = async (
           action: "Redirect update",
           entity_id: patchedRedirect.id,
           entity_type: "Redirect",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchedRedirect,
@@ -65,6 +81,8 @@ export const RedirectController = async (
         sendResponseMessage(200, false, patchedRedirect, response);
         break;
       case "DELETE":
+        const deleteUser = await AuthToken(request);
+
         const deleteRedirectId = PathnameValidator(pathnames);
 
         await service.deleteRedirect(deleteRedirectId);
@@ -73,7 +91,7 @@ export const RedirectController = async (
           action: "Redirect deletion",
           entity_id: deleteRedirectId,
           entity_type: "Redirect",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

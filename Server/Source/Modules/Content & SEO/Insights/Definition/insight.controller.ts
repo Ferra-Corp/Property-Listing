@@ -7,7 +7,7 @@ import {
   PathnameValidator,
   getClientDetails,
 } from "../../../../Utilities/Http.js";
-import { AuthToken } from "../../../../Middleware/Authentication.js";
+import { OptionalAuthToken } from "../../../../Middleware/Authentication.js";
 import { Authorized } from "../../../../Middleware/Authorization.js";
 
 export const InsightController = async (
@@ -21,19 +21,18 @@ export const InsightController = async (
   const service = insightService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
       case "GET":
-        const insightId = pathnames[2],
+        const viewer = await OptionalAuthToken(request),
+          insightId = pathnames[2],
           result = insightId
-            ? await service.getInsight(insightId)
-            : await service.getInsights();
+            ? await service.getInsight(insightId, !viewer)
+            : await service.getInsights(!viewer);
 
         sendResponseMessage(200, false, result, response);
         break;
       case "POST":
-        await Authorized(request, "Create insight");
+        const postUser = await Authorized(request, "Create insight");
 
         const postRequestBody: any = await getRequestBody(request),
           newInsight = await service.createInsight(postRequestBody);
@@ -42,7 +41,7 @@ export const InsightController = async (
           action: "Insight creation",
           entity_id: newInsight.id,
           entity_type: "Insight",
-          user_id: user.id,
+          user_id: postUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: newInsight,
@@ -51,7 +50,7 @@ export const InsightController = async (
         sendResponseMessage(201, false, newInsight, response);
         break;
       case "PATCH":
-        await Authorized(request, "Edit insight");
+        const patchUser = await Authorized(request, "Edit insight");
 
         const patchInsightId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
@@ -64,7 +63,7 @@ export const InsightController = async (
           action: "Insight update",
           entity_id: patchedInsight.id,
           entity_type: "Insight",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchedInsight,
@@ -73,7 +72,7 @@ export const InsightController = async (
         sendResponseMessage(200, false, patchedInsight, response);
         break;
       case "DELETE":
-        await Authorized(request, "Delete insight");
+        const deleteUser = await Authorized(request, "Delete insight");
 
         const deleteInsightId = PathnameValidator(pathnames);
 
@@ -83,7 +82,7 @@ export const InsightController = async (
           action: "Insight deletion",
           entity_id: deleteInsightId,
           entity_type: "Insight",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

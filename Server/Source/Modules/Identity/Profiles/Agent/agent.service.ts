@@ -66,7 +66,10 @@ export class AgentServ implements AgentService {
 
     const newAgentProfile = await this.repo.createAgentProfile(details);
 
-    await this.cache.invalidate(CacheKeys.all(Resource.Agent));
+    await this.cache.invalidate(
+      CacheKeys.all(Resource.Agent),
+      `${CacheKeys.all(Resource.Agent)}:public`,
+    );
 
     return newAgentProfile;
   }
@@ -113,17 +116,26 @@ export class AgentServ implements AgentService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Agent, id),
+      `${CacheKeys.single(Resource.Agent, id)}:public`,
       CacheKeys.all(Resource.Agent),
+      `${CacheKeys.all(Resource.Agent)}:public`,
     );
 
     return patchedAgentProfile;
   }
 
-  async getAgentProfile(id: string): Promise<AgentProfile> {
+  async getAgentProfile(
+    id: string,
+    publicOnly = false,
+  ): Promise<AgentProfile> {
     if (!id) throw new ServiceError("Agent profile id must be provided", 400);
 
-    return this.cache.remember(CacheKeys.single(Resource.Agent, id), async () => {
-      const agentProfile = await this.repo.getAgentProfile(id);
+    const cacheKey = publicOnly
+      ? `${CacheKeys.single(Resource.Agent, id)}:public`
+      : CacheKeys.single(Resource.Agent, id);
+
+    return this.cache.remember(cacheKey, async () => {
+      const agentProfile = await this.repo.getAgentProfile(id, publicOnly);
 
       if (!agentProfile) throw new ServiceError("Agent profile not found", 404);
 
@@ -131,9 +143,13 @@ export class AgentServ implements AgentService {
     });
   }
 
-  async getAgentProfiles(): Promise<AgentProfile[]> {
-    return this.cache.remember(CacheKeys.all(Resource.Agent), () =>
-      this.repo.getAgentProfiles(),
+  async getAgentProfiles(publicOnly = false): Promise<AgentProfile[]> {
+    const cacheKey = publicOnly
+      ? `${CacheKeys.all(Resource.Agent)}:public`
+      : CacheKeys.all(Resource.Agent);
+
+    return this.cache.remember(cacheKey, () =>
+      this.repo.getAgentProfiles(publicOnly),
     );
   }
 
@@ -144,7 +160,9 @@ export class AgentServ implements AgentService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Agent, id),
+      `${CacheKeys.single(Resource.Agent, id)}:public`,
       CacheKeys.all(Resource.Agent),
+      `${CacheKeys.all(Resource.Agent)}:public`,
     );
   }
 }

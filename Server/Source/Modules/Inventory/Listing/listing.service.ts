@@ -137,7 +137,10 @@ export class ListingServ implements ListingService {
       }
     }
 
-    await this.cache.invalidate(CacheKeys.all(Resource.Listing));
+    await this.cache.invalidate(
+      CacheKeys.all(Resource.Listing),
+      `${CacheKeys.all(Resource.Listing)}:public`,
+    );
 
     return newListing;
   }
@@ -163,30 +166,40 @@ export class ListingServ implements ListingService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Listing, id),
+      `${CacheKeys.single(Resource.Listing, id)}:public`,
       CacheKeys.all(Resource.Listing),
+      `${CacheKeys.all(Resource.Listing)}:public`,
     );
 
     return patchedListing;
   }
 
-  async getListing(id: string): Promise<ListingWithMedia> {
+  async getListing(
+    id: string,
+    publicOnly = false,
+  ): Promise<ListingWithMedia> {
     if (!id) throw new ServiceError("Listing id must be provided", 400);
 
-    return this.cache.remember(
-      CacheKeys.single(Resource.Listing, id),
-      async () => {
-        const listing = await this.repo.getListing(id);
+    const cacheKey = publicOnly
+      ? `${CacheKeys.single(Resource.Listing, id)}:public`
+      : CacheKeys.single(Resource.Listing, id);
 
-        if (!listing) throw new ServiceError("Listing not found", 404);
+    return this.cache.remember(cacheKey, async () => {
+      const listing = await this.repo.getListing(id, publicOnly);
 
-        return listing;
-      },
-    );
+      if (!listing) throw new ServiceError("Listing not found", 404);
+
+      return listing;
+    });
   }
 
-  async getListings(): Promise<ListingWithThumbnail[]> {
-    return this.cache.remember(CacheKeys.all(Resource.Listing), () =>
-      this.repo.getListings(),
+  async getListings(publicOnly = false): Promise<ListingWithThumbnail[]> {
+    const cacheKey = publicOnly
+      ? `${CacheKeys.all(Resource.Listing)}:public`
+      : CacheKeys.all(Resource.Listing);
+
+    return this.cache.remember(cacheKey, () =>
+      this.repo.getListings(publicOnly),
     );
   }
 
@@ -197,7 +210,9 @@ export class ListingServ implements ListingService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Listing, id),
+      `${CacheKeys.single(Resource.Listing, id)}:public`,
       CacheKeys.all(Resource.Listing),
+      `${CacheKeys.all(Resource.Listing)}:public`,
     );
   }
 }

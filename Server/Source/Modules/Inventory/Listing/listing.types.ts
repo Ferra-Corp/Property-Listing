@@ -155,15 +155,18 @@ export type ListingWithThumbnail = Listing & { thumbnail_url: string | null };
 export interface ListingRepository {
   createListing: (details: createListingDTO) => Promise<Listing>;
   editListing: (id: string, details: UpdateListingDTO) => Promise<Listing>;
-  getListing: (id: string) => Promise<ListingWithMedia | null>;
-  getListings: () => Promise<ListingWithThumbnail[]>;
+  getListing: (
+    id: string,
+    publicOnly?: boolean,
+  ) => Promise<ListingWithMedia | null>;
+  getListings: (publicOnly?: boolean) => Promise<ListingWithThumbnail[]>;
   deleteListing: (id: string) => Promise<void>;
 }
 
 export interface ListingService {
   createListing: (details: createListingDTO) => Promise<Listing>;
   editListing: (id: string, details: UpdateListingDTO) => Promise<Listing>;
-  getListing: (id: string) => Promise<ListingWithMedia>;
-  getListings: () => Promise<ListingWithThumbnail[]>;
+  getListing: (id: string, publicOnly?: boolean) => Promise<ListingWithMedia>;
+  getListings: (publicOnly?: boolean) => Promise<ListingWithThumbnail[]>;
   deleteListing: (id: string) => Promise<void>;
 }

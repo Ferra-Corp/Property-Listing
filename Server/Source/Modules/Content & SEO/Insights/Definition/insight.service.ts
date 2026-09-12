@@ -68,7 +68,10 @@ export class InsightServ implements InsightService {
       word_count: this.countWords(details.content),
     });
 
-    await this.cache.invalidate(CacheKeys.all(Resource.Insight));
+    await this.cache.invalidate(
+      CacheKeys.all(Resource.Insight),
+      `${CacheKeys.all(Resource.Insight)}:public`,
+    );
 
     return newInsight;
   }
@@ -99,30 +102,40 @@ export class InsightServ implements InsightService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Insight, id),
+      `${CacheKeys.single(Resource.Insight, id)}:public`,
       CacheKeys.all(Resource.Insight),
+      `${CacheKeys.all(Resource.Insight)}:public`,
     );
 
     return patchedInsight;
   }
 
-  async getInsight(id: string): Promise<InsightWithTags> {
+  async getInsight(
+    id: string,
+    publicOnly = false,
+  ): Promise<InsightWithTags> {
     if (!id) throw new ServiceError("Insight id must be provided", 400);
 
-    return this.cache.remember(
-      CacheKeys.single(Resource.Insight, id),
-      async () => {
-        const insight = await this.repo.getInsight(id);
+    const cacheKey = publicOnly
+      ? `${CacheKeys.single(Resource.Insight, id)}:public`
+      : CacheKeys.single(Resource.Insight, id);
 
-        if (!insight) throw new ServiceError("Insight not found", 404);
+    return this.cache.remember(cacheKey, async () => {
+      const insight = await this.repo.getInsight(id, publicOnly);
 
-        return insight;
-      },
-    );
+      if (!insight) throw new ServiceError("Insight not found", 404);
+
+      return insight;
+    });
   }
 
-  async getInsights(): Promise<InsightWithTags[]> {
-    return this.cache.remember(CacheKeys.all(Resource.Insight), () =>
-      this.repo.getInsights(),
+  async getInsights(publicOnly = false): Promise<InsightWithTags[]> {
+    const cacheKey = publicOnly
+      ? `${CacheKeys.all(Resource.Insight)}:public`
+      : CacheKeys.all(Resource.Insight);
+
+    return this.cache.remember(cacheKey, () =>
+      this.repo.getInsights(publicOnly),
     );
   }
 
@@ -133,7 +146,9 @@ export class InsightServ implements InsightService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Insight, id),
+      `${CacheKeys.single(Resource.Insight, id)}:public`,
       CacheKeys.all(Resource.Insight),
+      `${CacheKeys.all(Resource.Insight)}:public`,
     );
   }
 }

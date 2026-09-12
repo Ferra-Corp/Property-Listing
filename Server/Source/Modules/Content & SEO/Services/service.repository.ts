@@ -58,10 +58,13 @@ export class ServiceRepo implements ServiceRepository {
     }
   }
 
-  async getService(id: string): Promise<Service | null> {
+  async getService(id: string, publicOnly = false): Promise<Service | null> {
     try {
-      const sqlString: string =
-          "SELECT * FROM services WHERE id=$1 AND deleted_at IS NULL",
+      const sqlString: string = `
+          SELECT * FROM services
+          WHERE id=$1 AND deleted_at IS NULL
+          ${publicOnly ? "AND is_active = true" : ""}
+        `,
         sqlQuery = await this.db.query(sqlString, [id]),
         serviceQuery = sqlQuery as QueryResult<Service>;
 
@@ -71,10 +74,13 @@ export class ServiceRepo implements ServiceRepository {
     }
   }
 
-  async getServices(): Promise<Service[]> {
+  async getServices(publicOnly = false): Promise<Service[]> {
     try {
-      const sqlString: string =
-          "SELECT * FROM services WHERE deleted_at IS NULL",
+      const sqlString: string = `
+          SELECT * FROM services
+          WHERE deleted_at IS NULL
+          ${publicOnly ? "AND is_active = true" : ""}
+        `,
         sqlQuery = await this.db.query(sqlString),
         servicesQuery = sqlQuery as QueryResult<Service>;
 

@@ -24,3 +24,19 @@ export const AuthToken = async (
     throw new MiddlewareError((error as Error).message);
   }
 };
+
+/**
+ * Same as `AuthToken`, but for routes a visitor may hit anonymously (e.g. a
+ * public listing/insight/agent page) where staff should additionally see
+ * unpublished records. Returns `null` instead of throwing when no valid
+ * session is present, rather than blocking the request.
+ */
+export const OptionalAuthToken = async (
+  request: IncomingMessage,
+): Promise<PublicUser | null> => {
+  try {
+    return await AuthToken(request);
+  } catch {
+    return null;
+  }
+};

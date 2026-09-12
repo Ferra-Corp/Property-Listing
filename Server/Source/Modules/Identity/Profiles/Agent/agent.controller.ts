@@ -7,7 +7,10 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../../Utilities/Http.js";
-import { AuthToken } from "../../../../Middleware/Authentication.js";
+import {
+  AuthToken,
+  OptionalAuthToken,
+} from "../../../../Middleware/Authentication.js";
 
 export const AgentController = async (
   request: IncomingMessage,
@@ -20,18 +23,19 @@ export const AgentController = async (
   const service = agentService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
       case "GET":
-        const agentId = pathnames[2],
+        const viewer = await OptionalAuthToken(request),
+          agentId = pathnames[2],
           result = agentId
-            ? await service.getAgentProfile(agentId)
-            : await service.getAgentProfiles();
+            ? await service.getAgentProfile(agentId, !viewer)
+            : await service.getAgentProfiles(!viewer);
 
         sendResponseMessage(200, false, result, response);
         break;
       case "PATCH":
+        const patchUser = await AuthToken(request);
+
         const patchAgentId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
           patchedAgentProfile = await service.editAgentProfile(
@@ -43,7 +47,7 @@ export const AgentController = async (
           action: "Agent profile update",
           entity_id: patchedAgentProfile.id,
           entity_type: "Agent Profile",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchedAgentProfile,
@@ -52,6 +56,8 @@ export const AgentController = async (
         sendResponseMessage(200, false, patchedAgentProfile, response);
         break;
       case "DELETE":
+        const deleteUser = await AuthToken(request);
+
         const deleteAgentId = PathnameValidator(pathnames);
 
         await service.deleteAgentProfile(deleteAgentId);
@@ -60,7 +66,7 @@ export const AgentController = async (
           action: "Agent profile deletion",
           entity_id: deleteAgentId,
           entity_type: "Agent Profile",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

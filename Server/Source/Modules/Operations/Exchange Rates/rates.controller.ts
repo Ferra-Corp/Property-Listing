@@ -7,7 +7,6 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
 
 export const RateController = async (
@@ -21,8 +20,6 @@ export const RateController = async (
   const service = rateService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
       case "GET":
         const rates = await service.getRates();
@@ -30,7 +27,7 @@ export const RateController = async (
         sendResponseMessage(200, false, rates, response);
         break;
       case "POST":
-        await Authorized(request, "Create exchange rate");
+        const postUser = await Authorized(request, "Create exchange rate");
 
         const postRequestBody: any = await getRequestBody(request),
           newRate = await service.createRate(postRequestBody);
@@ -39,7 +36,7 @@ export const RateController = async (
           action: "Exchange rate creation",
           entity_id: newRate.id,
           entity_type: "Exchange Rate",
-          user_id: user.id,
+          user_id: postUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: newRate,
@@ -48,7 +45,7 @@ export const RateController = async (
         sendResponseMessage(201, false, newRate, response);
         break;
       case "PATCH":
-        await Authorized(request, "Edit exchange rate");
+        const patchUser = await Authorized(request, "Edit exchange rate");
 
         const patchRateId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
@@ -58,7 +55,7 @@ export const RateController = async (
           action: "Exchange rate update",
           entity_id: patchedRate.id,
           entity_type: "Exchange Rate",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchedRate,
@@ -67,7 +64,7 @@ export const RateController = async (
         sendResponseMessage(200, false, patchedRate, response);
         break;
       case "DELETE":
-        await Authorized(request, "Delete exchange rate");
+        const deleteUser = await Authorized(request, "Delete exchange rate");
 
         const deleteRateId = PathnameValidator(pathnames);
 
@@ -77,7 +74,7 @@ export const RateController = async (
           action: "Exchange rate deletion",
           entity_id: deleteRateId,
           entity_type: "Exchange Rate",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

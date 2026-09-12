@@ -58,15 +58,18 @@ export type InsightWithTags = Insight & { tags: Tag[] };
 export interface InsightRepository {
   createInsight: (details: createInsightDTO) => Promise<Insight>;
   editInsight: (id: string, details: UpdateInsightDTO) => Promise<Insight>;
-  getInsight: (id: string) => Promise<InsightWithTags | null>;
-  getInsights: () => Promise<InsightWithTags[]>;
+  getInsight: (
+    id: string,
+    publicOnly?: boolean,
+  ) => Promise<InsightWithTags | null>;
+  getInsights: (publicOnly?: boolean) => Promise<InsightWithTags[]>;
   deleteInsight: (id: string) => Promise<void>;
 }
 
 export interface InsightService {
   createInsight: (details: createInsightDTO) => Promise<Insight>;
   editInsight: (id: string, details: UpdateInsightDTO) => Promise<Insight>;
-  getInsight: (id: string) => Promise<InsightWithTags>;
-  getInsights: () => Promise<InsightWithTags[]>;
+  getInsight: (id: string, publicOnly?: boolean) => Promise<InsightWithTags>;
+  getInsights: (publicOnly?: boolean) => Promise<InsightWithTags[]>;
   deleteInsight: (id: string) => Promise<void>;
 }

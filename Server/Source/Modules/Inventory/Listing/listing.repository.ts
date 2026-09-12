@@ -99,7 +99,10 @@ export class ListingRepo implements ListingRepository {
     }
   }
 
-  async getListing(id: string): Promise<ListingWithMedia | null> {
+  async getListing(
+    id: string,
+    publicOnly = false,
+  ): Promise<ListingWithMedia | null> {
     try {
       const sqlString: string = `
           SELECT
@@ -112,6 +115,7 @@ export class ListingRepo implements ListingRepository {
           LEFT JOIN listing_media m
             ON m.listing_id = l.id AND m.deleted_at IS NULL
           WHERE l.id = $1 AND l.deleted_at IS NULL
+          ${publicOnly ? "AND l.status NOT IN ('draft', 'pending_review', 'withdrawn')" : ""}
           GROUP BY l.id
         `,
         sqlQuery = await this.db.query(sqlString, [id]),
@@ -123,7 +127,7 @@ export class ListingRepo implements ListingRepository {
     }
   }
 
-  async getListings(): Promise<ListingWithThumbnail[]> {
+  async getListings(publicOnly = false): Promise<ListingWithThumbnail[]> {
     try {
       const sqlString: string = `
           SELECT
@@ -133,6 +137,7 @@ export class ListingRepo implements ListingRepository {
           LEFT JOIN listing_media m
             ON m.listing_id = l.id AND m.is_primary = true AND m.deleted_at IS NULL
           WHERE l.deleted_at IS NULL
+          ${publicOnly ? "AND l.status NOT IN ('draft', 'pending_review', 'withdrawn')" : ""}
         `,
         sqlQuery = await this.db.query(sqlString),
         listingsQuery = sqlQuery as QueryResult<ListingWithThumbnail>;

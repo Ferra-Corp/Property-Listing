@@ -91,10 +91,16 @@ export class AgentRepo implements AgentRepository {
     }
   }
 
-  async getAgentProfile(id: string): Promise<AgentProfile | null> {
+  async getAgentProfile(
+    id: string,
+    publicOnly = false,
+  ): Promise<AgentProfile | null> {
     try {
-      const sqlString: string =
-          "SELECT * FROM agent_profiles WHERE id=$1 AND deleted_at IS NULL",
+      const sqlString: string = `
+          SELECT * FROM agent_profiles
+          WHERE id=$1 AND deleted_at IS NULL
+          ${publicOnly ? "AND is_active = true" : ""}
+        `,
         sqlQuery = await this.db.query(sqlString, [id]),
         agentQuery = sqlQuery as QueryResult<AgentProfile>;
 
@@ -104,10 +110,13 @@ export class AgentRepo implements AgentRepository {
     }
   }
 
-  async getAgentProfiles(): Promise<AgentProfile[]> {
+  async getAgentProfiles(publicOnly = false): Promise<AgentProfile[]> {
     try {
-      const sqlString: string =
-          "SELECT * FROM agent_profiles WHERE deleted_at IS NULL",
+      const sqlString: string = `
+          SELECT * FROM agent_profiles
+          WHERE deleted_at IS NULL
+          ${publicOnly ? "AND is_active = true" : ""}
+        `,
         sqlQuery = await this.db.query(sqlString),
         agentsQuery = sqlQuery as QueryResult<AgentProfile>;
 

@@ -42,7 +42,10 @@ export class ServiceServ implements ServiceService {
 
     const newService = await this.repo.createService(details);
 
-    await this.cache.invalidate(CacheKeys.all(Resource.Service));
+    await this.cache.invalidate(
+      CacheKeys.all(Resource.Service),
+      `${CacheKeys.all(Resource.Service)}:public`,
+    );
 
     return newService;
   }
@@ -68,17 +71,23 @@ export class ServiceServ implements ServiceService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Service, id),
+      `${CacheKeys.single(Resource.Service, id)}:public`,
       CacheKeys.all(Resource.Service),
+      `${CacheKeys.all(Resource.Service)}:public`,
     );
 
     return patchedService;
   }
 
-  async getService(id: string): Promise<Service> {
+  async getService(id: string, publicOnly = false): Promise<Service> {
     if (!id) throw new ServiceError("Service id must be provided", 400);
 
-    return this.cache.remember(CacheKeys.single(Resource.Service, id), async () => {
-      const service = await this.repo.getService(id);
+    const cacheKey = publicOnly
+      ? `${CacheKeys.single(Resource.Service, id)}:public`
+      : CacheKeys.single(Resource.Service, id);
+
+    return this.cache.remember(cacheKey, async () => {
+      const service = await this.repo.getService(id, publicOnly);
 
       if (!service) throw new ServiceError("Service not found", 404);
 
@@ -86,9 +95,13 @@ export class ServiceServ implements ServiceService {
     });
   }
 
-  async getServices(): Promise<Service[]> {
-    return this.cache.remember(CacheKeys.all(Resource.Service), () =>
-      this.repo.getServices(),
+  async getServices(publicOnly = false): Promise<Service[]> {
+    const cacheKey = publicOnly
+      ? `${CacheKeys.all(Resource.Service)}:public`
+      : CacheKeys.all(Resource.Service);
+
+    return this.cache.remember(cacheKey, () =>
+      this.repo.getServices(publicOnly),
     );
   }
 
@@ -99,7 +112,9 @@ export class ServiceServ implements ServiceService {
 
     await this.cache.invalidate(
       CacheKeys.single(Resource.Service, id),
+      `${CacheKeys.single(Resource.Service, id)}:public`,
       CacheKeys.all(Resource.Service),
+      `${CacheKeys.all(Resource.Service)}:public`,
     );
   }
 }
