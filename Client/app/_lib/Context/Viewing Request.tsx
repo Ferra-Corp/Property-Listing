@@ -1,0 +1,141 @@
+"use client"
+
+import { createContext, useContext, useEffect, useState } from "react"
+import {
+  createViewingRequestDTO,
+  UpdateViewingRequestDTO,
+  type ViewingContext,
+  ViewingRequest,
+} from "../Types/Viewing Request"
+
+const ViewingContext = createContext<ViewingContext>({
+  viewingRequests: [],
+  createViewingRequest: () => Promise.resolve(),
+  editViewingRequest: () => Promise.resolve(),
+  fetchViewingRequest: async () => null,
+  fetchViewingRequests: () => Promise.resolve(),
+  deleteViewingRequest: () => Promise.resolve(),
+})
+
+export const useViewingContext = () => useContext(ViewingContext)
+
+export default function ViewingContextProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const [viewingRequests, setViewingRequests] = useState<ViewingRequest[]>([])
+
+  const fetchViewingRequest = async (
+      viewingId: string,
+    ): Promise<ViewingRequest | null> => {
+      try {
+        const fetchRequest = await fetch(
+            `/system/api/v1/viewing-requests/${viewingId}`,
+            {
+              method: "GET",
+            },
+          ),
+          fetchResponse = await fetchRequest.json()
+
+        if (!fetchRequest.ok) {
+          if (fetchRequest.status == 404) return null
+
+          throw new Error(fetchResponse.error)
+        }
+
+        return fetchResponse
+      } catch (error) {
+        throw error
+      }
+    },
+    fetchViewingRequests = async () => {
+      try {
+        const fetchRequest = await fetch("/system/api/v1/viewing-requests", {
+            method: "GET",
+          }),
+          fetchResponse = await fetchRequest.json()
+
+        if (!fetchRequest.ok) throw new Error(fetchResponse.error)
+
+        setViewingRequests(fetchResponse)
+      } catch (error) {
+        throw error
+      }
+    }
+
+  useEffect(() => {
+    fetchViewingRequests()
+  }, [])
+
+  const createViewingRequest = async (details: createViewingRequestDTO) => {
+      try {
+        const createRequest = await fetch("/system/api/v1/viewing-requests", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(details),
+          }),
+          createResponse = await createRequest.json()
+
+        if (!createRequest.ok) throw new Error(createResponse.error)
+
+        await fetchViewingRequests()
+      } catch (error) {
+        throw error
+      }
+    },
+    editViewingRequest = async (
+      viewingId: string,
+      details: UpdateViewingRequestDTO,
+    ) => {
+      try {
+        const editRequest = await fetch(
+            `/system/api/v1/viewing-requests/${viewingId}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(details),
+            },
+          ),
+          editResponse = await editRequest.json()
+
+        if (!editRequest.ok) throw new Error(editResponse.error)
+
+        await fetchViewingRequests()
+      } catch (error) {
+        throw error
+      }
+    },
+    deleteViewingRequest = async (viewingId: string) => {
+      try {
+        const deleteRequest = await fetch(
+            `/system/api/v1/viewing-requests/${viewingId}`,
+            {
+              method: "DELETE",
+            },
+          ),
+          deleteResponse = await deleteRequest.json()
+
+        if (!deleteRequest.ok) throw new Error(deleteResponse.error)
+
+        await fetchViewingRequests()
+      } catch (error) {
+        throw error
+      }
+    }
+
+  return (
+    <ViewingContext.Provider
+      value={{
+        viewingRequests,
+        createViewingRequest,
+        editViewingRequest,
+        fetchViewingRequest,
+        fetchViewingRequests,
+        deleteViewingRequest,
+      }}
+    >
+      {children}
+    </ViewingContext.Provider>
+  )
+}
