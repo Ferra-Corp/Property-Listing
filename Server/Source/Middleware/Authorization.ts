@@ -6,7 +6,7 @@ import type {
   UserRole,
 } from "../Modules/Identity/Profiles/User/user.types.js";
 
-type permission_group =
+export type permission_group =
   // Insights
   | "Create insight"
   | "Edit insight"

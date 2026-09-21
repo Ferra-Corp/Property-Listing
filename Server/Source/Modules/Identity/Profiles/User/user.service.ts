@@ -108,4 +108,11 @@ export class UserServ implements UserService {
       CacheKeys.all(Resource.User),
     );
   }
+
+  async invalidateUser(id: string): Promise<void> {
+    await this.cache.invalidate(
+      CacheKeys.single(Resource.User, id),
+      CacheKeys.all(Resource.User),
+    );
+  }
 }

@@ -27,6 +27,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "chalk": "^6.0.0",
+    "cloudinary": "^2.11.0",
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
     "otplib": "^13.5.0",

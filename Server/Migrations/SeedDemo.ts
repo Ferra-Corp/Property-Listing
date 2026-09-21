@@ -292,7 +292,7 @@ async function createAgent(details: {
         property_type: "residential" as const,
         property_subtype: "apartment" as const,
         purpose: "rent" as const,
-        status: "let" as const,
+        status: "rented" as const,
         state_region: "Nairobi",
         city: "Nairobi",
         location_label: "Kilimani, Nairobi",

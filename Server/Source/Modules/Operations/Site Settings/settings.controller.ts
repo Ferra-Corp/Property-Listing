@@ -7,7 +7,6 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
 
 export const SettingsController = async (
@@ -21,28 +20,29 @@ export const SettingsController = async (
   const service = settingsService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
+      // Site settings are read publicly — the marketing site needs them
+      // (contact number, office address, ...) with no session. Only
+      // writing them requires staff auth, per case below.
       case "GET":
         const settings = await service.getSettings();
 
         sendResponseMessage(200, false, settings, response);
         break;
       case "POST":
-        await Authorized(request, "Create site setting");
+        const postUser = await Authorized(request, "Create site setting");
 
         const postRequestBody: any = await getRequestBody(request),
           newSetting = await service.createSetting({
             ...postRequestBody,
-            updated_by: user.id,
+            updated_by: postUser.id,
           });
 
         await logService.createLog({
           action: "Site setting creation",
           entity_id: newSetting.key,
           entity_type: "Site Setting",
-          user_id: user.id,
+          user_id: postUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: newSetting,
@@ -51,7 +51,7 @@ export const SettingsController = async (
         sendResponseMessage(201, false, newSetting, response);
         break;
       case "PATCH":
-        await Authorized(request, "Edit site setting");
+        const patchUser = await Authorized(request, "Edit site setting");
 
         const patchSettingKey = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
@@ -64,7 +64,7 @@ export const SettingsController = async (
           action: "Site setting update",
           entity_id: patchedSetting.key,
           entity_type: "Site Setting",
-          user_id: user.id,
+          user_id: patchUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: patchedSetting,
@@ -73,7 +73,7 @@ export const SettingsController = async (
         sendResponseMessage(200, false, patchedSetting, response);
         break;
       case "DELETE":
-        await Authorized(request, "Delete site setting");
+        const deleteUser = await Authorized(request, "Delete site setting");
 
         const deleteSettingKey = PathnameValidator(pathnames);
 
@@ -83,7 +83,7 @@ export const SettingsController = async (
           action: "Site setting deletion",
           entity_id: deleteSettingKey,
           entity_type: "Site Setting",
-          user_id: user.id,
+          user_id: deleteUser.id,
           user_agent: userAgent.deviceName,
           ip_address: userAgent.ipAddress,
           changes: {},

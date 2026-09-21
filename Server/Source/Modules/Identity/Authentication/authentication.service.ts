@@ -302,7 +302,7 @@ export class AuthServ implements AuthService {
     if (!authUser) return;
 
     const resetToken = await this.createPasswordSetupToken(authUser.id),
-      passwordResetUrl = `${REDIRECT_LINK}/resetpass?token=${resetToken}`;
+      passwordResetUrl = `${REDIRECT_LINK}/admin/auth/reset/${resetToken}`;
 
     await PasswordResetMail(authUser.email, passwordResetUrl);
 
@@ -365,13 +365,18 @@ export class AuthServ implements AuthService {
       secret = otp.generateSecret();
 
     const otpAuth = otp.generateURI({
-        issuer: "Ferra Properties",
+        issuer: "D&G Realtors",
         label: user.email,
         secret,
       }),
       qrCodeDataURL = await qrcode.toDataURL(otpAuth);
 
     await this.repo.setGoogleAuthSecret(userId, secret);
+
+    // The cached PublicUser (mfa_enabled derived from this same column)
+    // would otherwise keep serving the pre-pairing snapshot until its TTL
+    // lapses, even though the row was just updated.
+    await this.userService.invalidateUser(userId);
 
     return {
       qrcode: qrCodeDataURL,

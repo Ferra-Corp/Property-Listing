@@ -28,7 +28,9 @@ export class MediaRepo implements MediaRepository {
           details.width ?? null,
           details.height ?? null,
           details.bytes ?? null,
-          details.duration_seconds ?? null,
+          (details.duration_seconds
+            ? Math.floor(details.duration_seconds)
+            : details.duration_seconds) ?? null,
           details.is_primary ?? false,
           details.sort_order ?? 0,
         ]),

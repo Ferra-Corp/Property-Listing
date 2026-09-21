@@ -1,7 +1,7 @@
 import type { IncomingMessage } from "node:http";
 import { authService } from "../Data Objects/DTO.js";
 import type { PublicUser } from "../Modules/Identity/Profiles/User/user.types.js";
-import { MiddlewareError } from "../Utilities/Http.js";
+import { MiddlewareError, ServiceError } from "../Utilities/Http.js";
 
 export const AuthToken = async (
   request: IncomingMessage,
@@ -11,17 +11,27 @@ export const AuthToken = async (
   try {
     const authenticationToken = request.headers["authorization"];
     if (!authenticationToken)
-      throw new MiddlewareError("Authentication token not provided");
+      throw new MiddlewareError("Authentication token not provided", 401);
 
     const token = authenticationToken.split(" ")[1];
 
-    if (!token) throw new MiddlewareError("Authentication token not provided");
+    if (!token)
+      throw new MiddlewareError("Authentication token not provided", 401);
 
     const user = await service.getCurrentUser(token);
 
     return user;
   } catch (error) {
-    throw new MiddlewareError((error as Error).message);
+    if (error instanceof MiddlewareError) throw error;
+
+    // Preserve a real status the underlying error already carries (e.g. 401
+    // for an invalid/expired access token) instead of collapsing every
+    // failure here into a generic 400 — callers like the BFF's session
+    // refresh rely on actually getting a 401 back to know when to retry.
+    throw new MiddlewareError(
+      (error as Error).message,
+      error instanceof ServiceError ? error.statusCode : 401,
+    );
   }
 };
 

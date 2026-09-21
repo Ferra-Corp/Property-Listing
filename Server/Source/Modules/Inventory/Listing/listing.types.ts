@@ -39,7 +39,6 @@ export type ListingStatus =
   | "under_offer"
   | "sold"
   | "rented"
-  | "let"
   | "withdrawn";
 
 export type AreaUnit = "sqft" | "sqm" | "acre" | "hectare";

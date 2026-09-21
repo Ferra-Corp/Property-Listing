@@ -18,7 +18,12 @@ export type User = {
   deleted_at: string | null;
 };
 
-export type PublicUser = Omit<User, "password_hash">;
+// google_auth_secret itself is never on User at all — it lives only on the
+// narrower AuthUser used to check a login, and must never reach a client.
+// mfa_enabled is the one bit of that anyone else is allowed to know.
+export type PublicUser = Omit<User, "password_hash"> & {
+  mfa_enabled: boolean;
+};
 
 export type createUserDTO = {
   name: string;
@@ -46,4 +51,8 @@ export interface UserService {
   getUser: (id: string) => Promise<PublicUser>;
   getUsers: () => Promise<PublicUser[]>;
   deleteUser: (id: string) => Promise<void>;
+  // For writes that land through a different repository (e.g. the OTP
+  // secret, owned by AuthRepository) but still need the cached PublicUser
+  // to drop its stale mfa_enabled snapshot.
+  invalidateUser: (id: string) => Promise<void>;
 }

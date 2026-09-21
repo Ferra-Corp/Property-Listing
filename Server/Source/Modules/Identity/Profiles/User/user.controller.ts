@@ -71,6 +71,8 @@ export const UserController = async (
             user_id: newUser.id,
             display_name: newUser.name,
             slug: slugify(newUser.name),
+            phone: newUser.phone,
+            whatsapp_number: newUser.whatsapp_number ?? newUser.phone,
           });
 
           await logService.createLog({
@@ -87,10 +89,10 @@ export const UserController = async (
         const setupToken = await authService.createPasswordSetupToken(
           newUser.id,
         );
-
+        console.log(`${REDIRECT_LINK}/admin/auth/invite/${setupToken}`);
         await InviteAgent(
           newUser.email,
-          `${REDIRECT_LINK}/invite?token=${setupToken}`,
+          `${REDIRECT_LINK}/admin/auth/invite/${setupToken}`,
         );
 
         sendResponseMessage(201, false, newUser, response);

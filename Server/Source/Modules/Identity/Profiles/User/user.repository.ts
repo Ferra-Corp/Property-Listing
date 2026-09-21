@@ -9,7 +9,7 @@ import type {
 } from "./user.types.js";
 
 const PUBLIC_USER_COLUMNS =
-  "id,name,email,phone,whatsapp_number,role,is_active,email_verified_at,last_login_at,failed_login_count,locked_until,created_at,updated_at,deleted_at";
+  "id,name,email,phone,whatsapp_number,role,is_active,email_verified_at,last_login_at,failed_login_count,locked_until,created_at,updated_at,deleted_at,(google_auth_secret IS NOT NULL) AS mfa_enabled";
 
 export class UserRepo implements UserRepository {
   constructor(private db: Database) {}

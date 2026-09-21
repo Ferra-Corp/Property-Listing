@@ -21,6 +21,7 @@ import { InsightListingController } from "./Source/Modules/Content & SEO/Insight
 import { InsightTagController } from "./Source/Modules/Content & SEO/Insights/Tags/tag.controller.js";
 import { TagController } from "./Source/Modules/Content & SEO/Tags/tag.controller.js";
 import { ServiceController } from "./Source/Modules/Content & SEO/Services/service.controller.js";
+import { UploadController } from "./Source/Modules/Content & SEO/Media/upload.controller.js";
 
 interface Route {
   name: string;
@@ -118,5 +119,9 @@ export const Routes: Route[] = [
   {
     name: "services",
     controller: ServiceController,
+  },
+  {
+    name: "uploads",
+    controller: UploadController,
   },
 ];
