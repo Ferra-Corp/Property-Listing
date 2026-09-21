@@ -35,9 +35,23 @@ export const PATCH = async (request: NextRequest, params: RouteParams) => {
       status: patchRequest.status,
     })
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    )
+    switch ((error as Error).message) {
+      case "Access token and refresh token aren't provided":
+        return NextResponse.json(
+          {
+            error: "Authentication tokens not provided, unkwown user",
+          },
+          {
+            status: 401,
+          }
+        )
+      default:
+        return NextResponse.json(
+          { error: (error as Error).message },
+          {
+            status: 500,
+          }
+        )
+    }
   }
 }

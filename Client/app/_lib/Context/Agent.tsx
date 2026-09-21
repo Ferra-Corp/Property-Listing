@@ -8,6 +8,7 @@ import {
 } from "../Types/Agent"
 
 const AgentContext = createContext<AgentContext>({
+  loading: false,
   agents: [],
   editAgentProfile: () => Promise.resolve(),
   fetchAgentProfile: async () => null,
@@ -22,7 +23,8 @@ export default function AgentContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [agents, setAgents] = useState<AgentProfile[]>([])
+  const [agents, setAgents] = useState<AgentProfile[]>([]),
+    [loading, setLoading] = useState(true)
 
   const fetchAgentProfile = async (
       agentId: string,
@@ -60,7 +62,7 @@ export default function AgentContextProvider({
     }
 
   useEffect(() => {
-    fetchAgentProfiles()
+    fetchAgentProfiles().finally(() => setLoading(false))
   }, [])
 
   const editAgentProfile = async (
@@ -100,6 +102,7 @@ export default function AgentContextProvider({
   return (
     <AgentContext.Provider
       value={{
+        loading,
         agents,
         editAgentProfile,
         fetchAgentProfile,

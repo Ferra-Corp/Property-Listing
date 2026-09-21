@@ -3,7 +3,31 @@ import { cn } from "cn"
 
 /** Small caps mono label — the system's kicker, at admin scale. */
 export function K({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("cl-k text-[var(--color-neutral-600)]", className)} {...props} />
+  return <div className={cn("cl-k text-neutral-600", className)} {...props} />
+}
+
+/** Label + hint on the left, a form control on the right, hairline under —
+ * the row shape every admin create/edit form is built from. */
+export function FormField({
+  label,
+  hint,
+  children,
+}: {
+  label: string
+  hint?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-3 border-b border-(--color-divider) py-4 md:grid-cols-[170px_minmax(0,1fr)] md:gap-4.5 md:py-5">
+      <div>
+        <div className="text-[13.5px] leading-normal">{label}</div>
+        {hint ? (
+          <div className="cl-k mt-1.5 text-neutral-600">{hint}</div>
+        ) : null}
+      </div>
+      <div>{children}</div>
+    </div>
+  )
 }
 
 /** A figure: tabular, mono where it is a code rather than a quantity. */
@@ -13,17 +37,22 @@ export function Fig({
   ...props
 }: React.ComponentProps<"span"> & { mono?: boolean }) {
   return (
-    <span className={cn("cl-fig", mono && "cl-mono text-[11.5px]", className)} {...props} />
+    <span
+      className={cn("cl-fig", mono && "cl-mono text-[11.5px]", className)}
+      {...props}
+    />
   )
 }
 
-export type StatusTone = "published" | "pending" | "neutral" | "outline" | "mark"
+export type StatusTone =
+  "published" | "pending" | "neutral" | "outline" | "mark"
 
 const STATUS_TONES: Record<StatusTone, string> = {
   published: "bg-[var(--color-accent-100)] text-[var(--color-accent-800)]",
   pending: "bg-[var(--color-accent-2-100)] text-[var(--color-accent-2-700)]",
   neutral: "bg-[var(--color-neutral-300)] text-[var(--color-neutral-800)]",
-  outline: "border border-[var(--color-divider)] text-[var(--color-neutral-700)]",
+  outline:
+    "border border-[var(--color-divider)] text-[var(--color-neutral-700)]",
   mark: "border border-[var(--color-accent-2)] text-[var(--color-accent-2)]",
 }
 
@@ -36,9 +65,9 @@ export function Status({
   return (
     <span
       className={cn(
-        "cl-mono inline-flex items-center gap-[5px] rounded-[3px] px-2 py-[3px] text-[10px] tracking-[0.1em] whitespace-nowrap uppercase",
+        "cl-mono inline-flex items-center gap-1.25 rounded-[3px] px-2 py-0.75 text-[10px] tracking-widest whitespace-nowrap uppercase",
         STATUS_TONES[tone],
-        className,
+        className
       )}
       {...props}
     />
@@ -54,10 +83,10 @@ export function Chip({
   return (
     <span
       className={cn(
-        "cl-mono inline-flex items-center rounded-full border border-[var(--color-divider)] px-3 py-1.5 text-[10px] tracking-[0.12em] whitespace-nowrap text-[var(--color-neutral-700)] uppercase",
+        "cl-mono inline-flex items-center rounded-full border border-(--color-divider) px-3 py-1.5 text-[10px] tracking-[0.12em] whitespace-nowrap text-neutral-700 uppercase",
         on &&
-          "border-[var(--color-accent)] bg-[var(--color-accent-100)] text-[var(--color-accent-800)]",
-        className,
+          "border-(--color-accent) bg-(--color-accent-100) text-(--color-accent-800)",
+        className
       )}
       {...props}
     />
@@ -83,22 +112,24 @@ export function Banner({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3.5 rounded-[var(--cl-radius-lg)] border border-l-[3px] px-4 py-4 md:flex-row md:items-center md:gap-[18px] md:px-[18px]",
+        "flex flex-col gap-3.5 rounded-(--cl-radius-lg) border border-l-[3px] px-4 py-4 md:flex-row md:items-center md:gap-4.5 md:px-4.5",
         warn
-          ? "border-[var(--color-accent-2-300)] border-l-[var(--color-accent-2)] bg-[var(--color-accent-2-100)]"
-          : "border-[var(--color-accent-300)] border-l-[var(--color-accent)] bg-[var(--color-accent-100)]",
+          ? "border(--color-accent-2-300) border-l-(--color-accent-2) bg-(--color-accent-2-100)"
+          : "border(--color-accent-300) border-l-(--color-accent) bg-(--color-accent-100)"
       )}
     >
       <div className="flex-1">
         <div
           className={cn(
             "cl-k",
-            warn ? "text-[var(--color-accent-2-700)]" : "text-[var(--color-accent-800)]",
+            warn ? "text-(--color-accent-2-700)" : "text-(--color-accent-800)"
           )}
         >
           {kicker}
         </div>
-        <div className="mt-[7px] text-[13.5px] leading-[1.5] md:text-[14.5px]">{children}</div>
+        <div className="mt-1.75 text-[13.5px] leading-normal md:text-[14.5px]">
+          {children}
+        </div>
       </div>
       {action ? <div className="flex-none">{action}</div> : null}
     </div>
@@ -110,8 +141,8 @@ export function Th({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       className={cn(
-        "cl-mono border-b-2 border-[var(--color-text)] pt-0 pr-3 pb-2.5 pl-0 text-left text-[9.5px] tracking-[0.14em] whitespace-nowrap text-[var(--color-neutral-600)] uppercase",
-        className,
+        "cl-mono border-b-2 border-(--color-text) pt-0 pr-3 pb-2.5 pl-0 text-left text-[9.5px] tracking-[0.14em] whitespace-nowrap text-neutral-600 uppercase",
+        className
       )}
       {...props}
     />
@@ -123,8 +154,8 @@ export function Td({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
       className={cn(
-        "border-b border-[var(--color-divider)] py-3.5 pr-3 pl-0 align-top text-[13.5px]",
-        className,
+        "border-b border-(--color-divider) py-3.5 pr-3 pl-0 align-top text-[13.5px]",
+        className
       )}
       {...props}
     />
@@ -133,16 +164,21 @@ export function Td({ className, ...props }: React.ComponentProps<"td">) {
 
 /** A hoverable table row. */
 export function Tr({ className, ...props }: React.ComponentProps<"tr">) {
-  return <tr className={cn("[&:hover_td]:bg-[var(--color-neutral-100)]", className)} {...props} />
+  return (
+    <tr className={cn("[&:hover_td]:bg-neutral-100", className)} {...props} />
+  )
 }
 
 /** The heavy-ruled section heading used inside sheets and phone sections. */
-export function SectionHead({ className, ...props }: React.ComponentProps<"div">) {
+export function SectionHead({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "cl-mono border-b-2 border-[var(--color-text)] pb-1.5 text-[9.5px] leading-[1.4] tracking-[0.16em] text-[var(--color-neutral-600)] uppercase",
-        className,
+        "cl-mono border-b-2 border-(--color-text) pb-1.5 text-[9.5px] leading-[1.4] tracking-[0.16em] text-neutral-600 uppercase",
+        className
       )}
       {...props}
     />
@@ -161,7 +197,7 @@ export function Pair({
 }) {
   return (
     <div className={cn("cl-pair text-[13px]", className)}>
-      <span className="text-[var(--color-neutral-700)]">{label}</span>
+      <span className="text-neutral-700">{label}</span>
       <span className="cl-fig text-right">{children}</span>
     </div>
   )
@@ -175,11 +211,14 @@ export function CheckLine({
 }: React.ComponentProps<"input"> & { children: React.ReactNode }) {
   return (
     <label
-      className={cn("flex items-start gap-[9px] py-2 text-[13px] leading-[1.5]", className)}
+      className={cn(
+        "flex items-start gap-2.25 py-2 text-[13px] leading-normal",
+        className
+      )}
     >
       <input
         type="checkbox"
-        className="mt-[3px] accent-[var(--color-accent)] disabled:opacity-45"
+        className="mt-0.75 accent-(--color-accent) disabled:opacity-45"
         {...props}
       />
       <span>{children}</span>
@@ -197,20 +236,26 @@ export function ActivityLine({
 }) {
   return (
     <div className="flex gap-3">
-      <span className="cl-k cl-fig w-16 flex-none text-[var(--color-accent)]">{date}</span>
+      <span className="cl-k cl-fig w-16 flex-none text-(--color-accent)">
+        {date}
+      </span>
       <div className="text-[13px] leading-[1.55]">{children}</div>
     </div>
   )
 }
 
 /** The three standing notes that close most desk pages. */
-export function Notes({ items }: { items: { label: string; body: React.ReactNode }[] }) {
+export function Notes({
+  items,
+}: {
+  items: { label: string; body: React.ReactNode }[]
+}) {
   return (
-    <div className="grid gap-7 border-t border-[var(--color-divider)] pt-4 md:grid-cols-3">
+    <div className="grid gap-7 border-t border-(--color-divider) pt-4 md:grid-cols-3">
       {items.map((note) => (
         <div key={note.label}>
           <K>{note.label}</K>
-          <p className="mt-2 mb-0 text-[12.5px] leading-[1.65] text-[var(--color-neutral-700)]">
+          <p className="mt-2 mb-0 text-[12.5px] leading-[1.65] text-neutral-700">
             {note.body}
           </p>
         </div>

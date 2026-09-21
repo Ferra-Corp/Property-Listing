@@ -56,6 +56,7 @@ export type UpdateInsightDTO = Partial<createInsightDTO>
 export type InsightWithTags = Insight & { tags: Tag[] }
 
 export type InsightContext = {
+  loading: boolean
   insights: InsightWithTags[]
   createInsight: (details: createInsightDTO) => Promise<void>
   editInsight: (id: string, details: UpdateInsightDTO) => Promise<void>

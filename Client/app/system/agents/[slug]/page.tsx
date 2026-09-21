@@ -13,7 +13,7 @@ import { Tag } from "../../../_components/ui/tag"
 import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useListingContext } from "../../../_lib/Context/Listing"
 import { useInsightContext } from "../../../_lib/Context/Insight"
-import { ADMIN_WHATSAPP_NUMBER } from "../../../_lib/config"
+import { useContactPhone } from "../../../_lib/useSiteSettings"
 import { buildWhatsAppLink, toWhatsAppDigits } from "../../../_lib/format"
 import { createLead } from "../../../_lib/Actions/Leads"
 import {
@@ -58,6 +58,7 @@ export default function AgentDetailPage() {
     { listings } = useListingContext(),
     { insights } = useInsightContext(),
     convertTo = useCurrencyConversion(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     agent = agents.find((item) => item.slug === slug),
     [status, setStatus] = React.useState<
       "idle" | "submitting" | "success" | "error"
@@ -88,7 +89,7 @@ export default function AgentDetailPage() {
       .filter((listing) => listing.status === "published")
       .map((listing) => toRowListing(listing, convertTo)),
     transacted = agentListings
-      .filter((listing) => ["sold", "rented", "let"].includes(listing.status))
+      .filter((listing) => ["sold", "rented"].includes(listing.status))
       .map((listing) => toRowListing(listing, convertTo)),
     notes = insights.filter((insight) => insight.author_id === agent.user_id),
     contact = [agent.phone, agent.whatsapp_number, agent.email_public].filter(

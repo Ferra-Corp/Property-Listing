@@ -15,6 +15,8 @@ export type PublicUser = {
   created_at: string
   updated_at: string
   deleted_at: string | null
+  /** Whether a TOTP secret is on file — never the secret itself. */
+  mfa_enabled: boolean
 }
 
 export type InviteUserDTO = {
@@ -29,7 +31,10 @@ export type InviteUserDTO = {
 export type UpdateUserDTO = Partial<InviteUserDTO>
 
 export type UserContext = {
+  loading: boolean
   users: PublicUser[]
+  currentUser: PublicUser | null
+  fetchCurrentUser: () => Promise<void>
   inviteUser: (details: InviteUserDTO) => Promise<void>
   editUser: (id: string, details: UpdateUserDTO) => Promise<void>
   fetchUser: (id: string) => Promise<PublicUser | null>

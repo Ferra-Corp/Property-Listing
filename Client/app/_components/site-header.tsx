@@ -208,9 +208,14 @@ export function SiteHeader() {
 
         <Link
           href="/"
-          className="cl-mono flex-1 text-[12.5px] tracking-[0.16em] text-(--color-text) uppercase transition-opacity hover:opacity-70 md:flex-none md:text-[15px]"
+          className="flex flex-1 items-baseline gap-2 transition-opacity hover:opacity-70 md:flex-none"
         >
-          [ entity ]
+          <span className="font-(family-name:--font-heading) text-[19px] leading-none text-(--color-text) md:text-[21px]">
+            D&amp;G
+          </span>
+          <span className="cl-mono text-[10px] tracking-[0.18em] text-neutral-600 uppercase">
+            Realtors
+          </span>
         </Link>
 
         <SiteSearch className="hidden min-w-0 flex-1 md:block" />

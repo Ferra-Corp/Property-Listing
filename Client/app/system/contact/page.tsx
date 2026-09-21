@@ -10,7 +10,11 @@ import { Disclosure } from "../../_components/ui/section"
 import { createLead } from "../../_lib/Actions/Leads"
 import type { LeadIntent } from "../../_lib/Types/Lead"
 import { useAgentContext } from "../../_lib/Context/Agent"
-import { ADMIN_WHATSAPP_NUMBER } from "../../_lib/config"
+import {
+  useContactEmail,
+  useContactPhone,
+  useOfficeAddress,
+} from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink, toWhatsAppDigits } from "../../_lib/format"
 
 const INTENT_OPTIONS = [
@@ -102,21 +106,6 @@ function FieldRow({
   )
 }
 
-const OFFICE_CHANNEL = {
-  code: "OFC",
-  title: "The office",
-  detail: (
-    <>
-      2nd floor, Muthithi Road
-      <br />
-      Westlands, Nairobi
-      <br />
-      Visits by appointment
-    </>
-  ),
-  href: null as string | null,
-}
-
 const NEXT = [
   {
     n: "01",
@@ -152,16 +141,19 @@ const FAQ = [
 
 export default function ContactPage() {
   const { agents } = useAgentContext(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
+    fallbackEmail = useContactEmail(),
+    officeAddress = useOfficeAddress(),
     // Whoever holds the general contact WhatsApp line right now (Amina) —
     // resolved from the real agent record so name/email/phone stay in sync
-    // if that designation ever changes (see ADMIN_WHATSAPP_NUMBER).
+    // if that designation ever changes (see the real `contact.phone` setting).
     contactAgent = agents.find(
       (agent) =>
         toWhatsAppDigits(agent.whatsapp_number || agent.phone || "") ===
         ADMIN_WHATSAPP_NUMBER
     ),
     contactPhone = contactAgent?.phone ?? `+${ADMIN_WHATSAPP_NUMBER}`,
-    contactEmail = contactAgent?.email_public ?? "hello@entity.co.ke",
+    contactEmail = contactAgent?.email_public ?? fallbackEmail,
     whatsappHref = buildWhatsAppLink(
       ADMIN_WHATSAPP_NUMBER,
       "Hi, I'd like to get in touch about a property."
@@ -194,7 +186,17 @@ export default function ContactPage() {
       detail: contactEmail,
       href: `mailto:${contactEmail}`,
     },
-    OFFICE_CHANNEL,
+    {
+      code: "OFC",
+      title: "The office",
+      detail: officeAddress.split("\n").map((line, i, arr) => (
+        <React.Fragment key={i}>
+          {line}
+          {i < arr.length - 1 ? <br /> : null}
+        </React.Fragment>
+      )),
+      href: null as string | null,
+    },
   ]
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

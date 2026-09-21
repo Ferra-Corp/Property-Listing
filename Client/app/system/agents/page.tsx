@@ -7,7 +7,7 @@ import { Input, Select, Textarea } from "../../_components/ui/field"
 import { Plate } from "../../_components/ui/plate"
 import { useAgentContext } from "../../_lib/Context/Agent"
 import { useListingContext } from "../../_lib/Context/Listing"
-import { ADMIN_WHATSAPP_NUMBER } from "../../_lib/config"
+import { useContactPhone } from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink } from "../../_lib/format"
 import { createLead } from "../../_lib/Actions/Leads"
 import type { LeadIntent } from "../../_lib/Types/Lead"
@@ -42,6 +42,7 @@ const ENQUIRY_MAP: Record<
 export default function AgentsIndexPage() {
   const { agents } = useAgentContext(),
     { listings } = useListingContext(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     mandateCount = (userId: string) =>
       listings.filter((listing) => listing.agent_id === userId).length,
     contactLine = (agent: (typeof agents)[number]) =>

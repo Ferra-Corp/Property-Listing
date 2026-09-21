@@ -52,6 +52,7 @@ export type UpdateViewingRequestDTO = Partial<createViewingRequestDTO> & {
 }
 
 export type ViewingContext = {
+  loading: boolean
   viewingRequests: ViewingRequest[]
   createViewingRequest: (details: createViewingRequestDTO) => Promise<void>
   editViewingRequest: (

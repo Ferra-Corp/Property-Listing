@@ -9,6 +9,7 @@ import {
 } from "../Types/Site Setting"
 
 const SettingContext = createContext<SettingContext>({
+  loading: false,
   settings: [],
   createSetting: () => Promise.resolve(),
   editSetting: () => Promise.resolve(),
@@ -23,7 +24,8 @@ export default function SettingContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [settings, setSettings] = useState<SiteSetting[]>([])
+  const [settings, setSettings] = useState<SiteSetting[]>([]),
+    [loading, setLoading] = useState(true)
 
   const getSettings = async () => {
       try {
@@ -87,12 +89,19 @@ export default function SettingContextProvider({
     }
 
   useEffect(() => {
-    getSettings()
+    getSettings().finally(() => setLoading(false))
   }, [])
 
   return (
     <SettingContext.Provider
-      value={{ settings, createSetting, editSetting, getSettings, deleteSetting }}
+      value={{
+        loading,
+        settings,
+        createSetting,
+        editSetting,
+        getSettings,
+        deleteSetting,
+      }}
     >
       {children}
     </SettingContext.Provider>

@@ -7,7 +7,7 @@ import { Input, Segmented, Select, Textarea } from "../../_components/ui/field"
 import { Plate } from "../../_components/ui/plate"
 import { Disclosure } from "../../_components/ui/section"
 import { createValuationRequest } from "../../_lib/Actions/Valuation Requests"
-import { ADMIN_WHATSAPP_NUMBER } from "../../_lib/config"
+import { useContactPhone } from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink } from "../../_lib/format"
 
 const TYPE_OPTIONS = [
@@ -142,6 +142,7 @@ export default function ValuationRequestPage() {
       "idle" | "submitting" | "success" | "error"
     >("idle"),
     [error, setError] = React.useState<string | null>(null),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     whatsappHref = buildWhatsAppLink(
       ADMIN_WHATSAPP_NUMBER,
       "Hi, I'd like a valuation — here's the location and size."

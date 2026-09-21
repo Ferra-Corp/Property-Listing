@@ -100,6 +100,7 @@ export type UpdateLeadDTO = Partial<createLeadDTO> & {
 }
 
 export type LeadContext = {
+  loading: boolean
   leads: Lead[]
   createLead: (details: createLeadDTO) => Promise<void>
   editLead: (id: string, details: UpdateLeadDTO) => Promise<void>

@@ -58,6 +58,8 @@ export default function InsightsIndexPage() {
         <section className="grid gap-0 px-3 pt-3.5 md:grid-cols-[1.5fr_1fr] md:gap-1.25 md:px-6 md:pt-5.5">
           <Plate
             className="aspect-16/10 rounded-lg border-0 md:aspect-auto md:h-82.5 md:border-4"
+            src={lead.cover_image_url}
+            alt={lead.cover_image_alt ?? lead.title}
             label={lead.cover_image_alt ?? lead.title}
           />
           <div className="px-4 pt-4 md:pt-1.5 md:pr-8.5 md:pl-7.5">
@@ -146,6 +148,8 @@ export default function InsightsIndexPage() {
                 <Plate
                   matted={false}
                   className="aspect-video"
+                  src={note.cover_image_url}
+                  alt={note.cover_image_alt ?? note.title}
                   label={note.cover_image_alt ?? note.title}
                 />
                 <div className="px-4 pt-4 pb-4 md:px-4.5 md:pb-4.5">

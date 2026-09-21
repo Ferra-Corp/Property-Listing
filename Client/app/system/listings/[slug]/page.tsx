@@ -15,7 +15,7 @@ import {
   relativeDate,
   toWhatsAppDigits,
 } from "../../../_lib/format"
-import { ADMIN_WHATSAPP_NUMBER } from "../../../_lib/config"
+import { useContactPhone } from "../../../_lib/useSiteSettings"
 import { toRowListing, useCurrencyConversion } from "../_components/listing-row"
 import type { ListingWithMedia } from "../../../_lib/Types/Listing"
 
@@ -83,15 +83,24 @@ function buildSpec(listing: ListingWithMedia): [string, string][] {
   return spec
 }
 
+// Helper to determine if a media item is a video
+const isVideo = (media: any) => {
+  return (
+    media?.type === "video" || /\.(mp4|webm|ogg|mov)$/i.test(media?.url || "")
+  )
+}
+
 export default function ListingDetailPage() {
   const { slug } = useParams<{ slug: string }>(),
     { listings, fetchListing } = useListingContext(),
     { agents } = useAgentContext(),
     convertTo = useCurrencyConversion(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     [listing, setListing] = React.useState<ListingWithMedia | null>(null),
     [status, setStatus] = React.useState<"loading" | "found" | "not-found">(
       "loading"
-    )
+    ),
+    [isModalOpen, setIsModalOpen] = React.useState(false)
 
   React.useEffect(() => {
     const summary = listings.find((item) => item.slug === slug)
@@ -111,6 +120,18 @@ export default function ListingDetailPage() {
       setStatus("found")
     })
   }, [slug, listings, fetchListing])
+
+  // Lock body scroll when the media modal is open
+  React.useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [isModalOpen])
 
   const comparable = listing
     ? listings
@@ -165,51 +186,80 @@ export default function ListingDetailPage() {
     callHref = `tel:+${toWhatsAppDigits(callNumber)}`,
     agentFirstName = agent?.display_name.split(" ")[0]
 
-  // Intelligent Image Mosaic Layout Logic
-  const plateCount = plates?.length || 1
-  let mosaicContainerClasses = ""
+  // Intelligent Image Grid Layout Logic (adapts to match the 1 large / 4 small reference)
+  const visiblePlates = plates ? plates.slice(0, 5) : []
+  const plateCount = visiblePlates.length
 
-  if (plateCount === 1) {
-    mosaicContainerClasses = "grid grid-cols-1 md:h-[500px]"
-  } else if (plateCount === 2) {
-    mosaicContainerClasses =
-      "grid grid-cols-1 grid-rows-[250px_250px] md:grid-cols-2 md:grid-rows-1 md:h-[500px]"
-  } else {
-    mosaicContainerClasses =
-      "grid grid-cols-2 grid-rows-[200px_120px] md:grid-cols-[2.1fr_1fr_1fr] md:grid-rows-[200px_200px]"
+  let gridContainerClass = "grid grid-cols-1 h-[300px] md:h-[500px]"
+  if (plateCount === 2) {
+    gridContainerClass =
+      "grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 h-[300px] md:h-[500px]"
+  } else if (plateCount === 3) {
+    gridContainerClass =
+      "grid grid-cols-1 md:grid-cols-[2fr_1fr] md:grid-rows-2 gap-2 md:gap-3 h-[300px] md:h-[500px]"
+  } else if (plateCount >= 4) {
+    gridContainerClass =
+      "grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 md:gap-3 h-[300px] md:h-[500px]"
   }
 
-  const getPlateClass = (index: number) => {
-    const base = "border-0 md:border-4 object-cover w-full h-full"
+  const getItemClass = (index: number) => {
+    let base = "relative overflow-hidden rounded-xl h-full w-full"
+    if (index > 0) base += " hidden md:block" // Hide secondary items on mobile
+
     if (plateCount <= 2) return base
-    if (index === 0) return `${base} col-span-2 md:col-span-1 md:row-span-2`
-    if (index >= 3) return `${base} hidden md:grid`
+
+    if (plateCount === 3) {
+      if (index === 0) return `${base} md:row-span-2`
+      return base
+    }
+
+    if (plateCount >= 4) {
+      if (index === 0) return `${base} md:col-span-2 md:row-span-2`
+      // Fill the grid nicely if there are exactly 4 items
+      if (plateCount === 4 && index === 3) return `${base} md:col-span-2`
+      return `${base} md:col-span-1 md:row-span-1`
+    }
     return base
   }
 
   return (
     <>
-      {/* ── Mosaic: Dynamically adjusts to 1, 2, or 3+ images matching header bounds ── */}
-      <section
-        className={`relative mt-4 gap-1 px-3 pt-3 md:gap-1.25 md:px-6 md:pt-1.25 ${mosaicContainerClasses}`}
-      >
-        {plates ? (
-          plates
-            .slice(0, 5)
-            .map((media, index) => (
-              <Plate
-                key={media.id}
-                className={getPlateClass(index)}
-                label={media.alt_text ?? listing.title}
-                src={media.url}
-                alt={media.alt_text ?? listing.title}
-              />
+      {/* ── Media Grid Setup with Custom View All Overlay ── */}
+      <section className="relative mt-4 px-3 pt-3 md:px-6 md:pt-1.25">
+        <div className={gridContainerClass}>
+          {visiblePlates.length > 0 ? (
+            visiblePlates.map((media, index) => (
+              <div key={media.id} className={getItemClass(index)}>
+                {isVideo(media) ? (
+                  <video
+                    src={media.url}
+                    className="h-full w-full object-cover"
+                    muted
+                    playsInline
+                    loop
+                    autoPlay
+                  />
+                ) : (
+                  <Plate
+                    className="h-full w-full border-0 object-cover"
+                    label={media.alt_text ?? listing.title}
+                    src={media.url}
+                    alt={media.alt_text ?? listing.title}
+                  />
+                )}
+              </div>
             ))
-        ) : (
-          <Plate className={getPlateClass(0)} label={listing.title} />
-        )}
+          ) : (
+            <div className={getItemClass(0)}>
+              <Plate
+                className="h-full w-full border-0 object-cover"
+                label={listing.title}
+              />
+            </div>
+          )}
+        </div>
 
-        <div className="absolute top-6 left-5 flex gap-1.75 md:left-9">
+        <div className="absolute top-6 left-5 z-10 flex gap-1.75 md:left-9">
           {listing.is_exclusive ? (
             <Tag
               variant="mark"
@@ -222,7 +272,83 @@ export default function ListingDetailPage() {
             {listing.purpose === "sale" ? "For sale" : "For lease"}
           </Tag>
         </div>
+
+        {/* View All Media Overlay Button - Only shows if there is more than 1 image/video */}
+        {plates && plates.length > 5 && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="absolute right-6 bottom-5 z-20 flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-[13.5px] font-medium text-neutral-900 shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-transform hover:scale-105 active:scale-95 md:right-10 md:bottom-6"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+              <circle cx="9" cy="9" r="2" />
+              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+            </svg>
+            View All Media
+          </button>
+        )}
       </section>
+
+      {/* ── Custom Fullscreen Media Modal ── */}
+      {isModalOpen && plates && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm">
+          {/* Close Button */}
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 md:top-8 md:right-8"
+            aria-label="Close media view"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+
+          {/* Scrollable Media Container */}
+          <div className="h-full w-full max-w-5xl overflow-y-auto p-4 py-16 md:p-8">
+            <div className="flex flex-col gap-6 md:gap-10">
+              {plates.map((media) => (
+                <div
+                  key={media.id}
+                  className="flex w-full items-center justify-center overflow-hidden rounded-xl bg-neutral-900/50"
+                >
+                  {isVideo(media) ? (
+                    <video
+                      src={media.url}
+                      controls
+                      className="max-h-[85vh] w-full object-contain"
+                    />
+                  ) : (
+                    <img
+                      src={media.url}
+                      alt={media.alt_text ?? listing.title}
+                      className="max-h-[85vh] w-full object-contain"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid items-start gap-8 px-3 pt-6 pb-10 md:grid-cols-[1fr_320px] md:gap-14 md:px-6 md:pt-10 md:pb-11.5">
         {/* ── The description ── */}

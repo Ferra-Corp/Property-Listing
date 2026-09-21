@@ -9,6 +9,7 @@ import {
 } from "../Types/Lead"
 
 const LeadContext = createContext<LeadContext>({
+  loading: false,
   leads: [],
   createLead: () => Promise.resolve(),
   editLead: () => Promise.resolve(),
@@ -24,7 +25,8 @@ export default function LeadContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [leads, setLeads] = useState<Lead[]>([])
+  const [leads, setLeads] = useState<Lead[]>([]),
+    [loading, setLoading] = useState(true)
 
   const fetchLead = async (leadId: string): Promise<Lead | null> => {
       try {
@@ -60,7 +62,7 @@ export default function LeadContextProvider({
     }
 
   useEffect(() => {
-    fetchLeads()
+    fetchLeads().finally(() => setLoading(false))
   }, [])
 
   const createLead = async (details: createLeadDTO) => {
@@ -112,7 +114,7 @@ export default function LeadContextProvider({
 
   return (
     <LeadContext.Provider
-      value={{ leads, createLead, editLead, fetchLead, fetchLeads, deleteLead }}
+      value={{ loading, leads, createLead, editLead, fetchLead, fetchLeads, deleteLead }}
     >
       {children}
     </LeadContext.Provider>

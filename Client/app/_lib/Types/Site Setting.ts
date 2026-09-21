@@ -16,6 +16,7 @@ export type createSiteSettingDTO = {
 export type UpdateSiteSettingDTO = Partial<Omit<createSiteSettingDTO, "key">>
 
 export type SettingContext = {
+  loading: boolean
   settings: SiteSetting[]
   createSetting: (details: createSiteSettingDTO) => Promise<void>
   editSetting: (key: string, details: UpdateSiteSettingDTO) => Promise<void>

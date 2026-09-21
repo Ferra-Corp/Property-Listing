@@ -39,7 +39,6 @@ export type ListingStatus =
   | "under_offer"
   | "sold"
   | "rented"
-  | "let"
   | "withdrawn"
 
 export type AreaUnit = "sqft" | "sqm" | "acre" | "hectare"
@@ -153,6 +152,7 @@ export type ListingWithMedia = Listing & { media: ListingMedia[] }
 export type ListingWithThumbnail = Listing & { thumbnail_url: string | null }
 
 export type ListingContext = {
+  loading: boolean
   listings: ListingWithThumbnail[]
   createListing: (details: createListingDTO) => Promise<void>
   editListing: (id: string, details: UpdateListingDTO) => Promise<void>

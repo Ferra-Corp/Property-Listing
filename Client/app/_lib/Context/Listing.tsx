@@ -10,6 +10,7 @@ import {
 } from "../Types/Listing"
 
 const ListingContext = createContext<ListingContext>({
+  loading: false,
   listings: [],
   createListing: async () => Promise.resolve(),
   editListing: async () => Promise.resolve(),
@@ -25,17 +26,18 @@ export default function ListingContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [listings, setListings] = useState<ListingWithThumbnail[]>([])
+  const [listings, setListings] = useState<ListingWithThumbnail[]>([]),
+    [loading, setLoading] = useState(true)
 
   const fetchListing = async (
-      listingId: string,
+      listingId: string
     ): Promise<ListingWithMedia | null> => {
       try {
         const fetchRequest = await fetch(
             `/system/api/v1/listing/${listingId}`,
             {
               method: "GET",
-            },
+            }
           ),
           fetchResponse = await fetchRequest.json()
 
@@ -66,7 +68,7 @@ export default function ListingContextProvider({
     }
 
   useEffect(() => {
-    fetchListings()
+    fetchListings().finally(() => setLoading(false))
   }, [])
 
   const createListing = async (details: createListingDTO) => {
@@ -87,14 +89,11 @@ export default function ListingContextProvider({
     },
     editListing = async (listingId: string, details: UpdateListingDTO) => {
       try {
-        const editRequest = await fetch(
-            `/system/api/v1/listing/${listingId}`,
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(details),
-            },
-          ),
+        const editRequest = await fetch(`/system/api/v1/listing/${listingId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(details),
+          }),
           editResponse = await editRequest.json()
 
         if (!editRequest.ok) throw new Error(editResponse.error)
@@ -110,7 +109,7 @@ export default function ListingContextProvider({
             `/system/api/v1/listing/${listingId}`,
             {
               method: "DELETE",
-            },
+            }
           ),
           deleteResponse = await deleteRequest.json()
 
@@ -125,6 +124,7 @@ export default function ListingContextProvider({
   return (
     <ListingContext.Provider
       value={{
+        loading,
         listings,
         createListing,
         editListing,

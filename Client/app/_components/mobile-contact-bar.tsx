@@ -1,10 +1,13 @@
+"use client"
+
 import { ButtonLink } from "./ui/button"
-import { ADMIN_WHATSAPP_NUMBER } from "../_lib/config"
+import { useContactPhone } from "../_lib/useSiteSettings"
 import { buildWhatsAppLink } from "../_lib/format"
 
 /** Sticky contact bar — small screens only, mirrors the mobile mock. */
 export function MobileContactBar() {
-  const whatsappHref = buildWhatsAppLink(
+  const ADMIN_WHATSAPP_NUMBER = useContactPhone(),
+    whatsappHref = buildWhatsAppLink(
       ADMIN_WHATSAPP_NUMBER,
       "Hi, I'd like to get in touch about a property."
     ),

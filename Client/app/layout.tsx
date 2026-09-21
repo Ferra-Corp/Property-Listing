@@ -4,18 +4,9 @@ import { cn } from "cn"
 
 import "./globals.css"
 import "./classical.css"
-import { SiteHeader } from "./_components/site-header"
-import { SiteFooter } from "./_components/site-footer"
-import { MobileContactBar } from "./_components/mobile-contact-bar"
-import { PageTransition } from "./_components/page-transition"
+import { SiteChrome } from "./_components/site-chrome"
+import { PublicDataProviders } from "./_components/public-data-providers"
 import { ThemeProvider } from "@/components/theme-provider"
-import CurrencyContextProvider from "./_lib/Context/Currencies"
-import RateContextProvider from "./_lib/Context/ExchangeRate"
-import SelectedCurrencyProvider from "./_lib/Context/SelectedCurrency"
-import ListingContextProvider from "./_lib/Context/Listing"
-import AgentContextProvider from "./_lib/Context/Agent"
-import InsightContextProvider from "./_lib/Context/Insight"
-import ServiceContextProvider from "./_lib/Context/Service"
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -53,34 +44,9 @@ export default function SystemLayout({
     >
       <body>
         <ThemeProvider>
-          <CurrencyContextProvider>
-            <RateContextProvider>
-              <SelectedCurrencyProvider>
-                <ListingContextProvider>
-                  <AgentContextProvider>
-                    <InsightContextProvider>
-                      <ServiceContextProvider>
-                        <div
-                          className={cn(
-                            "cl-root flex min-h-dvh flex-col",
-                            cormorant.variable,
-                            lora.variable
-                          )}
-                        >
-                          <SiteHeader />
-                          <main className="flex-1">
-                            <PageTransition>{children}</PageTransition>
-                          </main>
-                          <SiteFooter />
-                          <MobileContactBar />
-                        </div>
-                      </ServiceContextProvider>
-                    </InsightContextProvider>
-                  </AgentContextProvider>
-                </ListingContextProvider>
-              </SelectedCurrencyProvider>
-            </RateContextProvider>
-          </CurrencyContextProvider>
+          <PublicDataProviders>
+            <SiteChrome>{children}</SiteChrome>
+          </PublicDataProviders>
         </ThemeProvider>
       </body>
     </html>

@@ -80,6 +80,19 @@
   --color-footer-link: #dbbb8f;
   --color-footer-link-hover: #ebd5b8;
 
+  /* Admin nav chrome (top bar + dock) — same reasoning as the footer above:
+     the admin rail is its own permanent dark aesthetic, independent of
+     whatever the public site's light/dark toggle is set to. */
+  --color-admin-bg: #3a2714;
+  --color-admin-active: #6f1a07;
+  --color-admin-border: rgba(247, 243, 227, 0.18);
+  --color-admin-text: #f7f3e3;
+  --color-admin-text-muted: #ded7c4;
+  --color-admin-hover: rgba(247, 243, 227, 0.09);
+  --color-admin-hover-active: rgba(247, 243, 227, 0.14);
+  --color-admin-accent: #dbbb8f;
+  --color-admin-accent-urgent: #dc9484;
+
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
@@ -147,6 +160,35 @@
 
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+/* Bridges shadcn/ui components into the Classical palette. shadcn's own
+   tokens (--background, --primary, --border, etc., set in globals.css)
+   are plain greyscale and never used directly by anything else on the
+   site — wrap a shadcn component tree in this class and it reads the same
+   already-theme-aware --color-* variables everything else does, so it
+   flips with the light/dark toggle for free instead of needing its own
+   dark-mode block. */
+.cl-shadcn {
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-neutral-100);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-bg);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-neutral-100);
+  --secondary: var(--color-neutral-200);
+  --secondary-foreground: var(--color-text);
+  --muted: var(--color-neutral-100);
+  --muted-foreground: var(--color-neutral-600);
+  --accent: var(--color-neutral-200);
+  --accent-foreground: var(--color-text);
+  --destructive: var(--color-accent-2);
+  --border: var(--color-divider);
+  --input: var(--color-divider);
+  --ring: var(--color-accent);
+  --radius: var(--cl-radius-md);
 }
 
 /* Smooth light/dark swap. Placed in `base` so any element carrying a
@@ -432,10 +474,27 @@
   }
   .cl-body h2 { font-weight: 400; font-size: 24px; line-height: 1.2; margin: 28px 0 12px; }
   .cl-body h3 { font-weight: 400; font-size: 19px; line-height: 1.25; margin: 24px 0 8px; }
+  .cl-body ul, .cl-body ol {
+    margin: 0 0 16px;
+    padding-left: 22px;
+    font-size: 14.5px;
+    line-height: 1.75;
+  }
+  .cl-body li { margin: 0 0 6px; }
+  .cl-body blockquote {
+    margin: 20px 0;
+    padding-left: 16px;
+    border-left: 3px solid var(--color-accent);
+    font-style: italic;
+    color: var(--color-neutral-700);
+  }
+  .cl-body a { color: var(--color-accent-700); text-decoration: underline; text-underline-offset: 2px; }
+  .cl-body strong { font-weight: 600; }
   @media (min-width: 768px) {
     .cl-body p { font-size: 16px; line-height: 1.8; }
     .cl-body h2 { font-size: 29px; margin: 32px 0 12px; }
     .cl-body h3 { font-size: 21px; }
+    .cl-body ul, .cl-body ol { font-size: 16px; line-height: 1.8; }
   }
 
   .cl-toc {

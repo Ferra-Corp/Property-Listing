@@ -9,6 +9,7 @@ import {
 } from "../Types/Insight"
 
 const InsightContext = createContext<InsightContext>({
+  loading: false,
   insights: [],
   createInsight: () => Promise.resolve(),
   editInsight: () => Promise.resolve(),
@@ -24,7 +25,8 @@ export default function InsightContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [insights, setInsights] = useState<InsightWithTags[]>([])
+  const [insights, setInsights] = useState<InsightWithTags[]>([]),
+    [loading, setLoading] = useState(true)
 
   const fetchInsight = async (
       insightId: string,
@@ -65,7 +67,7 @@ export default function InsightContextProvider({
     }
 
   useEffect(() => {
-    fetchInsights()
+    fetchInsights().finally(() => setLoading(false))
   }, [])
 
   const createInsight = async (details: createInsightDTO) => {
@@ -124,6 +126,7 @@ export default function InsightContextProvider({
   return (
     <InsightContext.Provider
       value={{
+        loading,
         insights,
         createInsight,
         editInsight,

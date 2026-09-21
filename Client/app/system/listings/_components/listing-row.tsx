@@ -8,7 +8,7 @@ import {
   formatPrice,
   relativeDate,
 } from "../../../_lib/format"
-import { ADMIN_WHATSAPP_NUMBER } from "../../../_lib/config"
+import { useContactPhone } from "../../../_lib/useSiteSettings"
 import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useSelectedCurrency } from "../../../_lib/Context/SelectedCurrency"
 import { useRatesContext } from "../../../_lib/Context/ExchangeRate"
@@ -57,6 +57,7 @@ export function useListingWhatsAppLink(
   message: string
 ): string {
   const { agents } = useAgentContext(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     agent = agents.find((item) => item.user_id === agentId),
     number = agent?.whatsapp_number || agent?.phone || ADMIN_WHATSAPP_NUMBER
 
@@ -66,8 +67,7 @@ export function useListingWhatsAppLink(
 const STATUS_LABEL: Record<string, string> = {
   under_offer: "under offer",
   sold: "sold",
-  rented: "let",
-  let: "let",
+  rented: "rented",
   withdrawn: "withdrawn",
 }
 

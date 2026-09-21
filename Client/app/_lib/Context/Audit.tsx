@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { Log, type LogContext } from "../Types/Audit"
 
 const LogContext = createContext<LogContext>({
+  loading: false,
   logs: [],
   getLogs: async () => {},
 })
@@ -15,7 +16,8 @@ export default function LogContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [logs, setLogs] = useState<Log[]>([])
+  const [logs, setLogs] = useState<Log[]>([]),
+    [loading, setLoading] = useState(true)
 
   const getLogs = async () => {
     try {
@@ -33,11 +35,11 @@ export default function LogContextProvider({
   }
 
   useEffect(() => {
-    getLogs()
+    getLogs().finally(() => setLoading(false))
   }, [])
 
   return (
-    <LogContext.Provider value={{ logs, getLogs }}>
+    <LogContext.Provider value={{ loading, logs, getLogs }}>
       {children}
     </LogContext.Provider>
   )

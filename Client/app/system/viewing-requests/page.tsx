@@ -13,7 +13,7 @@ import { createViewingRequest } from "../../_lib/Actions/Viewing Requests"
 import { useListingContext } from "../../_lib/Context/Listing"
 import { useAgentContext } from "../../_lib/Context/Agent"
 import { buildWhatsAppLink, formatPrice } from "../../_lib/format"
-import { ADMIN_WHATSAPP_NUMBER } from "../../_lib/config"
+import { useContactPhone } from "../../_lib/useSiteSettings"
 
 /** Kicker label over a control — the form's unit throughout this page. */
 function FieldRow({
@@ -77,6 +77,7 @@ function ViewingRequestContent() {
   const searchParams = useSearchParams(),
     { listings } = useListingContext(),
     { agents } = useAgentContext(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     preselectedSlug = searchParams.get("listing"),
     preselected = listings.find((l) => l.slug === preselectedSlug) ?? null,
     [manualListingId, setManualListingId] = React.useState(""),

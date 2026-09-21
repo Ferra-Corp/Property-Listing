@@ -91,6 +91,7 @@ export type UpdateValuationRequestDTO = Partial<createValuationRequestDTO> & {
 }
 
 export type ValuationContext = {
+  loading: boolean
   valuationRequests: ValuationRequest[]
   createValuationRequest: (details: createValuationRequestDTO) => Promise<void>
   editValuationRequest: (

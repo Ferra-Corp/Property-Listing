@@ -9,6 +9,7 @@ import {
 } from "../Types/Valuation Request"
 
 const ValuationContext = createContext<ValuationContext>({
+  loading: false,
   valuationRequests: [],
   createValuationRequest: () => Promise.resolve(),
   editValuationRequest: () => Promise.resolve(),
@@ -25,8 +26,9 @@ export default function ValuationContextProvider({
   children: React.ReactNode
 }) {
   const [valuationRequests, setValuationRequests] = useState<
-    ValuationRequest[]
-  >([])
+      ValuationRequest[]
+    >([]),
+    [loading, setLoading] = useState(true)
 
   const fetchValuationRequest = async (
       valuationId: string,
@@ -70,7 +72,7 @@ export default function ValuationContextProvider({
     }
 
   useEffect(() => {
-    fetchValuationRequests()
+    fetchValuationRequests().finally(() => setLoading(false))
   }, [])
 
   const createValuationRequest = async (
@@ -137,6 +139,7 @@ export default function ValuationContextProvider({
   return (
     <ValuationContext.Provider
       value={{
+        loading,
         valuationRequests,
         createValuationRequest,
         editValuationRequest,

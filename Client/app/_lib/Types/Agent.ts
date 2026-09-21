@@ -47,6 +47,7 @@ export type UpdateAgentProfileDTO = Partial<
 }
 
 export type AgentContext = {
+  loading: boolean
   agents: AgentProfile[]
   editAgentProfile: (id: string, details: UpdateAgentProfileDTO) => Promise<void>
   fetchAgentProfile: (id: string) => Promise<AgentProfile | null>

@@ -9,6 +9,7 @@ import {
 } from "../Types/Viewing Request"
 
 const ViewingContext = createContext<ViewingContext>({
+  loading: false,
   viewingRequests: [],
   createViewingRequest: () => Promise.resolve(),
   editViewingRequest: () => Promise.resolve(),
@@ -24,7 +25,8 @@ export default function ViewingContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [viewingRequests, setViewingRequests] = useState<ViewingRequest[]>([])
+  const [viewingRequests, setViewingRequests] = useState<ViewingRequest[]>([]),
+    [loading, setLoading] = useState(true)
 
   const fetchViewingRequest = async (
       viewingId: string,
@@ -65,7 +67,7 @@ export default function ViewingContextProvider({
     }
 
   useEffect(() => {
-    fetchViewingRequests()
+    fetchViewingRequests().finally(() => setLoading(false))
   }, [])
 
   const createViewingRequest = async (details: createViewingRequestDTO) => {
@@ -127,6 +129,7 @@ export default function ViewingContextProvider({
   return (
     <ViewingContext.Provider
       value={{
+        loading,
         viewingRequests,
         createViewingRequest,
         editViewingRequest,

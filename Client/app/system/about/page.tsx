@@ -44,7 +44,7 @@ export default function AboutPage() {
 
   const published = listings.filter((l) => l.status === "published"),
     transacted = listings.filter((l) =>
-      ["sold", "rented", "let"].includes(l.status)
+      ["sold", "rented"].includes(l.status)
     ),
     combinedExperience = agents.reduce(
       (total, agent) => total + (agent.years_experience ?? 0),

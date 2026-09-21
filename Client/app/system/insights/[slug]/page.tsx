@@ -135,6 +135,8 @@ export default function InsightDetailPage() {
       <div className="px-3 pt-4 md:px-6 md:pt-5">
         <Plate
           className="aspect-16/10 border-0 md:aspect-auto md:h-100 md:border-4"
+          src={insight.cover_image_url}
+          alt={insight.cover_image_alt ?? insight.title}
           label={insight.cover_image_alt ?? insight.title}
         />
       </div>
@@ -228,7 +230,7 @@ export default function InsightDetailPage() {
                 href={`/system/listings/${listing.slug}`}
                 className="contents"
               >
-                <Card className="overflow-hidden rounded-lg p-0 text-(--color-text)">
+                <Card className="overflow-hidden rounded-lg p-0 text-(--color-text) transition-transform duration-300 hover:-translate-y-1 hover:shadow-md">
                   <Plate
                     matted={false}
                     className="aspect-16/10"

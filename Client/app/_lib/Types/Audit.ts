@@ -13,6 +13,7 @@ export type Log = {
 export type createLogDTO = Omit<Log, "id" | "created_at">
 
 export type LogContext = {
+  loading: boolean
   logs: Log[]
   getLogs: () => Promise<void>
 }

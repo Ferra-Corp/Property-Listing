@@ -16,6 +16,7 @@ export function PageIn({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32, ease: EASE }}
+      className="rounded-sm"
     >
       {children}
     </motion.div>
@@ -106,11 +107,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={{ duration: 0.2, ease: EASE }}
-              className="pointer-events-auto flex items-center gap-2.5 rounded-[var(--cl-radius-lg)] border border-[rgba(247,243,227,.18)] bg-[var(--color-accent-900)] px-4 py-3 shadow-[var(--shadow-lg)]"
+              className="pointer-events-auto flex items-center gap-2.5 rounded-(--cl-radius-lg) border border-(--color-admin-border) bg-(--color-admin-bg) px-4 py-3 shadow-(--shadow-lg)"
             >
-              <span className="text-[13.5px] text-[#F7F3E3]">{t.title}</span>
+              <span className="text-[13.5px] text-(--color-admin-text)">
+                {t.title}
+              </span>
               {t.body ? (
-                <span className="cl-k text-[var(--color-accent-300)]">
+                <span className="cl-k text-(--color-admin-accent)">
                   {t.body}
                 </span>
               ) : null}

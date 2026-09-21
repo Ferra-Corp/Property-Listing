@@ -3,7 +3,11 @@
 import Link from "next/link"
 import { useSelectedCurrency } from "../_lib/Context/SelectedCurrency"
 import { useAgentContext } from "../_lib/Context/Agent"
-import { ADMIN_WHATSAPP_NUMBER } from "../_lib/config"
+import {
+  useContactEmail,
+  useContactPhone,
+  useSocialLinks,
+} from "../_lib/useSiteSettings"
 import { toWhatsAppDigits } from "../_lib/format"
 
 const COLUMNS = [
@@ -38,24 +42,59 @@ const COLUMNS = [
   },
 ]
 
+/** lucide-react ships no brand marks, so LinkedIn/Instagram are inline. */
+function LinkedinMark({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5.001 2.5 2.5 0 0 1 0-5.001ZM3 9h4v12H3V9Zm7 0h3.83v1.64h.05c.53-1 1.85-2.06 3.81-2.06 4.08 0 4.83 2.68 4.83 6.17V21h-4v-5.7c0-1.36-.02-3.1-1.89-3.1-1.9 0-2.19 1.48-2.19 3v5.8h-4V9Z" />
+    </svg>
+  )
+}
+
+function InstagramMark({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      aria-hidden
+    >
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 /** Colophon foot — the one deep ground on the page. */
 export function SiteFooter() {
   const { currency } = useSelectedCurrency(),
     { agents } = useAgentContext(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
+    fallbackEmail = useContactEmail(),
     contactAgent = agents.find(
       (agent) =>
         toWhatsAppDigits(agent.whatsapp_number || agent.phone || "") ===
         ADMIN_WHATSAPP_NUMBER
     ),
     contactPhone = contactAgent?.phone ?? `+${ADMIN_WHATSAPP_NUMBER}`,
-    contactEmail = contactAgent?.email_public ?? "hello@entity.co.ke"
+    contactEmail = contactAgent?.email_public ?? fallbackEmail,
+    { linkedin, instagram } = useSocialLinks()
 
   return (
     <footer className="mt-10 bg-(--color-footer-bg) px-4 py-6 text-(--color-footer-text) md:px-10 md:pt-8.5 md:pb-7.5">
       <div className="grid gap-9 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
-          <div className="cl-mono text-[13px] tracking-[0.16em] uppercase md:text-[15px]">
-            [ entity ]
+          <div className="flex items-baseline gap-2">
+            <span className="font-(family-name:--font-heading) text-[21px] leading-none text-(--color-footer-text) md:text-[23px]">
+              D&amp;G
+            </span>
+            <span className="cl-mono text-[11px] tracking-[0.18em] text-(--color-footer-muted) uppercase">
+              Realtors
+            </span>
           </div>
           <p className="mt-2.5 mb-0 max-w-[34ch] text-[12.5px] leading-[1.7] text-(--color-footer-muted) md:mt-3 md:text-[13px]">
             Commercial and upmarket residential property, Nairobi metropolitan
@@ -68,6 +107,32 @@ export function SiteFooter() {
             <span>·</span>
             <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
           </div>
+          {linkedin || instagram ? (
+            <div className="mt-3.5 flex items-center gap-3 text-(--color-footer-text) md:mt-4">
+              {linkedin ? (
+                <a
+                  href={linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="opacity-80 transition-opacity hover:opacity-100"
+                >
+                  <LinkedinMark size={16} />
+                </a>
+              ) : null}
+              {instagram ? (
+                <a
+                  href={instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="opacity-80 transition-opacity hover:opacity-100"
+                >
+                  <InstagramMark size={16} />
+                </a>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         {COLUMNS.map((column) => (

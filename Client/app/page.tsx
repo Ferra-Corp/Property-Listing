@@ -13,7 +13,7 @@ import { useAgentContext } from "./_lib/Context/Agent"
 import { useInsightContext } from "./_lib/Context/Insight"
 import { useServiceContext } from "./_lib/Context/Service"
 import { buildWhatsAppLink } from "./_lib/format"
-import { ADMIN_WHATSAPP_NUMBER } from "./_lib/config"
+import { useContactPhone } from "./_lib/useSiteSettings"
 import {
   toRowListing,
   useCurrencyConversion,
@@ -103,6 +103,7 @@ export default function HomePage() {
     { insights: allInsights } = useInsightContext(),
     { services } = useServiceContext(),
     convertTo = useCurrencyConversion(),
+    ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     whatsappHref = buildWhatsAppLink(
       ADMIN_WHATSAPP_NUMBER,
       "Hi, I'd like some help finding a property."
@@ -115,7 +116,7 @@ export default function HomePage() {
       .map((l) => toRowListing(l, convertTo)),
     mosaic = published.slice(0, 5),
     transacted = listings
-      .filter((l) => ["sold", "rented", "let"].includes(l.status))
+      .filter((l) => ["sold", "rented"].includes(l.status))
       .slice(0, 3)
       .map((l) => toRowListing(l, convertTo)),
     insights = allInsights

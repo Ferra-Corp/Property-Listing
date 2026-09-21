@@ -31,6 +31,7 @@ export type createServiceDTO = {
 export type UpdateServiceDTO = Partial<createServiceDTO>
 
 export type ServiceContext = {
+  loading: boolean
   services: Service[]
   createService: (details: createServiceDTO) => Promise<void>
   editService: (id: string, details: UpdateServiceDTO) => Promise<void>

@@ -15,6 +15,25 @@ export function relativeDate(dateString: string): string {
   return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`
 }
 
+/** "42m" / "6h" / "3d" — compact elapsed-time label for a queue's "waiting" column. */
+export function elapsedLabel(ms: number): string {
+  const minutes = Math.floor(ms / 60_000)
+  if (minutes < 60) return `${Math.max(minutes, 0)}m`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h`
+  const days = Math.floor(hours / 24)
+  return `${days}d`
+}
+
+/** "Six Questions?" → "six-questions" */
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
 /** e.g. "1,920,000" — grouped, no currency symbol/code. */
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(

@@ -9,6 +9,7 @@ import {
 } from "../Types/Service"
 
 const ServiceContext = createContext<ServiceContext>({
+  loading: false,
   services: [],
   createService: () => Promise.resolve(),
   editService: () => Promise.resolve(),
@@ -24,7 +25,8 @@ export default function ServiceContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [services, setServices] = useState<Service[]>([])
+  const [services, setServices] = useState<Service[]>([]),
+    [loading, setLoading] = useState(true)
 
   const fetchService = async (serviceId: string): Promise<Service | null> => {
       try {
@@ -63,7 +65,7 @@ export default function ServiceContextProvider({
     }
 
   useEffect(() => {
-    fetchServices()
+    fetchServices().finally(() => setLoading(false))
   }, [])
 
   const createService = async (details: createServiceDTO) => {
@@ -122,6 +124,7 @@ export default function ServiceContextProvider({
   return (
     <ServiceContext.Provider
       value={{
+        loading,
         services,
         createService,
         editService,

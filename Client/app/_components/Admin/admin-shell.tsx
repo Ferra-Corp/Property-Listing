@@ -1,34 +1,57 @@
+"use client"
+
 import * as React from "react"
 import Link from "next/link"
 import { cn } from "cn"
-import { AdminRail, AdminTabs } from "./admin-nav"
-import { MenuIcon, SearchIcon } from "./icons"
+import {
+  AdminDock,
+  AdminGroupTabs,
+  AdminThemeToggle,
+  useAdminNav,
+} from "./admin-nav"
+import { SearchIcon } from "./icons"
 
 /**
- * The desk. A dark rail on the left, one sheet of ivory on the right; on a
- * phone the rail collapses to a header bar and the five-door tab bar.
+ * The desk: a top switcher for the active wing's pages, one sheet of ivory
+ * in between, and a dock at the bottom for choosing the wing itself. Same
+ * two-bar shape at every screen size — the top row just scrolls sideways
+ * when a wing has more pages than fit.
  */
 export function AdminShell({ children }: { children: React.ReactNode }) {
+  const { groups, activeGroupIndex, selectGroup } = useAdminNav(),
+    activeGroup = groups[activeGroupIndex]
+
   return (
-    <div className="grid min-h-dvh grid-rows-[auto_1fr_auto] bg-[var(--color-neutral-200)] md:grid-cols-[250px_minmax(0,1fr)] md:grid-rows-1">
-      <header className="flex items-center gap-3 border-b border-[var(--color-divider)] bg-[var(--color-bg)] px-4 py-3.5 md:hidden">
-        <button type="button" className="cl-btn cl-btn-secondary cl-btn-icon h-[34px] w-[34px]">
-          <MenuIcon size={16} />
-        </button>
-        <div className="cl-mono text-[12px] tracking-[0.16em] uppercase">[ entity ]</div>
-        <span className="flex-1" />
-        <Link href="/admin/my-profile" className="cl-k text-[var(--color-neutral-600)]">
-          Dennis O.
+    <div className="grid min-h-dvh grid-rows-[auto_1fr_auto] bg-neutral-200">
+      <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) py-2.5 pr-4 pl-5 shadow-(--shadow-sm) backdrop-blur-sm md:top-3.5 md:mx-6 md:mt-3.5">
+        <Link
+          href="/admin"
+          className="flex flex-none items-baseline gap-2 transition-opacity hover:opacity-80"
+        >
+          <span className="font-(family-name:--font-heading) text-[20px] leading-none text-(--color-admin-text) md:text-[22px]">
+            D&amp;G
+          </span>
+          <span className="cl-mono text-[10px] tracking-[0.18em] text-(--color-admin-text-muted) uppercase">
+            Realtors
+          </span>
         </Link>
+        <AdminGroupTabs items={activeGroup.items} />
+        <div className="flex justify-end">
+          <AdminThemeToggle />
+        </div>
       </header>
 
-      <AdminRail />
-
-      <main className="min-w-0 overflow-x-hidden bg-[var(--color-bg)] md:m-3.5 md:rounded-[var(--cl-radius-lg)] md:border md:border-[var(--color-divider)] md:shadow-[var(--shadow-sm)]">
+      <main className="mx-3 mt-2.5 mb-2.5 min-w-0 overflow-x-hidden rounded-(--cl-radius-lg) border border-(--color-divider) bg-(--color-bg) shadow-(--shadow-sm) md:mx-6 md:mt-3.5 md:mb-3.5">
         {children}
       </main>
 
-      <AdminTabs />
+      <div className="sticky bottom-2.5 z-20 mb-2.5 flex justify-center md:bottom-3.5 md:mb-3.5">
+        <AdminDock
+          groups={groups}
+          activeGroupIndex={activeGroupIndex}
+          onSelect={selectGroup}
+        />
+      </div>
     </div>
   )
 }
@@ -50,14 +73,16 @@ export function PageHead({
   children?: React.ReactNode
 }) {
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3.5 border-b border-[var(--color-divider)] bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] px-4 py-4 backdrop-blur-[8px] md:px-7 md:py-[18px]">
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3.5 border-b border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] px-4 py-4 backdrop-blur-sm md:px-7 md:py-4.5">
       <div className="min-w-0">
         <h1 className="m-0 text-[24px] font-normal md:text-[26px]">{title}</h1>
-        {meta ? <div className="cl-k mt-1.5 text-[var(--color-neutral-600)]">{meta}</div> : null}
+        {meta ? (
+          <div className="cl-k mt-1.5 text-neutral-600">{meta}</div>
+        ) : null}
       </div>
       <span className="hidden flex-1 md:block" />
       {search ? (
-        <label className="order-last flex min-h-9 w-full items-center gap-2 rounded-[var(--cl-radius-md)] border border-[var(--color-divider)] px-3 text-[var(--color-neutral-600)] md:order-none md:w-[250px]">
+        <label className="order-last flex min-h-9 w-full items-center gap-2 rounded-(--cl-radius-md) border border-(--color-divider) px-3 text-neutral-600 md:order-0 md:w-62.5">
           <SearchIcon size={14} className="flex-none" />
           <input
             className="cl-input min-h-0 border-0 p-0 text-[13px]"

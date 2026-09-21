@@ -9,7 +9,10 @@ import {
 } from "../Types/User"
 
 const UserContext = createContext<UserContext>({
+  loading: false,
   users: [],
+  currentUser: null,
+  fetchCurrentUser: () => Promise.resolve(),
   inviteUser: () => Promise.resolve(),
   editUser: () => Promise.resolve(),
   fetchUser: async () => null,
@@ -24,9 +27,25 @@ export default function UserContextProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [users, setUsers] = useState<PublicUser[]>([])
+  const [currentUser, setUser] = useState<PublicUser | null>(null),
+    [users, setUsers] = useState<PublicUser[]>([]),
+    [loading, setLoading] = useState(true)
 
-  const fetchUser = async (userId: string): Promise<PublicUser | null> => {
+  const fetchCurrentUser = async () => {
+      try {
+        const retrieveUserDetails = await fetch("/admin/api/auth/me", {
+            method: "GET",
+          }),
+          retrieveUser = await retrieveUserDetails.json()
+
+        if (!retrieveUserDetails.ok) throw new Error(retrieveUser.error)
+
+        setUser(retrieveUser)
+      } catch (error) {
+        throw error
+      }
+    },
+    fetchUser = async (userId: string): Promise<PublicUser | null> => {
       try {
         const fetchRequest = await fetch(`/system/api/v1/users/${userId}`, {
             method: "GET",
@@ -60,7 +79,9 @@ export default function UserContextProvider({
     }
 
   useEffect(() => {
-    fetchUsers()
+    Promise.all([fetchCurrentUser(), fetchUsers()]).finally(() =>
+      setLoading(false)
+    )
   }, [])
 
   const inviteUser = async (details: InviteUserDTO) => {
@@ -112,7 +133,17 @@ export default function UserContextProvider({
 
   return (
     <UserContext.Provider
-      value={{ users, inviteUser, editUser, fetchUser, fetchUsers, deleteUser }}
+      value={{
+        currentUser,
+        fetchCurrentUser,
+        loading,
+        users,
+        inviteUser,
+        editUser,
+        fetchUser,
+        fetchUsers,
+        deleteUser,
+      }}
     >
       {children}
     </UserContext.Provider>
