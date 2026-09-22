@@ -15,12 +15,14 @@ export default function AdminLeadPage({
   const { id } = use(params)
 
   return (
-    <div className="grid md:grid-cols-[minmax(0,1fr)_430px]">
-      <div className="hidden md:block">
+    // Same measured md:h-[...] offset as /admin/leads, so both routes'
+    // panes line up and scroll independently the same way.
+    <div className="grid md:h-[calc(100dvh-178px)] md:grid-cols-[minmax(0,1fr)_430px] md:gap-4 md:p-4">
+      <div className="hidden md:block md:h-full md:overflow-y-auto md:rounded-(--cl-radius-lg) md:border md:border-(--color-divider) md:bg-(--color-bg)">
         <LeadQueue selectedId={id} />
       </div>
 
-      <aside className="border-l-0 border-(--color-divider) md:border-l">
+      <aside className="md:h-full md:overflow-y-auto md:rounded-(--cl-radius-lg) md:border md:border-(--color-divider) md:bg-(--color-bg)">
         <div className="flex items-center gap-3 border-b border-(--color-divider) bg-(--color-bg) px-4 py-3.5 md:hidden">
           <ButtonLink
             href="/admin/leads"

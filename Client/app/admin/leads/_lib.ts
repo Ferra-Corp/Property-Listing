@@ -1,4 +1,9 @@
-import type { Lead, LeadIntent, LeadSource, LeadStatus } from "../../_lib/Types/Lead"
+import type {
+  Lead,
+  LeadIntent,
+  LeadSource,
+  LeadStatus,
+} from "../../_lib/Types/Lead"
 import type { SiteSetting } from "../../_lib/Types/Site Setting"
 import type { StatusTone } from "../../_components/Admin/ui"
 import { elapsedLabel, formatMoney } from "../../_lib/format"
@@ -50,7 +55,10 @@ export const STATUS_TONE: Record<LeadStatus, StatusTone> = {
  * no single "closed" status, just three terminal ones. */
 export type QueueFilter = "New" | "Contacted" | "Open" | "Closed" | "All"
 
-export function inQueueFilter(status: LeadStatus, filter: QueueFilter): boolean {
+export function inQueueFilter(
+  status: LeadStatus,
+  filter: QueueFilter
+): boolean {
   if (filter === "All") return true
   if (filter === "New") return status === "new"
   if (filter === "Contacted") return status === "contacted"
@@ -89,8 +97,10 @@ export function waitingFor(
     : Date.now()
   const elapsedMs = endpoint - new Date(lead.created_at).getTime()
 
-  const slaValueRaw = settings.find((s) => s.key === "leads.reply_sla_value")?.value?.value,
-    slaUnitRaw = settings.find((s) => s.key === "leads.reply_sla_unit")?.value?.value
+  const slaValueRaw = settings.find((s) => s.key === "leads.reply_sla_value")
+      ?.value?.value,
+    slaUnitRaw = settings.find((s) => s.key === "leads.reply_sla_unit")?.value
+      ?.value
 
   const slaValue = slaValueRaw != null ? Number(slaValueRaw) : null,
     slaUnit = typeof slaUnitRaw === "string" ? slaUnitRaw : null
@@ -114,6 +124,7 @@ export function budgetLabel(lead: Lead): string | null {
   if (lead.budget_min == null && lead.budget_max == null) return null
   if (lead.budget_min != null && lead.budget_max != null)
     return `${formatMoney(lead.budget_min, lead.currency_code)} – ${formatMoney(lead.budget_max, lead.currency_code)}`
-  if (lead.budget_min != null) return `From ${formatMoney(lead.budget_min, lead.currency_code)}`
+  if (lead.budget_min != null)
+    return `From ${formatMoney(lead.budget_min, lead.currency_code)}`
   return `Up to ${formatMoney(lead.budget_max!, lead.currency_code)}`
 }

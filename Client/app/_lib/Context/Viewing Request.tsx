@@ -67,7 +67,12 @@ export default function ViewingContextProvider({
     }
 
   useEffect(() => {
-    fetchViewingRequests().finally(() => setLoading(false))
+    // Mounted for every signed-in role regardless of whether they can
+    // actually read viewing requests — a permission-denied role should
+    // just see an empty list, not an unhandled rejection on page load.
+    fetchViewingRequests()
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const createViewingRequest = async (details: createViewingRequestDTO) => {
@@ -111,14 +116,18 @@ export default function ViewingContextProvider({
     deleteViewingRequest = async (viewingId: string) => {
       try {
         const deleteRequest = await fetch(
-            `/system/api/v1/viewing-requests/${viewingId}`,
-            {
-              method: "DELETE",
-            },
-          ),
-          deleteResponse = await deleteRequest.json()
+          `/system/api/v1/viewing-requests/${viewingId}`,
+          {
+            method: "DELETE",
+          },
+        )
 
-        if (!deleteRequest.ok) throw new Error(deleteResponse.error)
+        // The backend returns 204 with no body on success — only the
+        // error path has JSON to parse.
+        if (!deleteRequest.ok) {
+          const deleteResponse = await deleteRequest.json()
+          throw new Error(deleteResponse.error)
+        }
 
         await fetchViewingRequests()
       } catch (error) {

@@ -12,6 +12,7 @@ import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useSettingContext } from "../../../_lib/Context/Site Setting"
 import { useListingContext } from "../../../_lib/Context/Listing"
 import { useUserContext } from "../../../_lib/Context/User"
+import { usePermission } from "../../../_lib/permissions"
 import type { LeadStatus } from "../../../_lib/Types/Lead"
 import {
   inQueueFilter,
@@ -36,6 +37,7 @@ export function LeadQueue({ selectedId }: { selectedId?: string }) {
     { settings } = useSettingContext(),
     { listings } = useListingContext(),
     { users } = useUserContext(),
+    canEdit = usePermission("Edit lead"),
     push = useToast(),
     [stateFilter, setStateFilter] = React.useState<QueueFilter>("New"),
     [agentFilter, setAgentFilter] = React.useState(""),
@@ -138,7 +140,7 @@ export function LeadQueue({ selectedId }: { selectedId?: string }) {
   }
 
   return (
-    <div className="min-w-0 border-r-0 border-(--color-divider) md:border-r">
+    <div className="min-w-0">
       <PageHead
         title="Leads"
         meta={`${counts.new} new · ${counts.contacted} contacted · ${counts.open} open · ${thisMonth} this month${unclaimedAssigneeName ? ` · unclaimed go to ${unclaimedAssigneeName}` : ""}`}
@@ -214,18 +216,20 @@ export function LeadQueue({ selectedId }: { selectedId?: string }) {
       <div className="hidden px-6 pt-2 md:block">
         <div className="grid grid-cols-[22px_minmax(250px,1fr)_132px_100px_96px] gap-3 border-b-2 border-(--color-text) pb-2.25">
           <div>
-            <input
-              type="checkbox"
-              aria-label="Select all"
-              checked={sorted.length > 0 && selected.size === sorted.length}
-              onChange={(e) =>
-                setSelected(
-                  e.target.checked
-                    ? new Set(sorted.map((l) => l.id))
-                    : new Set()
-                )
-              }
-            />
+            {canEdit ? (
+              <input
+                type="checkbox"
+                aria-label="Select all"
+                checked={sorted.length > 0 && selected.size === sorted.length}
+                onChange={(e) =>
+                  setSelected(
+                    e.target.checked
+                      ? new Set(sorted.map((l) => l.id))
+                      : new Set()
+                  )
+                }
+              />
+            ) : null}
           </div>
           <K>Person &amp; enquiry</K>
           <K>Listing &amp; source</K>
@@ -253,12 +257,14 @@ export function LeadQueue({ selectedId }: { selectedId?: string }) {
               }`}
             >
               <div onClick={(e) => e.preventDefault()}>
-                <input
-                  type="checkbox"
-                  checked={selected.has(lead.id)}
-                  onChange={() => toggle(lead.id)}
-                  aria-label={`Select ${lead.full_name}`}
-                />
+                {canEdit ? (
+                  <input
+                    type="checkbox"
+                    checked={selected.has(lead.id)}
+                    onChange={() => toggle(lead.id)}
+                    aria-label={`Select ${lead.full_name}`}
+                  />
+                ) : null}
               </div>
               <div>
                 <div className="text-[14.5px]">{lead.full_name}</div>
@@ -307,37 +313,41 @@ export function LeadQueue({ selectedId }: { selectedId?: string }) {
         })}
 
         <div className="flex items-center gap-3.5 pt-4.5 pb-7">
-          <K>With selected ({selected.size})</K>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("contacted")
-            }}
-          >
-            Mark contacted
-          </ButtonLink>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("won")
-            }}
-          >
-            Close · won
-          </ButtonLink>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("lost")
-            }}
-          >
-            Close · lost
-          </ButtonLink>
+          {canEdit ? (
+            <>
+              <K>With selected ({selected.size})</K>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetStatus("contacted")
+                }}
+              >
+                Mark contacted
+              </ButtonLink>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetStatus("won")
+                }}
+              >
+                Close · won
+              </ButtonLink>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetStatus("lost")
+                }}
+              >
+                Close · lost
+              </ButtonLink>
+            </>
+          ) : null}
           <span className="flex-1" />
           <K className="cl-fig">
             {sorted.length} of {leads.length}

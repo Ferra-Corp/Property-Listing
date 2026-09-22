@@ -14,9 +14,14 @@ export default function AdminLeadsPage() {
     selected = sorted[0]
 
   return (
-    <div className="grid md:grid-cols-[minmax(0,1fr)_430px]">
-      <LeadQueue selectedId={selected?.id} />
-      <aside className="hidden border-l border-(--color-divider) md:block">
+    // md:h-[...] is the viewport minus the header/dock chrome around <main>
+    // (measured live: 178px at that breakpoint) — bounding it is what lets
+    // each pane below scroll independently instead of the whole page.
+    <div className="grid md:h-[calc(100dvh-178px)] md:grid-cols-[minmax(0,1fr)_430px] md:gap-4 md:p-4">
+      <div className="min-w-0 md:h-full md:overflow-y-auto md:rounded-(--cl-radius-lg) md:border md:border-(--color-divider) md:bg-(--color-bg)">
+        <LeadQueue selectedId={selected?.id} />
+      </div>
+      <aside className="hidden md:block md:h-full md:overflow-y-auto md:rounded-(--cl-radius-lg) md:border md:border-(--color-divider) md:bg-(--color-bg)">
         {selected ? (
           <LeadPanel id={selected.id} />
         ) : (

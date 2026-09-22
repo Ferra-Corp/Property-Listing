@@ -22,6 +22,8 @@ import {
   ViewingsIcon,
 } from "./icons"
 import { useUserContext } from "@/app/_lib/Context/User"
+import { hasPermission, type Permission } from "@/app/_lib/permissions"
+import type { UserRole } from "@/app/_lib/Types/User"
 
 // Dependency-free class name utility
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -38,6 +40,10 @@ export type Item = {
   count?: string
   /** lava rather than gold — something is waiting */
   urgent?: boolean
+  /** Omitted entirely means every role can see it (no backend read-gate
+   * exists for it either — e.g. Listings, Staff, Insights). Present means
+   * the role needs at least one of these to see the tab at all. */
+  permission?: Permission | Permission[]
 }
 
 export type NavGroup = {
@@ -63,18 +69,21 @@ export const PRIMARY: Item[] = [
     icon: LeadsIcon,
     count: "7 new",
     urgent: true,
+    permission: "View lead",
   },
   {
     href: "/admin/viewings",
     label: "Viewings",
     icon: ViewingsIcon,
     count: "4",
+    permission: "View viewing request",
   },
   {
     href: "/admin/valuations",
     label: "Valuations",
     icon: ValuationsIcon,
     count: "3",
+    permission: "View valuation request",
   },
 ]
 
@@ -86,13 +95,27 @@ export const SECONDARY: Item[] = [
     href: "/admin/subscribers",
     label: "Subscribers",
     icon: SubscribersIcon,
+    permission: "View subscriber",
   },
   { href: "/admin/analytics", label: "Analytics", icon: AnalyticsIcon },
 ]
 
 export const TERTIARY: Item[] = [
-  { href: "/admin/site-settings", label: "Site settings", icon: SettingsIcon },
-  { href: "/admin/audit-log", label: "Audit log", icon: AuditIcon },
+  {
+    href: "/admin/site-settings",
+    label: "Site settings",
+    icon: SettingsIcon,
+    // No "View site setting" permission exists — only admin holds any of
+    // the create/edit/delete trio, so any one of them is an accurate
+    // stand-in for "is this an admin".
+    permission: "Edit site setting",
+  },
+  {
+    href: "/admin/audit-log",
+    label: "Audit log",
+    icon: AuditIcon,
+    permission: "View logs",
+  },
 ]
 
 export const GROUPS: NavGroup[] = [
@@ -112,8 +135,27 @@ function useActive(href: string) {
   return matchesItem(pathname, href)
 }
 
-function groupIndexForPath(pathname: string): number {
-  const index = GROUPS.findIndex((group) =>
+function itemVisible(role: UserRole | undefined, item: Item): boolean {
+  if (!item.permission) return true
+
+  const permissions = Array.isArray(item.permission)
+    ? item.permission
+    : [item.permission]
+
+  return permissions.some((permission) => hasPermission(role, permission))
+}
+
+/** A tab a role has no items left in (e.g. "System" for anyone but admin)
+ * disappears from the dock entirely, rather than opening to an empty page. */
+function visibleGroups(role: UserRole | undefined): NavGroup[] {
+  return GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => itemVisible(role, item)),
+  })).filter((group) => group.items.length > 0)
+}
+
+function groupIndexForPath(pathname: string, groups: NavGroup[]): number {
+  const index = groups.findIndex((group) =>
     group.items.some((item) => matchesItem(pathname, item.href))
   )
   return index === -1 ? 0 : index
@@ -121,7 +163,14 @@ function groupIndexForPath(pathname: string): number {
 
 export function useAdminNav() {
   const pathname = usePathname() ?? ""
-  const routeGroupIndex = groupIndexForPath(pathname)
+  const { currentUser } = useUserContext()
+
+  const groups = React.useMemo(
+    () => visibleGroups(currentUser?.role),
+    [currentUser?.role]
+  )
+
+  const routeGroupIndex = groupIndexForPath(pathname, groups)
   const [manualGroupIndex, setManualGroupIndex] = React.useState<number | null>(
     null
   )
@@ -134,7 +183,7 @@ export function useAdminNav() {
   const activeGroupIndex = manualGroupIndex ?? routeGroupIndex
 
   return {
-    groups: GROUPS,
+    groups,
     activeGroupIndex,
     selectGroup: setManualGroupIndex,
   }
@@ -210,7 +259,10 @@ export function AdminThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
-      className="flex size-9 flex-none items-center justify-center rounded-full text-(--color-admin-text-muted) transition-colors duration-200 outline-none hover:bg-(--color-admin-hover) hover:text-(--color-admin-text) focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)"
+      // Sits directly on the now-transparent header with no panel behind
+      // it, so it carries its own border (a light glass tint, not a solid
+      // fill) purely for definition against whatever scrolls beneath it.
+      className="flex size-9 flex-none items-center justify-center rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_35%,transparent)] text-(--color-admin-text-muted) shadow-(--shadow-sm) backdrop-blur-md transition-colors duration-200 outline-none hover:bg-(--color-admin-hover) hover:text-(--color-admin-text) focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)"
     >
       {mounted ? (
         <AnimatePresence mode="wait" initial={false}>
@@ -340,8 +392,8 @@ export function AdminGroupTabs({ items }: { items: Item[] }) {
   return (
     <nav
       aria-label="Section pages"
-      // Added a background, border, and padding here to turn the tabs container into a distinct "selector" block
-      className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) p-1 shadow-sm backdrop-blur-md"
+      // Its own glass tint (30%), layered inside the header wrapper's.
+      className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] p-1 shadow-(--shadow-sm) backdrop-blur-md"
     >
       {items.map((item) => (
         <TopTabItem key={item.href} item={item} />
@@ -362,7 +414,9 @@ export function AdminDock({
   return (
     <nav
       aria-label="Admin sections"
-      className="flex items-center gap-1.5 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) p-1.5 shadow-(--shadow-md) backdrop-blur-sm"
+      // Solid, like the header — same deep shadow too, so the two "docks"
+      // lift off the page the same way.
+      className="flex items-center gap-1.5 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) p-1.5 shadow-(--shadow-lg)"
     >
       <div className="flex items-center gap-1">
         {groups.map((group, index) => {

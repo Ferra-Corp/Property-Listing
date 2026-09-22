@@ -108,14 +108,18 @@ export default function InsightContextProvider({
     deleteInsight = async (insightId: string) => {
       try {
         const deleteRequest = await fetch(
-            `/system/api/v1/insights/${insightId}`,
-            {
-              method: "DELETE",
-            },
-          ),
-          deleteResponse = await deleteRequest.json()
+          `/system/api/v1/insights/${insightId}`,
+          {
+            method: "DELETE",
+          },
+        )
 
-        if (!deleteRequest.ok) throw new Error(deleteResponse.error)
+        // The backend returns 204 with no body on success — only the
+        // error path has JSON to parse.
+        if (!deleteRequest.ok) {
+          const deleteResponse = await deleteRequest.json()
+          throw new Error(deleteResponse.error)
+        }
 
         await fetchInsights()
       } catch (error) {

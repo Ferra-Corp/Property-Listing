@@ -12,6 +12,7 @@ import { useViewingContext } from "../../../_lib/Context/Viewing Request"
 import { useValuationContext } from "../../../_lib/Context/Valuation Request"
 import { useUserContext } from "../../../_lib/Context/User"
 import { useLogsContext } from "../../../_lib/Context/Audit"
+import { usePermission } from "../../../_lib/permissions"
 import {
   initialsFor,
   listingsFor,
@@ -27,17 +28,20 @@ export function AgentPanel({ slug }: { slug: string }) {
     { leads } = useLeadContext(),
     { viewingRequests } = useViewingContext(),
     { valuationRequests } = useValuationContext(),
-    { users } = useUserContext(),
+    { users, currentUser } = useUserContext(),
     { logs } = useLogsContext(),
+    canEditOthers = usePermission("Manage user roles"),
     router = useRouter()
 
-  const sorted = [...agents].sort((a, b) => a.display_name.localeCompare(b.display_name)),
+  const sorted = [...agents].sort((a, b) =>
+      a.display_name.localeCompare(b.display_name)
+    ),
     index = sorted.findIndex((a) => a.slug === slug),
     agent = sorted[index]
 
   if (!agent) {
     return (
-      <div className="px-4 py-10 text-center text-[13.5px] text-[var(--color-neutral-600)] md:px-[22px]">
+      <div className="px-4 py-10 text-center text-[13.5px] text-neutral-600 md:px-5.5">
         {loading ? "Loading…" : `Agent "${slug}" not found.`}
       </div>
     )
@@ -56,20 +60,21 @@ export function AgentPanel({ slug }: { slug: string }) {
     recentActivity = logs
       .filter((l) => l.user_id === agent.user_id)
       .sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
       .slice(0, 5)
 
   return (
-    <div className="bg-[var(--color-neutral-100)]">
-      <div className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-[var(--color-divider)] bg-[color-mix(in_srgb,var(--color-neutral-100)_94%,transparent)] px-4 py-4 backdrop-blur-[8px] md:px-[22px]">
+    <div className="bg-neutral-100">
+      <div className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-(--color-divider) bg-[color-mix(in_srgb,var(--color-neutral-100)_94%,transparent)] px-4 py-4 backdrop-blur-sm md:px-5.5">
         <K className="cl-fig">Agent · {agent.slug}</K>
         <span className="flex-1" />
         <Button
           type="button"
           variant="secondary"
           size="icon"
-          className="h-[30px] w-[30px]"
+          className="h-7.5 w-7.5"
           title="Previous"
           disabled={!prev}
           onClick={() => prev && router.push(`/admin/agents/${prev.slug}`)}
@@ -80,7 +85,7 @@ export function AgentPanel({ slug }: { slug: string }) {
           type="button"
           variant="secondary"
           size="icon"
-          className="h-[30px] w-[30px]"
+          className="h-7.5 w-7.5"
           title="Next"
           disabled={!next}
           onClick={() => next && router.push(`/admin/agents/${next.slug}`)}
@@ -91,20 +96,20 @@ export function AgentPanel({ slug }: { slug: string }) {
           href="/admin/agents"
           variant="secondary"
           size="icon"
-          className="h-[30px] w-[30px]"
+          className="h-7.5 w-7.5"
           title="Close"
         >
           ×
         </ButtonLink>
       </div>
 
-      <div className="px-4 pt-5 md:px-[22px]">
+      <div className="px-4 pt-5 md:px-5.5">
         <div className="flex items-start gap-3.5">
           <Plate
             matted={false}
             src={agent.photo_url}
             alt={agent.display_name}
-            className="h-[74px] w-[74px] flex-none rounded-full"
+            className="h-18.5 w-18.5 flex-none rounded-full"
             label={initialsFor(agent.display_name)}
           />
           <div className="min-w-0 flex-1">
@@ -113,7 +118,7 @@ export function AgentPanel({ slug }: { slug: string }) {
             </h2>
             <K className="mt-1.5">{agent.title ?? "Agent"}</K>
             {agent.phone ? (
-              <div className="cl-fig mt-1.5 text-[13px] text-[var(--color-neutral-700)]">
+              <div className="cl-fig mt-1.5 text-[13px] text-neutral-700">
                 {agent.phone}
               </div>
             ) : null}
@@ -129,7 +134,9 @@ export function AgentPanel({ slug }: { slug: string }) {
             variant="primary"
             className="flex-1"
           >
-            Edit profile
+            {currentUser?.id === agent.user_id || canEditOthers
+              ? "Edit profile"
+              : "View profile"}
           </ButtonLink>
           <ButtonLink
             href={`/system/agents/${agent.slug}`}
@@ -140,7 +147,7 @@ export function AgentPanel({ slug }: { slug: string }) {
           </ButtonLink>
         </div>
 
-        <div className="mt-4 rounded-[var(--cl-radius-lg)] border border-[var(--color-divider)] bg-[var(--color-bg)] p-4">
+        <div className="mt-4 rounded-(--cl-radius-lg) border border-(--color-divider) bg-(--color-bg) p-4">
           <K>Public biography</K>
           <p className="mt-2.5 mb-0 text-[13.5px] leading-[1.75] md:text-[14px]">
             {agent.bio || "No biography on file yet."}
@@ -148,7 +155,7 @@ export function AgentPanel({ slug }: { slug: string }) {
         </div>
       </div>
 
-      <div className="px-4 pt-[18px] md:px-[22px]">
+      <div className="px-4 pt-4.5 md:px-5.5">
         <SectionHead>Contact & identity</SectionHead>
         <Pair label="WhatsApp">{agent.whatsapp_number ?? "Same as phone"}</Pair>
         <Pair label="Public email">{agent.email_public ?? "—"}</Pair>
@@ -163,11 +170,11 @@ export function AgentPanel({ slug }: { slug: string }) {
         </Pair>
       </div>
 
-      <div className="px-4 pt-[18px] md:px-[22px]">
+      <div className="px-4 pt-4.5 md:px-5.5">
         <SectionHead>Patch & specialisms</SectionHead>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {patch.length === 0 && agent.specializations.length === 0 ? (
-            <span className="text-[13px] text-[var(--color-neutral-600)]">
+            <span className="text-[13px] text-neutral-600">
               No mandates or specialisms on file yet.
             </span>
           ) : null}
@@ -183,13 +190,13 @@ export function AgentPanel({ slug }: { slug: string }) {
           ))}
         </div>
         {agent.languages.length > 0 ? (
-          <K className="mt-2.5 text-[var(--color-neutral-600)]">
+          <K className="mt-2.5 text-neutral-600">
             Speaks {agent.languages.join(", ")}
           </K>
         ) : null}
       </div>
 
-      <div className="px-4 pt-[18px] md:px-[22px]">
+      <div className="px-4 pt-4.5 md:px-5.5">
         <SectionHead>What {firstName} is holding</SectionHead>
         <div className="mt-3 grid grid-cols-2 gap-2.5">
           {[
@@ -201,7 +208,7 @@ export function AgentPanel({ slug }: { slug: string }) {
           ].map((item) => (
             <div
               key={item.label}
-              className="rounded-[var(--cl-radius-md)] border border-[var(--color-divider)] bg-[var(--color-bg)] px-3.5 py-2.5"
+              className="rounded-(--cl-radius-md) border border-(--color-divider) bg-(--color-bg) px-3.5 py-2.5"
             >
               <div className="cl-fig text-[24px] leading-none">
                 {item.figure}
@@ -215,10 +222,10 @@ export function AgentPanel({ slug }: { slug: string }) {
         ) : null}
       </div>
 
-      <div className="px-4 pt-[18px] pb-7 md:px-[22px]">
+      <div className="px-4 pt-4.5 pb-7 md:px-5.5">
         <SectionHead>Activity</SectionHead>
         {recentActivity.length === 0 ? (
-          <div className="mt-3 text-[13px] text-[var(--color-neutral-600)]">
+          <div className="mt-3 text-[13px] text-neutral-600">
             No recorded activity for this account yet.
           </div>
         ) : (
@@ -227,9 +234,9 @@ export function AgentPanel({ slug }: { slug: string }) {
               <Link
                 key={log.id}
                 href={`/admin/audit-log/${log.id}`}
-                className="flex gap-3 hover:text-[var(--color-accent-700)]"
+                className="flex gap-3 hover:text-(--color-accent-700)"
               >
-                <span className="cl-fig cl-k w-[88px] flex-none text-[var(--color-accent)]">
+                <span className="cl-fig cl-k w-22 flex-none text-(--color-accent)">
                   {new Date(log.created_at).toLocaleDateString("en-GB")}
                 </span>
                 <div className="text-[13px] leading-[1.55]">

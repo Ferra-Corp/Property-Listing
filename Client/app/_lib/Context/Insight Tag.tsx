@@ -59,14 +59,18 @@ export default function InsightTagContextProvider({
     detachTag = async (insightId: string, tagId: string) => {
       try {
         const deleteRequest = await fetch(
-            `/system/api/v1/insight-tags/${insightId}/${tagId}`,
-            {
-              method: "DELETE",
-            },
-          ),
-          deleteResponse = await deleteRequest.json()
+          `/system/api/v1/insight-tags/${insightId}/${tagId}`,
+          {
+            method: "DELETE",
+          },
+        )
 
-        if (!deleteRequest.ok) throw new Error(deleteResponse.error)
+        // The backend returns 204 with no body on success — only the
+        // error path has JSON to parse.
+        if (!deleteRequest.ok) {
+          const deleteResponse = await deleteRequest.json()
+          throw new Error(deleteResponse.error)
+        }
       } catch (error) {
         throw error
       }

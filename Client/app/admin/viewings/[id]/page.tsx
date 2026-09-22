@@ -15,6 +15,7 @@ import { useLeadContext } from "../../../_lib/Context/Lead"
 import { useListingContext } from "../../../_lib/Context/Listing"
 import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useLogsContext } from "../../../_lib/Context/Audit"
+import { usePermission } from "../../../_lib/permissions"
 import { buildWhatsAppLink } from "../../../_lib/format"
 import { budgetLabel, INTENT_LABEL } from "../../leads/_lib"
 import { priceLabel } from "../../listings/_lib"
@@ -32,6 +33,7 @@ export default function AdminViewingPage({
     { listings } = useListingContext(),
     { agents } = useAgentContext(),
     { logs } = useLogsContext(),
+    canEdit = usePermission("Edit viewing request"),
     push = useToast()
 
   const viewing = viewingRequests.find((v) => v.id === id)
@@ -234,6 +236,11 @@ export default function AdminViewingPage({
 
             <div className="mt-4">
               <SectionHead>Schedule &amp; assignment</SectionHead>
+              {!canEdit ? (
+                <p className="mt-2 mb-0 text-[12.5px] leading-normal text-neutral-600">
+                  Read-only — your role can view this request but not change it.
+                </p>
+              ) : null}
               <div className="mt-3 grid grid-cols-2 gap-2.5">
                 <label className="flex flex-col gap-1.5">
                   <K>Date</K>
@@ -241,6 +248,7 @@ export default function AdminViewingPage({
                     type="date"
                     value={preferredDate}
                     onChange={(e) => setPreferredDate(e.target.value)}
+                    disabled={!canEdit}
                     className="cl-fig text-[13px]"
                   />
                 </label>
@@ -250,6 +258,7 @@ export default function AdminViewingPage({
                     value={preferredSlot}
                     onChange={(e) => setPreferredSlot(e.target.value)}
                     placeholder="14:00 or morning"
+                    disabled={!canEdit}
                     className="text-[13px]"
                   />
                 </label>
@@ -260,6 +269,7 @@ export default function AdminViewingPage({
                   type="date"
                   value={alternateDate}
                   onChange={(e) => setAlternateDate(e.target.value)}
+                  disabled={!canEdit}
                   className="cl-fig text-[13px]"
                 />
               </label>
@@ -270,6 +280,7 @@ export default function AdminViewingPage({
                   <Select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as RequestStatus)}
+                    disabled={!canEdit}
                     className="text-[13px]"
                   >
                     {(Object.keys(STATUS_LABEL) as RequestStatus[]).map((s) => (
@@ -284,6 +295,7 @@ export default function AdminViewingPage({
                   <Select
                     value={assignedAgent}
                     onChange={(e) => setAssignedAgent(e.target.value)}
+                    disabled={!canEdit}
                     className="text-[13px]"
                   >
                     <option value="">Unassigned</option>
@@ -302,6 +314,7 @@ export default function AdminViewingPage({
                   <Input
                     value={cancelledReason}
                     onChange={(e) => setCancelledReason(e.target.value)}
+                    disabled={!canEdit}
                     className="text-[13px]"
                   />
                 </label>
@@ -312,15 +325,18 @@ export default function AdminViewingPage({
                 <Textarea
                   value={internalNotes}
                   onChange={(e) => setInternalNotes(e.target.value)}
+                  disabled={!canEdit}
                   className="min-h-17.5 text-[13px]"
                   placeholder="Kept internal — never shown to the visitor"
                 />
               </label>
 
-              <p className="mt-2 mb-0 text-[12.5px] leading-normal text-neutral-700">
-                Confirming here does not message the visitor automatically — use
-                the WhatsApp button below once you&apos;ve saved.
-              </p>
+              {canEdit ? (
+                <p className="mt-2 mb-0 text-[12.5px] leading-normal text-neutral-700">
+                  Confirming here does not message the visitor automatically —
+                  use the WhatsApp button below once you&apos;ve saved.
+                </p>
+              ) : null}
             </div>
 
             <div className="mt-4">
@@ -358,24 +374,28 @@ export default function AdminViewingPage({
               WhatsApp
             </ButtonLink>
           ) : null}
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex-1 md:max-w-50"
-            disabled={saving || viewing.status === "cancelled"}
-            onClick={handleCancel}
-          >
-            Cancel request
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            className="flex-1 text-(--color-accent) md:max-w-55"
-            disabled={saving}
-            onClick={handleSave}
-          >
-            {saving ? "Saving…" : "Save"}
-          </Button>
+          {canEdit ? (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1 md:max-w-50"
+                disabled={saving || viewing.status === "cancelled"}
+                onClick={handleCancel}
+              >
+                Cancel request
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                className="flex-1 text-(--color-accent) md:max-w-55"
+                disabled={saving}
+                onClick={handleSave}
+              >
+                {saving ? "Saving…" : "Save"}
+              </Button>
+            </>
+          ) : null}
         </div>
       </div>
     </PageIn>

@@ -10,6 +10,7 @@ import { RowIn, useToast } from "../../../_components/Admin/motion"
 import { useValuationContext } from "../../../_lib/Context/Valuation Request"
 import { useLeadContext } from "../../../_lib/Context/Lead"
 import { useAgentContext } from "../../../_lib/Context/Agent"
+import { usePermission } from "../../../_lib/permissions"
 import type { RequestStatus } from "../../../_lib/Types/Valuation Request"
 import { STATUS_LABEL, STATUS_TONE, waitingLabel } from "../_lib"
 import { titleCase } from "../../listings/_lib"
@@ -21,6 +22,7 @@ export function ValuationQueue({ selectedId }: { selectedId?: string }) {
       useValuationContext(),
     { leads } = useLeadContext(),
     { agents } = useAgentContext(),
+    canEdit = usePermission("Edit valuation request"),
     push = useToast(),
     [tab, setTab] = React.useState<(typeof TABS)[number]>("Pending"),
     [agentFilter, setAgentFilter] = React.useState(""),
@@ -144,18 +146,20 @@ export function ValuationQueue({ selectedId }: { selectedId?: string }) {
       <div className="hidden px-6 pt-2 md:block">
         <div className="grid grid-cols-[22px_minmax(230px,1fr)_128px_108px_92px] gap-3 border-b-2 border-(--color-text) pb-2.25">
           <div>
-            <input
-              type="checkbox"
-              aria-label="Select all"
-              checked={sorted.length > 0 && selected.size === sorted.length}
-              onChange={(e) =>
-                setSelected(
-                  e.target.checked
-                    ? new Set(sorted.map((v) => v.id))
-                    : new Set()
-                )
-              }
-            />
+            {canEdit ? (
+              <input
+                type="checkbox"
+                aria-label="Select all"
+                checked={sorted.length > 0 && selected.size === sorted.length}
+                onChange={(e) =>
+                  setSelected(
+                    e.target.checked
+                      ? new Set(sorted.map((v) => v.id))
+                      : new Set()
+                  )
+                }
+              />
+            ) : null}
           </div>
           <K>Owner &amp; property</K>
           <K>Purpose &amp; class</K>
@@ -184,12 +188,14 @@ export function ValuationQueue({ selectedId }: { selectedId?: string }) {
                 }`}
               >
                 <div onClick={(e) => e.preventDefault()}>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(v.id)}
-                    onChange={() => toggle(v.id)}
-                    aria-label={`Select ${lead?.full_name ?? v.location_label}`}
-                  />
+                  {canEdit ? (
+                    <input
+                      type="checkbox"
+                      checked={selected.has(v.id)}
+                      onChange={() => toggle(v.id)}
+                      aria-label={`Select ${lead?.full_name ?? v.location_label}`}
+                    />
+                  ) : null}
                 </div>
                 <div>
                   <div className="text-[14.5px]">
@@ -226,37 +232,41 @@ export function ValuationQueue({ selectedId }: { selectedId?: string }) {
         })}
 
         <div className="flex items-center gap-3.5 pt-4.5 pb-7">
-          <K>With selected ({selected.size})</K>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("confirmed")
-            }}
-          >
-            Schedule
-          </ButtonLink>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("completed")
-            }}
-          >
-            Mark completed
-          </ButtonLink>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("cancelled")
-            }}
-          >
-            Close
-          </ButtonLink>
+          {canEdit ? (
+            <>
+              <K>With selected ({selected.size})</K>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetStatus("confirmed")
+                }}
+              >
+                Schedule
+              </ButtonLink>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetStatus("completed")
+                }}
+              >
+                Mark completed
+              </ButtonLink>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetStatus("cancelled")
+                }}
+              >
+                Close
+              </ButtonLink>
+            </>
+          ) : null}
           <span className="flex-1" />
           <K className="cl-fig">
             {sorted.length} of {valuationRequests.length}

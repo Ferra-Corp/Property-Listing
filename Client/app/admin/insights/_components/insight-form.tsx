@@ -16,6 +16,7 @@ import { useInsightContext } from "../../../_lib/Context/Insight"
 import { useInsightTagContext } from "../../../_lib/Context/Insight Tag"
 import { useTagContext } from "../../../_lib/Context/Tag"
 import { useUserContext } from "../../../_lib/Context/User"
+import { usePermission } from "../../../_lib/permissions"
 import { uploadImage } from "../../../_lib/uploadImage"
 import type {
   ContentStatus,
@@ -76,6 +77,7 @@ export function InsightForm({ insight }: { insight?: InsightWithTags }) {
     { attachTag, detachTag } = useInsightTagContext(),
     { tags, createTag, fetchTags } = useTagContext(),
     { users } = useUserContext(),
+    canUse = usePermission(insight ? "Edit insight" : "Create insight"),
     push = useToast(),
     router = useRouter()
 
@@ -226,6 +228,22 @@ export function InsightForm({ insight }: { insight?: InsightWithTags }) {
     }
   }
 
+  // Reaching this by direct URL without the permission that the list/panel
+  // buttons already hide behind: creating has nothing to show read-only,
+  // so it's just a dead end; editing still has real data worth viewing.
+  if (!canUse && !insight) {
+    return (
+      <div className="flex flex-col items-center gap-3 px-4 py-10 text-center text-[13.5px] text-neutral-600 md:px-7">
+        <p className="m-0">
+          You don&apos;t have permission to create articles.
+        </p>
+        <ButtonLink href="/admin/insights" variant="secondary">
+          Back to Insights
+        </ButtonLink>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="min-w-0">
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] px-4 py-4 backdrop-blur-sm md:px-7">
@@ -240,10 +258,18 @@ export function InsightForm({ insight }: { insight?: InsightWithTags }) {
         >
           Cancel
         </ButtonLink>
-        <Button type="submit" variant="primary" disabled={saving}>
-          {saving ? "Saving…" : insight ? "Save changes" : "Create article"}
-        </Button>
+        {canUse ? (
+          <Button type="submit" variant="primary" disabled={saving}>
+            {saving ? "Saving…" : insight ? "Save changes" : "Create article"}
+          </Button>
+        ) : null}
       </div>
+
+      {!canUse ? (
+        <p className="mx-4 mt-4 text-[13px] text-neutral-600 md:mx-7">
+          Read-only — your role can view this article but not change it.
+        </p>
+      ) : null}
 
       {error ? (
         <div className="mx-4 mt-4 rounded-(--cl-radius-md) border border-(--color-accent-2-300) bg-(--color-accent-2-100) px-4 py-3 text-[13px] text-(--color-accent-2-700) md:mx-7">
@@ -251,290 +277,303 @@ export function InsightForm({ insight }: { insight?: InsightWithTags }) {
         </div>
       ) : null}
 
-      <div className="px-4 md:px-7">
-        <SectionHead className="mt-5">Content</SectionHead>
+      <fieldset disabled={!canUse} className="contents">
+        <div className="px-4 md:px-7">
+          <SectionHead className="mt-5">Content</SectionHead>
 
-        <FormField label="Title">
-          <Input
-            value={draft.title}
-            onChange={(e) => {
-              const title = e.target.value
-              set("title", title)
-              if (!insight) set("slug", slugify(title))
-            }}
-            placeholder="What a go-down on Baba Dogo Road is really worth"
-            className="text-[14px]"
-          />
-        </FormField>
-
-        <FormField
-          label="Slug"
-          hint="The article's URL — entity.co.ke/insights/…"
-        >
-          <Input
-            value={draft.slug}
-            onChange={(e) => set("slug", slugify(e.target.value))}
-            className="cl-fig text-[13.5px]"
-          />
-        </FormField>
-
-        <FormField
-          label="Summary"
-          hint="Shown under the title and in article cards"
-        >
-          <Textarea
-            value={draft.summary}
-            onChange={(e) => set("summary", e.target.value)}
-            className="min-h-17.5 text-[13.5px]"
-          />
-        </FormField>
-
-        <FormField label="Article body">
-          <RichEditor
-            key={insight?.id ?? "new"}
-            defaultValue={draft.content}
-            onChange={(html) => set("content", html)}
-            placeholder="Begin writing…"
-          />
-        </FormField>
-
-        <SectionHead className="mt-2">Cover image</SectionHead>
-
-        <FormField
-          label="Cover"
-          hint="Shown at the top of the article and in cards"
-        >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            <Plate
-              matted={false}
-              src={draft.cover_image_url || undefined}
-              alt={draft.cover_image_alt || draft.title}
-              className="aspect-video w-full flex-none sm:w-55"
-              label="No cover image"
+          <FormField label="Title">
+            <Input
+              value={draft.title}
+              onChange={(e) => {
+                const title = e.target.value
+                set("title", title)
+                if (!insight) set("slug", slugify(title))
+              }}
+              placeholder="What a go-down on Baba Dogo Road is really worth"
+              className="text-[14px]"
             />
-            <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-              <label className="cl-btn cl-btn-secondary inline-flex w-fit cursor-pointer items-center">
-                {uploading
-                  ? "Uploading…"
-                  : draft.cover_image_url
-                    ? "Replace image"
-                    : "Upload image"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleCoverUpload(file)
-                    e.target.value = ""
-                  }}
+          </FormField>
+
+          <FormField
+            label="Slug"
+            hint="The article's URL — entity.co.ke/insights/…"
+          >
+            <Input
+              value={draft.slug}
+              onChange={(e) => set("slug", slugify(e.target.value))}
+              className="cl-fig text-[13.5px]"
+            />
+          </FormField>
+
+          <FormField
+            label="Summary"
+            hint="Shown under the title and in article cards"
+          >
+            <Textarea
+              value={draft.summary}
+              onChange={(e) => set("summary", e.target.value)}
+              className="min-h-17.5 text-[13.5px]"
+            />
+          </FormField>
+
+          <FormField label="Article body">
+            <RichEditor
+              key={insight?.id ?? "new"}
+              defaultValue={draft.content}
+              onChange={(html) => set("content", html)}
+              placeholder="Begin writing…"
+            />
+          </FormField>
+
+          <SectionHead className="mt-2">Cover image</SectionHead>
+
+          <FormField
+            label="Cover"
+            hint="Shown at the top of the article and in cards"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <Plate
+                matted={false}
+                src={draft.cover_image_url || undefined}
+                alt={draft.cover_image_alt || draft.title}
+                className="aspect-video w-full flex-none sm:w-55"
+                label="No cover image"
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                <label className="cl-btn cl-btn-secondary inline-flex w-fit cursor-pointer items-center">
+                  {uploading
+                    ? "Uploading…"
+                    : draft.cover_image_url
+                      ? "Replace image"
+                      : "Upload image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleCoverUpload(file)
+                      e.target.value = ""
+                    }}
+                  />
+                </label>
+                {draft.cover_image_url ? (
+                  <button
+                    type="button"
+                    onClick={() => set("cover_image_url", "")}
+                    className="w-fit text-[12.5px] text-(--color-accent-2) underline underline-offset-2"
+                  >
+                    Remove image
+                  </button>
+                ) : null}
+                <Input
+                  value={draft.cover_image_alt}
+                  onChange={(e) => set("cover_image_alt", e.target.value)}
+                  placeholder="Alt text / caption"
+                  className="text-[13px]"
                 />
-              </label>
-              {draft.cover_image_url ? (
-                <button
-                  type="button"
-                  onClick={() => set("cover_image_url", "")}
-                  className="w-fit text-[12.5px] text-(--color-accent-2) underline underline-offset-2"
-                >
-                  Remove image
-                </button>
+              </div>
+            </div>
+          </FormField>
+
+          <SectionHead className="mt-2">Filing</SectionHead>
+
+          <FormField label="Author">
+            <Select
+              value={draft.author_id}
+              onChange={(e) => set("author_id", e.target.value)}
+              className="text-[13.5px]"
+            >
+              <option value="">No author set</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </Select>
+            {users.length === 0 ? (
+              <K className="mt-2 text-neutral-600">
+                Sign in to choose from the staff register.
+              </K>
+            ) : null}
+          </FormField>
+
+          <FormField label="Status">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Select
+                value={draft.status}
+                onChange={(e) => set("status", e.target.value as ContentStatus)}
+                className="w-42.5 text-[13.5px]"
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </Select>
+              {draft.status === "published" ? (
+                <Input
+                  type="datetime-local"
+                  value={draft.published_at}
+                  onChange={(e) => set("published_at", e.target.value)}
+                  className="w-55 text-[13px]"
+                />
               ) : null}
+            </div>
+            {draft.status === "published" ? (
+              <K className="mt-2 text-neutral-600">
+                Leave the date blank to publish as of now.
+              </K>
+            ) : null}
+          </FormField>
+
+          <FormField label="Tags">
+            <div className="flex flex-wrap gap-1.5">
+              {tags.length === 0 ? (
+                <span className="text-[13px] text-neutral-600">
+                  No tags yet — add the first one below.
+                </span>
+              ) : (
+                tags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleTag(tag.id)}
+                    className={
+                      draft.tagIds.includes(tag.id)
+                        ? "cl-tag cl-tag-accent"
+                        : "cl-tag cl-tag-outline"
+                    }
+                  >
+                    {tag.name}
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="mt-2.5 flex gap-2">
               <Input
-                value={draft.cover_image_alt}
-                onChange={(e) => set("cover_image_alt", e.target.value)}
-                placeholder="Alt text / caption"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                placeholder="New tag name"
+                className="w-50 text-[13px]"
+              />
+              <Button type="button" variant="secondary" onClick={handleAddTag}>
+                Add tag
+              </Button>
+            </div>
+          </FormField>
+
+          <FormField
+            label="Targeting"
+            hint="Optional — for geo-targeted content"
+          >
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <Input
+                value={draft.target_country_code}
+                onChange={(e) => set("target_country_code", e.target.value)}
+                placeholder="Country code, e.g. KE"
+                className="text-[13px]"
+              />
+              <Input
+                value={draft.target_state_region}
+                onChange={(e) => set("target_state_region", e.target.value)}
+                placeholder="Region, e.g. Nairobi County"
+                className="text-[13px]"
+              />
+              <Input
+                value={draft.target_city}
+                onChange={(e) => set("target_city", e.target.value)}
+                placeholder="City, e.g. Nairobi"
                 className="text-[13px]"
               />
             </div>
-          </div>
-        </FormField>
+          </FormField>
 
-        <SectionHead className="mt-2">Filing</SectionHead>
+          <SectionHead className="mt-2">How it will read in search</SectionHead>
 
-        <FormField label="Author">
-          <Select
-            value={draft.author_id}
-            onChange={(e) => set("author_id", e.target.value)}
-            className="text-[13.5px]"
+          <FormField
+            label="Meta title"
+            hint="Falls back to the title if left blank"
           >
-            <option value="">No author set</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </Select>
-          {users.length === 0 ? (
+            <Input
+              value={draft.meta_title}
+              onChange={(e) => set("meta_title", e.target.value)}
+              className="text-[13.5px]"
+            />
             <K className="mt-2 text-neutral-600">
-              Sign in to choose from the staff register.
+              {(draft.meta_title || draft.title).length} of 60
             </K>
-          ) : null}
-        </FormField>
+          </FormField>
 
-        <FormField label="Status">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Select
-              value={draft.status}
-              onChange={(e) => set("status", e.target.value as ContentStatus)}
-              className="w-42.5 text-[13.5px]"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </Select>
-            {draft.status === "published" ? (
-              <Input
-                type="datetime-local"
-                value={draft.published_at}
-                onChange={(e) => set("published_at", e.target.value)}
-                className="w-55 text-[13px]"
+          <FormField
+            label="Meta description"
+            hint="Falls back to the summary if left blank"
+          >
+            <Textarea
+              value={draft.meta_description}
+              onChange={(e) => set("meta_description", e.target.value)}
+              className="min-h-15 text-[13.5px]"
+            />
+            <K className="mt-2 text-neutral-600">
+              {(draft.meta_description || draft.summary).length} of 160
+            </K>
+          </FormField>
+
+          <FormField
+            label="Canonical URL"
+            hint="Only if this content is published elsewhere too"
+          >
+            <Input
+              value={draft.canonical_url}
+              onChange={(e) => set("canonical_url", e.target.value)}
+              placeholder="https://…"
+              className="text-[13px]"
+            />
+          </FormField>
+
+          <FormField
+            label="Social share image"
+            hint="Falls back to the cover image if left blank"
+          >
+            <Input
+              value={draft.og_image_url}
+              onChange={(e) => set("og_image_url", e.target.value)}
+              placeholder="https://…"
+              className="text-[13px]"
+            />
+          </FormField>
+
+          <FormField label="Indexing">
+            <label className="flex items-center gap-2.5 text-[13.5px]">
+              <input
+                type="checkbox"
+                checked={draft.noindex}
+                onChange={(e) => set("noindex", e.target.checked)}
               />
+              Hide this article from search engines
+            </label>
+          </FormField>
+
+          <div className="flex items-center justify-end gap-3 py-7">
+            <ButtonLink
+              href={
+                insight ? `/admin/insights/${insight.id}` : "/admin/insights"
+              }
+              variant="secondary"
+            >
+              Cancel
+            </ButtonLink>
+            {canUse ? (
+              <Button type="submit" variant="primary" disabled={saving}>
+                {saving
+                  ? "Saving…"
+                  : insight
+                    ? "Save changes"
+                    : "Create article"}
+              </Button>
             ) : null}
           </div>
-          {draft.status === "published" ? (
-            <K className="mt-2 text-neutral-600">
-              Leave the date blank to publish as of now.
-            </K>
-          ) : null}
-        </FormField>
-
-        <FormField label="Tags">
-          <div className="flex flex-wrap gap-1.5">
-            {tags.length === 0 ? (
-              <span className="text-[13px] text-neutral-600">
-                No tags yet — add the first one below.
-              </span>
-            ) : (
-              tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.id)}
-                  className={
-                    draft.tagIds.includes(tag.id)
-                      ? "cl-tag cl-tag-accent"
-                      : "cl-tag cl-tag-outline"
-                  }
-                >
-                  {tag.name}
-                </button>
-              ))
-            )}
-          </div>
-          <div className="mt-2.5 flex gap-2">
-            <Input
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              placeholder="New tag name"
-              className="w-50 text-[13px]"
-            />
-            <Button type="button" variant="secondary" onClick={handleAddTag}>
-              Add tag
-            </Button>
-          </div>
-        </FormField>
-
-        <FormField label="Targeting" hint="Optional — for geo-targeted content">
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-            <Input
-              value={draft.target_country_code}
-              onChange={(e) => set("target_country_code", e.target.value)}
-              placeholder="Country code, e.g. KE"
-              className="text-[13px]"
-            />
-            <Input
-              value={draft.target_state_region}
-              onChange={(e) => set("target_state_region", e.target.value)}
-              placeholder="Region, e.g. Nairobi County"
-              className="text-[13px]"
-            />
-            <Input
-              value={draft.target_city}
-              onChange={(e) => set("target_city", e.target.value)}
-              placeholder="City, e.g. Nairobi"
-              className="text-[13px]"
-            />
-          </div>
-        </FormField>
-
-        <SectionHead className="mt-2">How it will read in search</SectionHead>
-
-        <FormField
-          label="Meta title"
-          hint="Falls back to the title if left blank"
-        >
-          <Input
-            value={draft.meta_title}
-            onChange={(e) => set("meta_title", e.target.value)}
-            className="text-[13.5px]"
-          />
-          <K className="mt-2 text-neutral-600">
-            {(draft.meta_title || draft.title).length} of 60
-          </K>
-        </FormField>
-
-        <FormField
-          label="Meta description"
-          hint="Falls back to the summary if left blank"
-        >
-          <Textarea
-            value={draft.meta_description}
-            onChange={(e) => set("meta_description", e.target.value)}
-            className="min-h-15 text-[13.5px]"
-          />
-          <K className="mt-2 text-neutral-600">
-            {(draft.meta_description || draft.summary).length} of 160
-          </K>
-        </FormField>
-
-        <FormField
-          label="Canonical URL"
-          hint="Only if this content is published elsewhere too"
-        >
-          <Input
-            value={draft.canonical_url}
-            onChange={(e) => set("canonical_url", e.target.value)}
-            placeholder="https://…"
-            className="text-[13px]"
-          />
-        </FormField>
-
-        <FormField
-          label="Social share image"
-          hint="Falls back to the cover image if left blank"
-        >
-          <Input
-            value={draft.og_image_url}
-            onChange={(e) => set("og_image_url", e.target.value)}
-            placeholder="https://…"
-            className="text-[13px]"
-          />
-        </FormField>
-
-        <FormField label="Indexing">
-          <label className="flex items-center gap-2.5 text-[13.5px]">
-            <input
-              type="checkbox"
-              checked={draft.noindex}
-              onChange={(e) => set("noindex", e.target.checked)}
-            />
-            Hide this article from search engines
-          </label>
-        </FormField>
-
-        <div className="flex items-center justify-end gap-3 py-7">
-          <ButtonLink
-            href={insight ? `/admin/insights/${insight.id}` : "/admin/insights"}
-            variant="secondary"
-          >
-            Cancel
-          </ButtonLink>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? "Saving…" : insight ? "Save changes" : "Create article"}
-          </Button>
         </div>
-      </div>
+      </fieldset>
     </form>
   )
 }

@@ -100,7 +100,8 @@ export default function ListingDetailPage() {
     [status, setStatus] = React.useState<"loading" | "found" | "not-found">(
       "loading"
     ),
-    [isModalOpen, setIsModalOpen] = React.useState(false)
+    [isModalOpen, setIsModalOpen] = React.useState(false),
+    recordedViewRef = React.useRef(false)
 
   React.useEffect(() => {
     const summary = listings.find((item) => item.slug === slug)
@@ -120,6 +121,25 @@ export default function ListingDetailPage() {
       setStatus("found")
     })
   }, [slug, listings, fetchListing])
+
+  // One beacon per page visit, not per re-render — this route already
+  // excludes a signed-in staff session server-side (a "View public page"
+  // preview from the admin never counts), and dedupes repeat visitors.
+  React.useEffect(() => {
+    if (status !== "found" || !listing || recordedViewRef.current) return
+    recordedViewRef.current = true
+
+    fetch("/system/api/v1/listing-views", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        listing_id: listing.id,
+        utm_source: new URLSearchParams(window.location.search).get(
+          "utm_source"
+        ),
+      }),
+    }).catch(() => {})
+  }, [status, listing])
 
   // Lock body scroll when the media modal is open
   React.useEffect(() => {

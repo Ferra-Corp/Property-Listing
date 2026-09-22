@@ -13,6 +13,7 @@ import { useUserContext } from "../../../_lib/Context/User"
 import { useLogsContext } from "../../../_lib/Context/Audit"
 import { useListingContext } from "../../../_lib/Context/Listing"
 import { useInsightListingContext } from "../../../_lib/Context/Insight Listing"
+import { usePermission } from "../../../_lib/permissions"
 import type { ContentStatus } from "../../../_lib/Types/Insight"
 import {
   authorFor,
@@ -29,6 +30,7 @@ export function InsightPanel({ id }: { id: string }) {
     { logs } = useLogsContext(),
     { listings } = useListingContext(),
     { getListingsForInsight } = useInsightListingContext(),
+    canEdit = usePermission("Edit insight"),
     push = useToast(),
     router = useRouter()
 
@@ -162,13 +164,15 @@ export function InsightPanel({ id }: { id: string }) {
         </div>
 
         <div className="mt-7 flex gap-3">
-          <ButtonLink
-            href={`/admin/insights/${insight.id}/edit`}
-            variant="primary"
-            className="flex-1 shadow-sm"
-          >
-            Open the editor
-          </ButtonLink>
+          {canEdit ? (
+            <ButtonLink
+              href={`/admin/insights/${insight.id}/edit`}
+              variant="primary"
+              className="flex-1 shadow-sm"
+            >
+              Open the editor
+            </ButtonLink>
+          ) : null}
           {insight.status === "published" ? (
             <ButtonLink
               href={`/system/insights/${insight.slug}`}
@@ -184,26 +188,28 @@ export function InsightPanel({ id }: { id: string }) {
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
-          <Select
-            value={status ?? insight.status}
-            onChange={(e) => setStatus(e.target.value as ContentStatus)}
-            className="flex-1 rounded-lg text-[13.5px] shadow-sm transition-all focus:ring-2 focus:ring-neutral-300"
-          >
-            <option value="draft">Set state · Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </Select>
-          <Button
-            type="button"
-            variant="primary"
-            className="flex-none text-(--color-accent) shadow-sm transition-all hover:bg-(--color-accent-50)"
-            disabled={!status || status === insight.status || savingStatus}
-            onClick={saveStatus}
-          >
-            {savingStatus ? "Saving…" : "Save"}
-          </Button>
-        </div>
+        {canEdit ? (
+          <div className="mt-4 flex items-center gap-3">
+            <Select
+              value={status ?? insight.status}
+              onChange={(e) => setStatus(e.target.value as ContentStatus)}
+              className="flex-1 rounded-lg text-[13.5px] shadow-sm transition-all focus:ring-2 focus:ring-neutral-300"
+            >
+              <option value="draft">Set state · Draft</option>
+              <option value="published">Published</option>
+              <option value="archived">Archived</option>
+            </Select>
+            <Button
+              type="button"
+              variant="primary"
+              className="flex-none text-(--color-accent) shadow-sm transition-all hover:bg-(--color-accent-50)"
+              disabled={!status || status === insight.status || savingStatus}
+              onClick={saveStatus}
+            >
+              {savingStatus ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        ) : null}
 
         {insight.summary ? (
           <div className="mt-6 rounded-xl border border-(--color-divider) bg-(--color-neutral-50) p-5 shadow-sm transition-all hover:shadow-md">

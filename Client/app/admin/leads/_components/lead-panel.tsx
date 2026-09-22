@@ -14,6 +14,7 @@ import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useUserContext } from "../../../_lib/Context/User"
 import { useListingContext } from "../../../_lib/Context/Listing"
 import { useNotificationContext } from "../../../_lib/Context/Notification"
+import { usePermission } from "../../../_lib/permissions"
 import { buildWhatsAppLink } from "../../../_lib/format"
 import { priceLabel } from "../../listings/_lib"
 import type { LeadActivity } from "../../../_lib/Types/Lead Activity"
@@ -44,7 +45,8 @@ export function LeadPanel({ id }: { id: string }) {
     { listings } = useListingContext(),
     { notifications } = useNotificationContext(),
     push = useToast(),
-    router = useRouter()
+    router = useRouter(),
+    canEdit = usePermission("Edit lead")
 
   const sorted = [...leads].sort(
       (a, b) =>
@@ -348,29 +350,38 @@ export function LeadPanel({ id }: { id: string }) {
 
       <div className="px-4 pt-4.5 md:px-5.5">
         <SectionHead>Assignment</SectionHead>
-        <div className="mt-3 flex gap-2">
-          <Select
-            value={assignAgent}
-            onChange={(e) => setAssignAgent(e.target.value)}
-            className="flex-1 text-[13px]"
-          >
-            <option value="">Unassigned</option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.user_id}>
-                {a.display_name}
-              </option>
-            ))}
-          </Select>
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex-none"
-            disabled={assignAgent === (lead.assigned_agent_id ?? "")}
-            onClick={handleReassign}
-          >
-            Reassign
-          </Button>
-        </div>
+        {canEdit ? (
+          <div className="mt-3 flex gap-2">
+            <Select
+              value={assignAgent}
+              onChange={(e) => setAssignAgent(e.target.value)}
+              className="flex-1 text-[13px]"
+            >
+              <option value="">Unassigned</option>
+              {agents.map((a) => (
+                <option key={a.id} value={a.user_id}>
+                  {a.display_name}
+                </option>
+              ))}
+            </Select>
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-none"
+              disabled={assignAgent === (lead.assigned_agent_id ?? "")}
+              onClick={handleReassign}
+            >
+              Reassign
+            </Button>
+          </div>
+        ) : (
+          <Pair label="Assigned to">
+            {lead.assigned_agent_id
+              ? (agents.find((a) => a.user_id === lead.assigned_agent_id)
+                  ?.display_name ?? "—")
+              : "Unassigned"}
+          </Pair>
+        )}
       </div>
 
       <div className="px-4 pt-4.5 md:px-5.5">
@@ -393,89 +404,93 @@ export function LeadPanel({ id }: { id: string }) {
         )}
       </div>
 
-      <div className="px-4 pt-4.5 md:px-5.5">
-        <SectionHead>Record an encounter</SectionHead>
-        <K className="mt-2.25">
-          Writes a row to <code className="cl-mono">lead_activities</code>
-        </K>
+      {canEdit ? (
+        <div className="px-4 pt-4.5 md:px-5.5">
+          <SectionHead>Record an encounter</SectionHead>
+          <K className="mt-2.25">
+            Writes a row to <code className="cl-mono">lead_activities</code>
+          </K>
 
-        <div className="scr mt-3 flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
-          {QUICK_TYPES.map((type) => (
-            <button
-              key={type}
+          <div className="scr mt-3 flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
+            {QUICK_TYPES.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setActivityType(type)}
+                className={`cl-mono inline-flex flex-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] ${
+                  activityType === type
+                    ? "border-(--color-accent) bg-(--color-accent-100) text-(--color-accent-800)"
+                    : "border-(--color-divider) text-neutral-700"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+          <Input
+            value={activityType}
+            onChange={(e) => setActivityType(e.target.value)}
+            placeholder="Or type a custom activity kind"
+            className="mt-2 text-[13px]"
+          />
+
+          <Textarea
+            value={activityBody}
+            onChange={(e) => setActivityBody(e.target.value)}
+            className="mt-3 min-h-20.5 text-[13px]"
+            placeholder="What was said, what was agreed, what they're waiting on — kept internal, never sent to the lead"
+          />
+
+          <div className="mt-2.5 grid gap-2 md:grid-cols-2">
+            <label className="flex flex-col gap-1.5">
+              <K className="cl-mono">occurred_at</K>
+              <Input
+                type="datetime-local"
+                value={occurredAt}
+                onChange={(e) => setOccurredAt(e.target.value)}
+                className="cl-fig text-[13px]"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <K>Also set the state</K>
+              <Select
+                value={nextStatus}
+                onChange={(e) =>
+                  setNextStatus(e.target.value as LeadStatus | "")
+                }
+                className="text-[13px]"
+              >
+                <option value="">Leave as {STATUS_LABEL[lead.status]}</option>
+                {(Object.keys(STATUS_LABEL) as LeadStatus[])
+                  .filter((s) => s !== lead.status)
+                  .map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_LABEL[s]}
+                    </option>
+                  ))}
+              </Select>
+            </label>
+          </div>
+
+          <div className="mt-3 flex items-center gap-2.5">
+            <span className="flex-1" />
+            <Button
               type="button"
-              onClick={() => setActivityType(type)}
-              className={`cl-mono inline-flex flex-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] ${
-                activityType === type
-                  ? "border-(--color-accent) bg-(--color-accent-100) text-(--color-accent-800)"
-                  : "border-(--color-divider) text-neutral-700"
-              }`}
+              variant="primary"
+              className="flex-none"
+              disabled={saving}
+              onClick={handleRecordActivity}
             >
-              {type}
-            </button>
-          ))}
+              {saving ? "Recording…" : "Record it"}
+            </Button>
+          </div>
+          <K className="mt-2.25 leading-[1.7]">
+            Changing the state records a{" "}
+            <span className="cl-fig">status_change</span> on the lead itself,
+            whether or not you write a body.
+          </K>
         </div>
-        <Input
-          value={activityType}
-          onChange={(e) => setActivityType(e.target.value)}
-          placeholder="Or type a custom activity kind"
-          className="mt-2 text-[13px]"
-        />
-
-        <Textarea
-          value={activityBody}
-          onChange={(e) => setActivityBody(e.target.value)}
-          className="mt-3 min-h-20.5 text-[13px]"
-          placeholder="What was said, what was agreed, what they're waiting on — kept internal, never sent to the lead"
-        />
-
-        <div className="mt-2.5 grid gap-2 md:grid-cols-2">
-          <label className="flex flex-col gap-1.5">
-            <K className="cl-mono">occurred_at</K>
-            <Input
-              type="datetime-local"
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
-              className="cl-fig text-[13px]"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <K>Also set the state</K>
-            <Select
-              value={nextStatus}
-              onChange={(e) => setNextStatus(e.target.value as LeadStatus | "")}
-              className="text-[13px]"
-            >
-              <option value="">Leave as {STATUS_LABEL[lead.status]}</option>
-              {(Object.keys(STATUS_LABEL) as LeadStatus[])
-                .filter((s) => s !== lead.status)
-                .map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABEL[s]}
-                  </option>
-                ))}
-            </Select>
-          </label>
-        </div>
-
-        <div className="mt-3 flex items-center gap-2.5">
-          <span className="flex-1" />
-          <Button
-            type="button"
-            variant="primary"
-            className="flex-none"
-            disabled={saving}
-            onClick={handleRecordActivity}
-          >
-            {saving ? "Recording…" : "Record it"}
-          </Button>
-        </div>
-        <K className="mt-2.25 leading-[1.7]">
-          Changing the state records a{" "}
-          <span className="cl-fig">status_change</span> on the lead itself,
-          whether or not you write a body.
-        </K>
-      </div>
+      ) : null}
 
       <div className="px-4 pt-4.5 pb-7 md:px-5.5">
         <div className="flex items-baseline gap-3 border-b-2 border-(--color-text) pb-1.5">

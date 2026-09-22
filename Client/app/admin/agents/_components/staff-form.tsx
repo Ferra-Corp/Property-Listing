@@ -9,6 +9,7 @@ import { PageHead, Pad } from "../../../_components/Admin/admin-shell"
 import { useToast } from "../../../_components/Admin/motion"
 import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useUserContext } from "../../../_lib/Context/User"
+import { usePermission } from "../../../_lib/permissions"
 import { uploadImage } from "../../../_lib/uploadImage"
 import { slugify } from "../../../_lib/format"
 import { Button } from "../../../../components/ui/button"
@@ -126,7 +127,12 @@ export function StaffForm({
     { editAgentProfile } = useAgentContext(),
     push = useToast(),
     router = useRouter(),
-    isSelf = variant === "self"
+    isSelf = variant === "self",
+    // Editing anyone else's record at all — not just their role — is an
+    // admin-only action on the backend now; this is the same check, just
+    // surfaced so the form doesn't show controls that would 403 on save.
+    canEditOthers = usePermission("Manage user roles"),
+    readOnly = !isSelf && !canEditOthers
 
   const [account, setAccount] = React.useState<AccountState>(() =>
       accountFrom(user)
@@ -304,444 +310,456 @@ export function StaffForm({
 
       <Pad className="cl-shadcn py-6">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account</CardTitle>
-              <CardDescription>
-                {isSelf
-                  ? "What you use to sign in."
-                  : "What they use to sign in, and their reach in the admin."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="acc_name">Full name</Label>
-                <Input
-                  id="acc_name"
-                  value={account.name}
-                  onChange={(e) => setAccountField("name", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {readOnly ? (
+            <p className="text-sm text-muted-foreground">
+              Read-only — your role can view this profile but not change it.
+            </p>
+          ) : null}
+          <fieldset disabled={readOnly} className="contents">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account</CardTitle>
+                <CardDescription>
+                  {isSelf
+                    ? "What you use to sign in."
+                    : "What they use to sign in, and their reach in the admin."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="acc_email">Email</Label>
+                  <Label htmlFor="acc_name">Full name</Label>
                   <Input
-                    id="acc_email"
-                    type="email"
-                    value={account.email}
-                    onChange={(e) => setAccountField("email", e.target.value)}
+                    id="acc_name"
+                    value={account.name}
+                    onChange={(e) => setAccountField("name", e.target.value)}
                     required
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="acc_phone">Phone</Label>
-                  <Input
-                    id="acc_phone"
-                    value={account.phone}
-                    onChange={(e) => setAccountField("phone", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {isSelf ? null : (
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="acc_role">Role</Label>
-                  <Select
-                    value={account.role}
-                    onValueChange={(value) =>
-                      setAccountField("role", value as UserRole)
-                    }
-                  >
-                    <SelectTrigger id="acc_role" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(ROLE_LABEL) as UserRole[]).map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {ROLE_LABEL[role]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {!agent && account.role === "agent" ? (
-                    <p className="text-xs text-muted-foreground">
-                      Saving this alone won&apos;t give them a public profile —
-                      there&apos;s no page for that yet outside a fresh invite.
-                    </p>
-                  ) : null}
-                </div>
-              )}
-
-              {isSelf ? null : (
-                <label
-                  htmlFor="acc_active"
-                  className="group/field flex items-center gap-2.5 pt-1"
-                >
-                  <Checkbox
-                    id="acc_active"
-                    checked={account.account_active}
-                    onCheckedChange={(checked) =>
-                      setAccountField("account_active", checked === true)
-                    }
-                  />
-                  <span className="text-sm">Account enabled — can sign in</span>
-                </label>
-              )}
-            </CardContent>
-          </Card>
-
-          {isSelf ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Password</CardTitle>
-                <CardDescription>
-                  Changed the same way a forgotten one is — by email link, not
-                  from here directly.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {resetSent ? (
-                  <p className="text-sm">
-                    A reset link has been sent to {user.email}. It lasts one
-                    hour and works once.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2.5">
-                    <p className="text-sm text-muted-foreground">
-                      We&apos;ll email a link to {user.email} that lets you set
-                      a new one.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="w-fit"
-                      disabled={resettingPassword}
-                      onClick={handleRequestPasswordReset}
-                    >
-                      {resettingPassword
-                        ? "Sending…"
-                        : "Send password reset email"}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ) : null}
-
-          {isSelf ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Two-factor authentication</CardTitle>
-                <CardDescription>
-                  Asked for at sign-in if you may publish a listing or approve a
-                  valuation.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {user.mfa_enabled ? (
-                  <p className="text-sm">
-                    Two-factor authentication is already configured on this
-                    account.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2.5">
-                    <p className="text-sm text-muted-foreground">
-                      Not set up yet — signing in only asks for your password.
-                    </p>
-                    <ButtonLink
-                      href="/admin/auth/pair-authenticator?next=/admin/my-profile"
-                      variant="secondary"
-                      className="w-fit"
-                    >
-                      Set up two-factor authentication
-                    </ButtonLink>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ) : null}
-
-          {agent && profile ? (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Photo</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <Plate
-                      matted={false}
-                      src={profile.photo_url || undefined}
-                      alt={profile.display_name}
-                      className="h-21.5 w-21.5 flex-none rounded-full"
-                      label={initialsFor(profile.display_name)}
-                    />
-                    <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-                      <label className="cl-btn cl-btn-secondary inline-flex w-fit cursor-pointer items-center">
-                        {uploading
-                          ? "Uploading…"
-                          : profile.photo_url
-                            ? "Replace photo"
-                            : "Upload photo"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploading}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) handlePhotoUpload(file)
-                            e.target.value = ""
-                          }}
-                        />
-                      </label>
-                      {profile.photo_url ? (
-                        <button
-                          type="button"
-                          onClick={() => setProfileField("photo_url", "")}
-                          className="w-fit text-[12.5px] text-(--color-accent-2) underline underline-offset-2"
-                        >
-                          Remove photo
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Public profile</CardTitle>
-                  <CardDescription>
-                    {isSelf
-                      ? "Shown on your listing pages and the agents directory."
-                      : "Shown on their listing pages and the agents directory."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="display_name">Display name</Label>
-                      <Input
-                        id="display_name"
-                        value={profile.display_name}
-                        onChange={(e) =>
-                          setProfileField("display_name", e.target.value)
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="slug">Slug</Label>
-                      <Input
-                        id="slug"
-                        value={profile.slug}
-                        onChange={(e) =>
-                          setProfileField("slug", e.target.value)
-                        }
-                        onBlur={() =>
-                          setProfileField("slug", slugify(profile.slug))
-                        }
-                        className="font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="title">Title</Label>
-                      <Input
-                        id="title"
-                        value={profile.title}
-                        onChange={(e) =>
-                          setProfileField("title", e.target.value)
-                        }
-                        placeholder="Senior Agent"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="license">License number</Label>
-                      <Input
-                        id="license"
-                        value={profile.license_number}
-                        onChange={(e) =>
-                          setProfileField("license_number", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="bio">Bio</Label>
-                    <Textarea
-                      id="bio"
-                      value={profile.bio}
-                      onChange={(e) => setProfileField("bio", e.target.value)}
-                      placeholder="A short introduction shown on their profile"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="specializations">Specializations</Label>
-                      <Input
-                        id="specializations"
-                        value={profile.specializations}
-                        onChange={(e) =>
-                          setProfileField("specializations", e.target.value)
-                        }
-                        placeholder="Apartments, Land, Commercial"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="languages">Languages</Label>
-                      <Input
-                        id="languages"
-                        value={profile.languages}
-                        onChange={(e) =>
-                          setProfileField("languages", e.target.value)
-                        }
-                        placeholder="English, Swahili"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="years">Years of experience</Label>
+                    <Label htmlFor="acc_email">Email</Label>
                     <Input
-                      id="years"
-                      type="number"
-                      min={0}
-                      className="max-w-35"
-                      value={profile.years_experience}
-                      onChange={(e) =>
-                        setProfileField("years_experience", e.target.value)
-                      }
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="profile_phone">Public phone</Label>
-                      <Input
-                        id="profile_phone"
-                        value={profile.phone}
-                        onChange={(e) =>
-                          setProfileField("phone", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="whatsapp">WhatsApp</Label>
-                      <Input
-                        id="whatsapp"
-                        value={profile.whatsapp_number}
-                        onChange={(e) =>
-                          setProfileField("whatsapp_number", e.target.value)
-                        }
-                        placeholder="Leave blank to use the public phone"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="email_public">Public email</Label>
-                    <Input
-                      id="email_public"
+                      id="acc_email"
                       type="email"
-                      value={profile.email_public}
-                      onChange={(e) =>
-                        setProfileField("email_public", e.target.value)
-                      }
-                      placeholder="Defaults to none shown"
+                      value={account.email}
+                      onChange={(e) => setAccountField("email", e.target.value)}
+                      required
                     />
                   </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="linkedin">LinkedIn URL</Label>
-                      <Input
-                        id="linkedin"
-                        value={profile.linkedin_url}
-                        onChange={(e) =>
-                          setProfileField("linkedin_url", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="instagram">Instagram URL</Label>
-                      <Input
-                        id="instagram"
-                        value={profile.instagram_url}
-                        onChange={(e) =>
-                          setProfileField("instagram_url", e.target.value)
-                        }
-                      />
-                    </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="acc_phone">Phone</Label>
+                    <Input
+                      id="acc_phone"
+                      value={account.phone}
+                      onChange={(e) => setAccountField("phone", e.target.value)}
+                    />
                   </div>
+                </div>
 
+                {isSelf ? null : (
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="acc_role">Role</Label>
+                    <Select
+                      value={account.role}
+                      onValueChange={(value) =>
+                        setAccountField("role", value as UserRole)
+                      }
+                    >
+                      <SelectTrigger id="acc_role" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(ROLE_LABEL) as UserRole[]).map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {ROLE_LABEL[role]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!agent && account.role === "agent" ? (
+                      <p className="text-xs text-muted-foreground">
+                        Saving this alone won&apos;t give them a public profile
+                        — there&apos;s no page for that yet outside a fresh
+                        invite.
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+
+                {isSelf ? null : (
                   <label
-                    htmlFor="profile_active"
+                    htmlFor="acc_active"
                     className="group/field flex items-center gap-2.5 pt-1"
                   >
                     <Checkbox
-                      id="profile_active"
-                      checked={profile.is_active}
+                      id="acc_active"
+                      checked={account.account_active}
                       onCheckedChange={(checked) =>
-                        setProfileField("is_active", checked === true)
+                        setAccountField("account_active", checked === true)
                       }
                     />
                     <span className="text-sm">
-                      Profile visible on the public site
+                      Account enabled — can sign in
                     </span>
                   </label>
-                </CardContent>
-              </Card>
+                )}
+              </CardContent>
+            </Card>
 
+            {isSelf ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>How it will read in search</CardTitle>
+                  <CardTitle>Password</CardTitle>
+                  <CardDescription>
+                    Changed the same way a forgotten one is — by email link, not
+                    from here directly.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="meta_title">Meta title</Label>
-                    <Input
-                      id="meta_title"
-                      value={profile.meta_title}
-                      onChange={(e) =>
-                        setProfileField("meta_title", e.target.value)
-                      }
-                      placeholder="Falls back to the name if left blank"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="meta_description">Meta description</Label>
-                    <Textarea
-                      id="meta_description"
-                      value={profile.meta_description}
-                      onChange={(e) =>
-                        setProfileField("meta_description", e.target.value)
-                      }
-                      placeholder="Falls back to the bio if left blank"
-                    />
-                  </div>
+                <CardContent>
+                  {resetSent ? (
+                    <p className="text-sm">
+                      A reset link has been sent to {user.email}. It lasts one
+                      hour and works once.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-2.5">
+                      <p className="text-sm text-muted-foreground">
+                        We&apos;ll email a link to {user.email} that lets you
+                        set a new one.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="w-fit"
+                        disabled={resettingPassword}
+                        onClick={handleRequestPasswordReset}
+                      >
+                        {resettingPassword
+                          ? "Sending…"
+                          : "Send password reset email"}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            </>
-          ) : null}
+            ) : null}
+
+            {isSelf ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Two-factor authentication</CardTitle>
+                  <CardDescription>
+                    Asked for at sign-in if you may publish a listing or approve
+                    a valuation.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {user.mfa_enabled ? (
+                    <p className="text-sm">
+                      Two-factor authentication is already configured on this
+                      account.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-2.5">
+                      <p className="text-sm text-muted-foreground">
+                        Not set up yet — signing in only asks for your password.
+                      </p>
+                      <ButtonLink
+                        href="/admin/auth/pair-authenticator?next=/admin/my-profile"
+                        variant="secondary"
+                        className="w-fit"
+                      >
+                        Set up two-factor authentication
+                      </ButtonLink>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {agent && profile ? (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Photo</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <Plate
+                        matted={false}
+                        src={profile.photo_url || undefined}
+                        alt={profile.display_name}
+                        className="h-21.5 w-21.5 flex-none rounded-full"
+                        label={initialsFor(profile.display_name)}
+                      />
+                      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                        <label className="cl-btn cl-btn-secondary inline-flex w-fit cursor-pointer items-center">
+                          {uploading
+                            ? "Uploading…"
+                            : profile.photo_url
+                              ? "Replace photo"
+                              : "Upload photo"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={uploading}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) handlePhotoUpload(file)
+                              e.target.value = ""
+                            }}
+                          />
+                        </label>
+                        {profile.photo_url ? (
+                          <button
+                            type="button"
+                            onClick={() => setProfileField("photo_url", "")}
+                            className="w-fit text-[12.5px] text-(--color-accent-2) underline underline-offset-2"
+                          >
+                            Remove photo
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Public profile</CardTitle>
+                    <CardDescription>
+                      {isSelf
+                        ? "Shown on your listing pages and the agents directory."
+                        : "Shown on their listing pages and the agents directory."}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="display_name">Display name</Label>
+                        <Input
+                          id="display_name"
+                          value={profile.display_name}
+                          onChange={(e) =>
+                            setProfileField("display_name", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="slug">Slug</Label>
+                        <Input
+                          id="slug"
+                          value={profile.slug}
+                          onChange={(e) =>
+                            setProfileField("slug", e.target.value)
+                          }
+                          onBlur={() =>
+                            setProfileField("slug", slugify(profile.slug))
+                          }
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                          id="title"
+                          value={profile.title}
+                          onChange={(e) =>
+                            setProfileField("title", e.target.value)
+                          }
+                          placeholder="Senior Agent"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="license">License number</Label>
+                        <Input
+                          id="license"
+                          value={profile.license_number}
+                          onChange={(e) =>
+                            setProfileField("license_number", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="bio">Bio</Label>
+                      <Textarea
+                        id="bio"
+                        value={profile.bio}
+                        onChange={(e) => setProfileField("bio", e.target.value)}
+                        placeholder="A short introduction shown on their profile"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="specializations">Specializations</Label>
+                        <Input
+                          id="specializations"
+                          value={profile.specializations}
+                          onChange={(e) =>
+                            setProfileField("specializations", e.target.value)
+                          }
+                          placeholder="Apartments, Land, Commercial"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="languages">Languages</Label>
+                        <Input
+                          id="languages"
+                          value={profile.languages}
+                          onChange={(e) =>
+                            setProfileField("languages", e.target.value)
+                          }
+                          placeholder="English, Swahili"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="years">Years of experience</Label>
+                      <Input
+                        id="years"
+                        type="number"
+                        min={0}
+                        className="max-w-35"
+                        value={profile.years_experience}
+                        onChange={(e) =>
+                          setProfileField("years_experience", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="profile_phone">Public phone</Label>
+                        <Input
+                          id="profile_phone"
+                          value={profile.phone}
+                          onChange={(e) =>
+                            setProfileField("phone", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="whatsapp">WhatsApp</Label>
+                        <Input
+                          id="whatsapp"
+                          value={profile.whatsapp_number}
+                          onChange={(e) =>
+                            setProfileField("whatsapp_number", e.target.value)
+                          }
+                          placeholder="Leave blank to use the public phone"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="email_public">Public email</Label>
+                      <Input
+                        id="email_public"
+                        type="email"
+                        value={profile.email_public}
+                        onChange={(e) =>
+                          setProfileField("email_public", e.target.value)
+                        }
+                        placeholder="Defaults to none shown"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="linkedin">LinkedIn URL</Label>
+                        <Input
+                          id="linkedin"
+                          value={profile.linkedin_url}
+                          onChange={(e) =>
+                            setProfileField("linkedin_url", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="instagram">Instagram URL</Label>
+                        <Input
+                          id="instagram"
+                          value={profile.instagram_url}
+                          onChange={(e) =>
+                            setProfileField("instagram_url", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <label
+                      htmlFor="profile_active"
+                      className="group/field flex items-center gap-2.5 pt-1"
+                    >
+                      <Checkbox
+                        id="profile_active"
+                        checked={profile.is_active}
+                        onCheckedChange={(checked) =>
+                          setProfileField("is_active", checked === true)
+                        }
+                      />
+                      <span className="text-sm">
+                        Profile visible on the public site
+                      </span>
+                    </label>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>How it will read in search</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="meta_title">Meta title</Label>
+                      <Input
+                        id="meta_title"
+                        value={profile.meta_title}
+                        onChange={(e) =>
+                          setProfileField("meta_title", e.target.value)
+                        }
+                        placeholder="Falls back to the name if left blank"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="meta_description">Meta description</Label>
+                      <Textarea
+                        id="meta_description"
+                        value={profile.meta_description}
+                        onChange={(e) =>
+                          setProfileField("meta_description", e.target.value)
+                        }
+                        placeholder="Falls back to the bio if left blank"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+          </fieldset>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
           <div className="flex items-center justify-end gap-3">
             <ButtonLink href={backHref} variant="ghost">
-              Cancel
+              {readOnly ? "Close" : "Cancel"}
             </ButtonLink>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save changes"}
-            </Button>
+            {readOnly ? null : (
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save changes"}
+              </Button>
+            )}
           </div>
         </form>
       </Pad>

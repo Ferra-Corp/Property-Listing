@@ -91,7 +91,12 @@ export default function SubscriberContextProvider({
     }
 
   useEffect(() => {
-    getSubscribers().finally(() => setLoading(false))
+    // Mounted for every signed-in role regardless of whether they can
+    // actually read subscribers — a permission-denied role should just see
+    // an empty list, not an unhandled rejection on every page load.
+    getSubscribers()
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   return (

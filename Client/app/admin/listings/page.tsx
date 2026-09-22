@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ButtonLink } from "../../_components/ui/button"
+import { Button, ButtonLink } from "../../_components/ui/button"
 import { Select } from "../../_components/ui/field"
 import { Plate } from "../../_components/ui/plate"
 import { PageHead, Pad, Toolbar } from "../../_components/Admin/admin-shell"
@@ -11,6 +11,7 @@ import { Chip, K, Status, Td, Th, Tr } from "../../_components/Admin/ui"
 import { useToast } from "../../_components/Admin/motion"
 import { useListingContext } from "../../_lib/Context/Listing"
 import { useAgentContext } from "../../_lib/Context/Agent"
+import { usePermission } from "../../_lib/permissions"
 import type { ListingStatus, PropertyType } from "../../_lib/Types/Listing"
 import {
   dateLabel,
@@ -42,8 +43,10 @@ function inStateFilter(
 }
 
 export default function AdminListingsPage() {
-  const { listings, loading, editListing } = useListingContext(),
+  const { listings, loading, editListing, deleteListing } = useListingContext(),
     { agents } = useAgentContext(),
+    canEdit = usePermission("Edit listing"),
+    canDelete = usePermission("Delete listing"),
     push = useToast(),
     [stateFilter, setStateFilter] =
       React.useState<(typeof STATE_FILTERS)[number]>("All"),
@@ -106,6 +109,29 @@ export default function AdminListingsPage() {
     } catch (error) {
       push({
         title: "Couldn't update those listings",
+        body: (error as Error).message,
+      })
+    }
+  }
+
+  async function bulkDelete() {
+    const ids = Array.from(selected)
+    if (ids.length === 0) return
+    if (
+      !window.confirm(
+        `Delete ${ids.length} listing${ids.length === 1 ? "" : "s"}? This can't be undone.`
+      )
+    )
+      return
+    try {
+      await Promise.all(ids.map((id) => deleteListing(id)))
+      push({
+        title: `${ids.length} listing${ids.length === 1 ? "" : "s"} deleted`,
+      })
+      setSelected(new Set())
+    } catch (error) {
+      push({
+        title: "Couldn't delete those listings",
         body: (error as Error).message,
       })
     }
@@ -217,20 +243,24 @@ export default function AdminListingsPage() {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <Th className="w-6.5">
-                <input
-                  type="checkbox"
-                  aria-label="Select all"
-                  checked={sorted.length > 0 && selected.size === sorted.length}
-                  onChange={(e) =>
-                    setSelected(
-                      e.target.checked
-                        ? new Set(sorted.map((l) => l.id))
-                        : new Set()
-                    )
-                  }
-                />
-              </Th>
+              {canEdit ? (
+                <Th className="w-6.5">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all"
+                    checked={
+                      sorted.length > 0 && selected.size === sorted.length
+                    }
+                    onChange={(e) =>
+                      setSelected(
+                        e.target.checked
+                          ? new Set(sorted.map((l) => l.id))
+                          : new Set()
+                      )
+                    }
+                  />
+                </Th>
+              ) : null}
               <Th>Listing</Th>
               <Th className="w-30">Reference</Th>
               <Th className="w-33">State</Th>
@@ -245,14 +275,16 @@ export default function AdminListingsPage() {
               const { price, priceUnit } = priceLabel(listing)
               return (
                 <Tr key={listing.id}>
-                  <Td>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(listing.id)}
-                      onChange={() => toggle(listing.id)}
-                      aria-label={`Select ${listing.title}`}
-                    />
-                  </Td>
+                  {canEdit ? (
+                    <Td>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(listing.id)}
+                        onChange={() => toggle(listing.id)}
+                        aria-label={`Select ${listing.title}`}
+                      />
+                    </Td>
+                  ) : null}
                   <Td>
                     <div className="flex items-start gap-3">
                       <Plate
@@ -353,39 +385,51 @@ export default function AdminListingsPage() {
         </div>
       </div>
 
-      <Pad className="hidden items-center gap-3.5 pt-5 pb-7 md:flex">
-        <K>With selected ({selected.size})</K>
-        <ButtonLink
-          href="#"
-          variant="secondary"
-          onClick={(e) => {
-            e.preventDefault()
-            bulkSetStatus("published")
-          }}
-        >
-          Publish
-        </ButtonLink>
-        <ButtonLink
-          href="#"
-          variant="secondary"
-          onClick={(e) => {
-            e.preventDefault()
-            bulkSetStatus("pending_review")
-          }}
-        >
-          Send to review
-        </ButtonLink>
-        <ButtonLink
-          href="#"
-          variant="secondary"
-          onClick={(e) => {
-            e.preventDefault()
-            bulkSetStatus("withdrawn")
-          }}
-        >
-          Withdraw
-        </ButtonLink>
-      </Pad>
+      {canEdit ? (
+        <Pad className="hidden items-center gap-3.5 pt-5 pb-7 md:flex">
+          <K>With selected ({selected.size})</K>
+          <ButtonLink
+            href="#"
+            variant="secondary"
+            onClick={(e) => {
+              e.preventDefault()
+              bulkSetStatus("published")
+            }}
+          >
+            Publish
+          </ButtonLink>
+          <ButtonLink
+            href="#"
+            variant="secondary"
+            onClick={(e) => {
+              e.preventDefault()
+              bulkSetStatus("pending_review")
+            }}
+          >
+            Send to review
+          </ButtonLink>
+          <ButtonLink
+            href="#"
+            variant="secondary"
+            onClick={(e) => {
+              e.preventDefault()
+              bulkSetStatus("withdrawn")
+            }}
+          >
+            Withdraw
+          </ButtonLink>
+          {canDelete ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="text-(--color-accent-2)"
+              onClick={bulkDelete}
+            >
+              Delete
+            </Button>
+          ) : null}
+        </Pad>
+      ) : null}
     </>
   )
 }

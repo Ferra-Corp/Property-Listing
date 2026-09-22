@@ -11,6 +11,7 @@ import { RowIn } from "../../../_components/Admin/motion"
 import { useToast } from "../../../_components/Admin/motion"
 import { useInsightContext } from "../../../_lib/Context/Insight"
 import { useUserContext } from "../../../_lib/Context/User"
+import { usePermission } from "../../../_lib/permissions"
 import type { ContentStatus } from "../../../_lib/Types/Insight"
 import {
   authorLabelFor,
@@ -26,6 +27,8 @@ const STATE_FILTERS = ["Draft", "Published", "Archived", "All"] as const
 export function InsightList({ selectedId }: { selectedId?: string }) {
   const { insights, loading, editInsight } = useInsightContext(),
     { users } = useUserContext(),
+    canCreate = usePermission("Create insight"),
+    canEdit = usePermission("Edit insight"),
     push = useToast(),
     [stateFilter, setStateFilter] =
       React.useState<(typeof STATE_FILTERS)[number]>("All"),
@@ -95,9 +98,11 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
         meta={`${counts.published} in print · ${counts.draft} draft${counts.draft === 1 ? "" : "s"} · ${counts.archived} archived`}
         search="Title, summary or tag"
       >
-        <ButtonLink href="/admin/insights/new" variant="primary">
-          Begin an article
-        </ButtonLink>
+        {canCreate ? (
+          <ButtonLink href="/admin/insights/new" variant="primary">
+            Begin an article
+          </ButtonLink>
+        ) : null}
       </PageHead>
 
       {/* Mobile Search */}
@@ -159,19 +164,21 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
         {/* Classical Editorial Header */}
         <div className="grid grid-cols-[26px_minmax(0,1fr)_140px_120px_92px] items-end gap-4 border-b-[1.5px] border-(--color-text) pb-2.5">
           <div className="pl-1">
-            <input
-              type="checkbox"
-              aria-label="Select all"
-              checked={sorted.length > 0 && selected.size === sorted.length}
-              onChange={(e) =>
-                setSelected(
-                  e.target.checked
-                    ? new Set(sorted.map((i) => i.id))
-                    : new Set()
-                )
-              }
-              className="h-3.5 w-3.5 cursor-pointer accent-(--color-text)"
-            />
+            {canEdit ? (
+              <input
+                type="checkbox"
+                aria-label="Select all"
+                checked={sorted.length > 0 && selected.size === sorted.length}
+                onChange={(e) =>
+                  setSelected(
+                    e.target.checked
+                      ? new Set(sorted.map((i) => i.id))
+                      : new Set()
+                  )
+                }
+                className="h-3.5 w-3.5 cursor-pointer accent-(--color-text)"
+              />
+            ) : null}
           </div>
           <K className="text-[10.5px] font-semibold tracking-[0.06em] text-neutral-600 uppercase">
             Article
@@ -189,7 +196,9 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
 
         {sorted.length === 0 ? (
           <div className="py-16 text-center text-[13.5px] text-neutral-500 italic">
-            {loading ? "Loading articles…" : "No articles match the current filters."}
+            {loading
+              ? "Loading articles…"
+              : "No articles match the current filters."}
           </div>
         ) : null}
 
@@ -205,13 +214,15 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
                 }`}
               >
                 <div className="pt-0.5 pl-1">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(insight.id)}
-                    onChange={() => toggle(insight.id)}
-                    aria-label={`Select ${insight.title}`}
-                    className="h-3.5 w-3.5 cursor-pointer accent-(--color-text) transition-opacity group-hover:opacity-100"
-                  />
+                  {canEdit ? (
+                    <input
+                      type="checkbox"
+                      checked={selected.has(insight.id)}
+                      onChange={() => toggle(insight.id)}
+                      aria-label={`Select ${insight.title}`}
+                      className="h-3.5 w-3.5 cursor-pointer accent-(--color-text) transition-opacity group-hover:opacity-100"
+                    />
+                  ) : null}
                 </div>
                 <Link
                   href={`/admin/insights/${insight.id}`}
@@ -276,55 +287,57 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
         </div>
 
         {/* Bulk Actions Footer */}
-        <div
-          className={`mt-4 mb-8 flex items-center gap-4 rounded-lg px-4 py-3.5 transition-all duration-300 ${
-            selected.size > 0
-              ? "border border-(--color-divider) bg-(--color-neutral-50) shadow-sm"
-              : "pointer-events-none opacity-60 grayscale"
-          }`}
-        >
-          <K className="font-medium text-(--color-text)">
-            {selected.size} selected
-          </K>
-          <div className="mx-1 h-4 w-px bg-(--color-divider)" />
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            className="text-[12.5px]"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("published")
-            }}
+        {canEdit ? (
+          <div
+            className={`mt-4 mb-8 flex items-center gap-4 rounded-lg px-4 py-3.5 transition-all duration-300 ${
+              selected.size > 0
+                ? "border border-(--color-divider) bg-(--color-neutral-50) shadow-sm"
+                : "pointer-events-none opacity-60 grayscale"
+            }`}
           >
-            Publish
-          </ButtonLink>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            className="text-[12.5px]"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("draft")
-            }}
-          >
-            Move to draft
-          </ButtonLink>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            className="text-[12.5px]"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetStatus("archived")
-            }}
-          >
-            Archive
-          </ButtonLink>
-          <span className="flex-1" />
-          <K className="cl-fig text-[12.5px]">
-            {sorted.length} of {insights.length} shown
-          </K>
-        </div>
+            <K className="font-medium text-(--color-text)">
+              {selected.size} selected
+            </K>
+            <div className="mx-1 h-4 w-px bg-(--color-divider)" />
+            <ButtonLink
+              href="#"
+              variant="secondary"
+              className="text-[12.5px]"
+              onClick={(e) => {
+                e.preventDefault()
+                bulkSetStatus("published")
+              }}
+            >
+              Publish
+            </ButtonLink>
+            <ButtonLink
+              href="#"
+              variant="secondary"
+              className="text-[12.5px]"
+              onClick={(e) => {
+                e.preventDefault()
+                bulkSetStatus("draft")
+              }}
+            >
+              Move to draft
+            </ButtonLink>
+            <ButtonLink
+              href="#"
+              variant="secondary"
+              className="text-[12.5px]"
+              onClick={(e) => {
+                e.preventDefault()
+                bulkSetStatus("archived")
+              }}
+            >
+              Archive
+            </ButtonLink>
+            <span className="flex-1" />
+            <K className="cl-fig text-[12.5px]">
+              {sorted.length} of {insights.length} shown
+            </K>
+          </div>
+        ) : null}
       </div>
 
       {/* Mobile List */}
@@ -372,13 +385,15 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
             {sorted.length} of {insights.length} shown
           </K>
           <span className="flex-1" />
-          <ButtonLink
-            href="/admin/insights/new"
-            variant="primary"
-            className="shadow-sm"
-          >
-            Begin an article
-          </ButtonLink>
+          {canCreate ? (
+            <ButtonLink
+              href="/admin/insights/new"
+              variant="primary"
+              className="shadow-sm"
+            >
+              Begin an article
+            </ButtonLink>
+          ) : null}
         </div>
       </div>
     </div>

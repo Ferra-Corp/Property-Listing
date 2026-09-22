@@ -12,6 +12,7 @@ import { RowIn } from "../../../_components/Admin/motion"
 import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useUserContext } from "../../../_lib/Context/User"
 import { useListingContext } from "../../../_lib/Context/Listing"
+import { usePermission } from "../../../_lib/permissions"
 import type { AgentProfile } from "../../../_lib/Types/Agent"
 import type { PublicUser, UserRole } from "../../../_lib/Types/User"
 import {
@@ -54,6 +55,7 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
   const { agents, loading: agentsLoading } = useAgentContext(),
     { users, loading: usersLoading } = useUserContext(),
     { listings } = useListingContext(),
+    canInvite = usePermission("Invite users"),
     [stateFilter, setStateFilter] =
       React.useState<(typeof STATE_FILTERS)[number]>("Active"),
     [roleFilter, setRoleFilter] = React.useState<UserRole | "all">("all"),
@@ -112,19 +114,21 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
   const activeCount = rows.filter(isRowActive).length
 
   return (
-    <div className="min-w-0 border-r-0 border-[var(--color-divider)] md:border-r">
+    <div className="min-w-0 border-r-0 border-(--color-divider) md:border-r">
       <PageHead
         title="Staff"
         meta={`${rows.length} on the register · ${activeCount} active`}
       >
-        <ButtonLink
-          href="/admin/agents/invite"
-          variant="primary"
-          className="gap-[7px]"
-        >
-          <PlusIcon size={14} />
-          Invite staff
-        </ButtonLink>
+        {canInvite ? (
+          <ButtonLink
+            href="/admin/agents/invite"
+            variant="primary"
+            className="gap-1.75"
+          >
+            <PlusIcon size={14} />
+            Invite staff
+          </ButtonLink>
+        ) : null}
       </PageHead>
 
       <div className="px-4 pt-3.5 md:px-6">
@@ -153,7 +157,7 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
         <Select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value as UserRole | "all")}
-          className="hidden w-[130px] flex-none text-[13px] md:block"
+          className="hidden w-32.5 flex-none text-[13px] md:block"
         >
           {ROLE_FILTERS.map((role) => (
             <option key={role} value={role}>
@@ -164,7 +168,7 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
         <Select
           value={specialism}
           onChange={(e) => setSpecialism(e.target.value)}
-          className="hidden w-[160px] flex-none text-[13px] md:block"
+          className="hidden w-40 flex-none text-[13px] md:block"
         >
           <option value="">Any specialism</option>
           {specialisms.map((s) => (
@@ -176,7 +180,7 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
         <Select
           value={sort}
           onChange={(e) => setSort(e.target.value as typeof sort)}
-          className="hidden w-[160px] flex-none text-[13px] md:block"
+          className="hidden w-40 flex-none text-[13px] md:block"
         >
           <option value="load">Heaviest load first</option>
           <option value="name">Name A–Z</option>
@@ -185,7 +189,7 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
       </div>
 
       <div className="hidden px-6 pt-2 md:block">
-        <div className="grid grid-cols-[minmax(0,1fr)_100px_1fr_96px] gap-3 border-b-2 border-[var(--color-text)] pb-[9px]">
+        <div className="grid grid-cols-[minmax(0,1fr)_100px_1fr_96px] gap-3 border-b-2 border-(--color-text) pb-2.25">
           <K>Person</K>
           <K>Role</K>
           <K>Patch / contact</K>
@@ -193,7 +197,7 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
         </div>
 
         {sorted.length === 0 ? (
-          <div className="py-10 text-center text-[13.5px] text-[var(--color-neutral-600)]">
+          <div className="py-10 text-center text-[13.5px] text-neutral-600">
             {loading ? "Loading staff…" : "No one matches these filters."}
           </div>
         ) : null}
@@ -215,9 +219,9 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
             <RowIn key={row.id} index={index}>
               <Link
                 href={`/admin/agents/${row.id}`}
-                className={`grid grid-cols-[minmax(0,1fr)_100px_1fr_96px] items-center gap-4 border-b border-[var(--color-divider)] px-2 py-5 text-[var(--color-text)] hover:bg-[var(--color-neutral-100)] ${
+                className={`grid grid-cols-[minmax(0,1fr)_100px_1fr_96px] items-center gap-4 border-b border-(--color-divider) px-2 py-5 text-(--color-text) hover:bg-neutral-100 ${
                   row.id === selectedId
-                    ? "bg-[var(--color-accent-100)] shadow-[inset_3px_0_0_var(--color-accent)]"
+                    ? "bg-(--color-accent-100) shadow-[inset_3px_0_0_var(--color-accent)]"
                     : ""
                 }`}
               >
@@ -252,7 +256,7 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
           )
         })}
 
-        <div className="flex items-center gap-3.5 pt-[18px] pb-7">
+        <div className="flex items-center gap-3.5 pt-4.5 pb-7">
           <span className="flex-1" />
           <K className="cl-fig">
             {sorted.length} of {rows.length} shown
@@ -274,14 +278,14 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
             <RowIn key={row.id} index={index}>
               <Link
                 href={`/admin/agents/${row.id}`}
-                className="block border-b border-[var(--color-divider)] px-4 py-4.5 text-[var(--color-text)]"
+                className="block border-b border-(--color-divider) px-4 py-4.5 text-(--color-text)"
               >
                 <div className="flex gap-3">
                   <Plate
                     matted={false}
                     src={photo}
                     alt={name}
-                    className="h-[46px] w-[46px] flex-none rounded-full"
+                    className="h-11.5 w-11.5 flex-none rounded-full"
                     label={initialsFor(name)}
                   />
                   <div className="min-w-0 flex-1">
@@ -305,14 +309,16 @@ export function StaffRegister({ selectedId }: { selectedId?: string }) {
             </RowIn>
           )
         })}
-        <div className="flex items-center gap-3 px-4 py-[18px]">
+        <div className="flex items-center gap-3 px-4 py-4.5">
           <K className="cl-fig">
             {sorted.length} of {rows.length} shown
           </K>
           <span className="flex-1" />
-          <ButtonLink href="/admin/agents/invite" variant="primary">
-            Invite staff
-          </ButtonLink>
+          {canInvite ? (
+            <ButtonLink href="/admin/agents/invite" variant="primary">
+              Invite staff
+            </ButtonLink>
+          ) : null}
         </div>
       </div>
     </div>

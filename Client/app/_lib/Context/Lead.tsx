@@ -62,7 +62,12 @@ export default function LeadContextProvider({
     }
 
   useEffect(() => {
-    fetchLeads().finally(() => setLoading(false))
+    // Mounted for every signed-in role regardless of whether they can
+    // actually read leads — a permission-denied role should just see an
+    // empty list, not an unhandled rejection on every page load.
+    fetchLeads()
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const createLead = async (details: createLeadDTO) => {
@@ -100,11 +105,15 @@ export default function LeadContextProvider({
     deleteLead = async (leadId: string) => {
       try {
         const deleteRequest = await fetch(`/system/api/v1/leads/${leadId}`, {
-            method: "DELETE",
-          }),
-          deleteResponse = await deleteRequest.json()
+          method: "DELETE",
+        })
 
-        if (!deleteRequest.ok) throw new Error(deleteResponse.error)
+        // The backend returns 204 with no body on success — only the
+        // error path has JSON to parse.
+        if (!deleteRequest.ok) {
+          const deleteResponse = await deleteRequest.json()
+          throw new Error(deleteResponse.error)
+        }
 
         await fetchLeads()
       } catch (error) {

@@ -87,11 +87,15 @@ export default function AgentContextProvider({
     deleteAgentProfile = async (agentId: string) => {
       try {
         const deleteRequest = await fetch(`/system/api/v1/agents/${agentId}`, {
-            method: "DELETE",
-          }),
-          deleteResponse = await deleteRequest.json()
+          method: "DELETE",
+        })
 
-        if (!deleteRequest.ok) throw new Error(deleteResponse.error)
+        // The backend returns 204 with no body on success — only the
+        // error path has JSON to parse.
+        if (!deleteRequest.ok) {
+          const deleteResponse = await deleteRequest.json()
+          throw new Error(deleteResponse.error)
+        }
 
         await fetchAgentProfiles()
       } catch (error) {

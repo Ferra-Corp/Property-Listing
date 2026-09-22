@@ -13,6 +13,7 @@ import { useAgentContext } from "../../../_lib/Context/Agent"
 import { useUserContext } from "../../../_lib/Context/User"
 import { useListingContext } from "../../../_lib/Context/Listing"
 import { useLogsContext } from "../../../_lib/Context/Audit"
+import { usePermission } from "../../../_lib/permissions"
 import { buildWhatsAppLink, formatMoney } from "../../../_lib/format"
 import { INTENT_LABEL } from "../../leads/_lib"
 import { titleCase } from "../../listings/_lib"
@@ -38,6 +39,7 @@ export function ValuationPanel({ id }: { id: string }) {
     { users } = useUserContext(),
     { listings } = useListingContext(),
     { logs } = useLogsContext(),
+    canEdit = usePermission("Edit valuation request"),
     push = useToast(),
     router = useRouter()
 
@@ -232,15 +234,17 @@ export function ValuationPanel({ id }: { id: string }) {
               </Button>
             )}
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex-1"
-            disabled={saving || valuation.status === "cancelled"}
-            onClick={handleCancel}
-          >
-            Close request
-          </Button>
+          {canEdit ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              disabled={saving || valuation.status === "cancelled"}
+              onClick={handleCancel}
+            >
+              Close request
+            </Button>
+          ) : null}
         </div>
 
         <div className="mt-4 rounded-(--cl-radius-lg) border border-(--color-divider) bg-(--color-bg) p-4">
@@ -298,12 +302,18 @@ export function ValuationPanel({ id }: { id: string }) {
 
       <div className="px-4 pt-4.5 md:px-5.5">
         <SectionHead>Estimate · internal</SectionHead>
+        {!canEdit ? (
+          <p className="mt-2 mb-0 text-[12.5px] leading-normal text-neutral-600">
+            Read-only — your role can view this request but not change it.
+          </p>
+        ) : null}
         <div className="mt-3 flex items-end gap-2">
           <label className="flex-1">
             <K>Estimated value ({valuation.currency_code})</K>
             <Input
               value={estimatedValue}
               onChange={(e) => setEstimatedValue(e.target.value)}
+              disabled={!canEdit}
               className="cl-fig mt-1.5 text-[13px]"
               inputMode="decimal"
               placeholder="0"
@@ -316,6 +326,7 @@ export function ValuationPanel({ id }: { id: string }) {
               onChange={(e) =>
                 setCondition(e.target.value as PropertyCondition | "")
               }
+              disabled={!canEdit}
               className="mt-1.5 text-[13px]"
             >
               <option value="">Not assessed</option>
@@ -338,6 +349,7 @@ export function ValuationPanel({ id }: { id: string }) {
           <Textarea
             value={evaluationNotes}
             onChange={(e) => setEvaluationNotes(e.target.value)}
+            disabled={!canEdit}
             className="min-h-19.5 text-[13px]"
             placeholder="Site observations, tenancy terms, anything the report will need"
           />
@@ -351,6 +363,7 @@ export function ValuationPanel({ id }: { id: string }) {
           <Select
             value={assignedAgent}
             onChange={(e) => setAssignedAgent(e.target.value)}
+            disabled={!canEdit}
             className="flex-1 text-[13px]"
           >
             <option value="">Unassigned</option>
@@ -367,6 +380,7 @@ export function ValuationPanel({ id }: { id: string }) {
             type="datetime-local"
             value={visitScheduledAt}
             onChange={(e) => setVisitScheduledAt(e.target.value)}
+            disabled={!canEdit}
             className="cl-fig text-[13px]"
           />
         </label>
@@ -379,6 +393,7 @@ export function ValuationPanel({ id }: { id: string }) {
             type="checkbox"
             checked={listOut}
             onChange={(e) => setListOut(e.target.checked)}
+            disabled={!canEdit}
           />
           Owner wants to instruct us to sell or let it
         </label>
@@ -388,6 +403,7 @@ export function ValuationPanel({ id }: { id: string }) {
             <Select
               value={valuedBy}
               onChange={(e) => setValuedBy(e.target.value)}
+              disabled={!canEdit}
               className="text-[13px]"
             >
               <option value="">Not recorded</option>
@@ -403,6 +419,7 @@ export function ValuationPanel({ id }: { id: string }) {
             <Select
               value={status}
               onChange={(e) => setStatus(e.target.value as RequestStatus)}
+              disabled={!canEdit}
               className="text-[13px]"
             >
               {(Object.keys(STATUS_LABEL) as RequestStatus[]).map((s) => (
@@ -448,18 +465,20 @@ export function ValuationPanel({ id }: { id: string }) {
           </div>
         )}
 
-        <div className="mt-4 flex items-center gap-2.5">
-          <span className="flex-1" />
-          <Button
-            type="button"
-            variant="primary"
-            className="flex-none"
-            disabled={saving}
-            onClick={handleSave}
-          >
-            {saving ? "Saving…" : "Save"}
-          </Button>
-        </div>
+        {canEdit ? (
+          <div className="mt-4 flex items-center gap-2.5">
+            <span className="flex-1" />
+            <Button
+              type="button"
+              variant="primary"
+              className="flex-none"
+              disabled={saving}
+              onClick={handleSave}
+            >
+              {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   )

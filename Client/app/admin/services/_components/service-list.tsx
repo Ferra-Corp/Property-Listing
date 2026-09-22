@@ -8,6 +8,7 @@ import { PageHead } from "../../../_components/Admin/admin-shell"
 import { K, Status } from "../../../_components/Admin/ui"
 import { RowIn, useToast } from "../../../_components/Admin/motion"
 import { useServiceContext } from "../../../_lib/Context/Service"
+import { usePermission } from "../../../_lib/permissions"
 import { bySortOrder, statusLabel, statusTone } from "../_lib"
 
 const STATE_FILTERS = ["Shown", "Held back", "All"] as const
@@ -40,6 +41,8 @@ function ArrowButton({
 
 export function ServiceList({ selectedId }: { selectedId?: string }) {
   const { services, editService, loading } = useServiceContext(),
+    canCreate = usePermission("Create service"),
+    canEdit = usePermission("Edit service"),
     push = useToast(),
     [stateFilter, setStateFilter] =
       React.useState<(typeof STATE_FILTERS)[number]>("All"),
@@ -117,9 +120,11 @@ export function ServiceList({ selectedId }: { selectedId?: string }) {
         >
           Preview the page
         </ButtonLink>
-        <ButtonLink href="/admin/services/new" variant="primary">
-          Add a service
-        </ButtonLink>
+        {canCreate ? (
+          <ButtonLink href="/admin/services/new" variant="primary">
+            Add a service
+          </ButtonLink>
+        ) : null}
       </PageHead>
 
       <div className="px-4 pt-3.5 md:hidden">
@@ -153,18 +158,22 @@ export function ServiceList({ selectedId }: { selectedId?: string }) {
       <div className="hidden px-6 pt-2 md:block">
         <div className="grid grid-cols-[22px_56px_minmax(0,1fr)_110px] gap-3 border-b-2 border-(--color-text) pb-2.25">
           <div>
-            <input
-              type="checkbox"
-              aria-label="Select all"
-              checked={filtered.length > 0 && selected.size === filtered.length}
-              onChange={(e) =>
-                setSelected(
-                  e.target.checked
-                    ? new Set(filtered.map((s) => s.id))
-                    : new Set()
-                )
-              }
-            />
+            {canEdit ? (
+              <input
+                type="checkbox"
+                aria-label="Select all"
+                checked={
+                  filtered.length > 0 && selected.size === filtered.length
+                }
+                onChange={(e) =>
+                  setSelected(
+                    e.target.checked
+                      ? new Set(filtered.map((s) => s.id))
+                      : new Set()
+                  )
+                }
+              />
+            ) : null}
           </div>
           <K>Order</K>
           <K>Service</K>
@@ -189,24 +198,30 @@ export function ServiceList({ selectedId }: { selectedId?: string }) {
                 }`}
               >
                 <div>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(service.id)}
-                    onChange={() => toggle(service.id)}
-                    aria-label={`Select ${service.title}`}
-                  />
+                  {canEdit ? (
+                    <input
+                      type="checkbox"
+                      checked={selected.has(service.id)}
+                      onChange={() => toggle(service.id)}
+                      aria-label={`Select ${service.title}`}
+                    />
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-1">
-                  <ArrowButton
-                    direction="up"
-                    disabled={orderedIndex === 0}
-                    onClick={() => move(orderedIndex, -1)}
-                  />
-                  <ArrowButton
-                    direction="down"
-                    disabled={orderedIndex === ordered.length - 1}
-                    onClick={() => move(orderedIndex, 1)}
-                  />
+                  {canEdit ? (
+                    <>
+                      <ArrowButton
+                        direction="up"
+                        disabled={orderedIndex === 0}
+                        onClick={() => move(orderedIndex, -1)}
+                      />
+                      <ArrowButton
+                        direction="down"
+                        disabled={orderedIndex === ordered.length - 1}
+                        onClick={() => move(orderedIndex, 1)}
+                      />
+                    </>
+                  ) : null}
                 </div>
                 <Link
                   href={`/admin/services/${service.id}`}
@@ -240,27 +255,31 @@ export function ServiceList({ selectedId }: { selectedId?: string }) {
         })}
 
         <div className="flex items-center gap-3.5 pt-4.5 pb-7">
-          <K>With selected ({selected.size})</K>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetActive(true)
-            }}
-          >
-            Show on site
-          </ButtonLink>
-          <ButtonLink
-            href="#"
-            variant="secondary"
-            onClick={(e) => {
-              e.preventDefault()
-              bulkSetActive(false)
-            }}
-          >
-            Hold back
-          </ButtonLink>
+          {canEdit ? (
+            <>
+              <K>With selected ({selected.size})</K>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetActive(true)
+                }}
+              >
+                Show on site
+              </ButtonLink>
+              <ButtonLink
+                href="#"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  bulkSetActive(false)
+                }}
+              >
+                Hold back
+              </ButtonLink>
+            </>
+          ) : null}
           <span className="flex-1" />
           <K className="cl-fig">
             {filtered.length} of {services.length} shown
@@ -303,9 +322,11 @@ export function ServiceList({ selectedId }: { selectedId?: string }) {
             {filtered.length} of {services.length} shown
           </K>
           <span className="flex-1" />
-          <ButtonLink href="/admin/services/new" variant="primary">
-            Add
-          </ButtonLink>
+          {canCreate ? (
+            <ButtonLink href="/admin/services/new" variant="primary">
+              Add
+            </ButtonLink>
+          ) : null}
         </div>
       </div>
     </div>

@@ -7,11 +7,13 @@ import { Plate } from "../../../_components/ui/plate"
 import { K, Pair, SectionHead, Status } from "../../../_components/Admin/ui"
 import { useServiceContext } from "../../../_lib/Context/Service"
 import { useLogsContext } from "../../../_lib/Context/Audit"
+import { usePermission } from "../../../_lib/permissions"
 import { bySortOrder, dateLabel, statusLabel, statusTone } from "../_lib"
 
 export function ServicePanel({ id }: { id: string }) {
   const { services, loading } = useServiceContext(),
     { logs } = useLogsContext(),
+    canEdit = usePermission("Edit service"),
     router = useRouter()
 
   const ordered = bySortOrder(services),
@@ -90,13 +92,15 @@ export function ServicePanel({ id }: { id: string }) {
         </div>
 
         <div className="mt-4 flex gap-2">
-          <ButtonLink
-            href={`/admin/services/${service.id}/edit`}
-            variant="primary"
-            className="flex-1"
-          >
-            Edit the copy
-          </ButtonLink>
+          {canEdit ? (
+            <ButtonLink
+              href={`/admin/services/${service.id}/edit`}
+              variant="primary"
+              className="flex-1"
+            >
+              Edit the copy
+            </ButtonLink>
+          ) : null}
           <ButtonLink
             href="/system/services"
             variant="secondary"

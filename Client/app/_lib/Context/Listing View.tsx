@@ -52,7 +52,9 @@ export default function ListingViewContextProvider({
     }
 
   useEffect(() => {
-    getViews()
+    // Not currently mounted anywhere, but if it is later: a permission-
+    // denied role should just see an empty list, not an unhandled rejection.
+    getViews().catch(() => {})
   }, [])
 
   return (

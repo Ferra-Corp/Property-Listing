@@ -23,11 +23,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="grid min-h-dvh grid-rows-[auto_1fr_auto] bg-neutral-200">
-      <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) py-2.5 pr-4 pl-5 shadow-(--shadow-sm) backdrop-blur-sm md:top-3.5 md:mx-6 md:mt-3.5">
+      {/* Solid, not glass — the deep shadow is what lifts it off the page
+          now, matching AdminDock below. */}
+      <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) py-2.5 pr-4 pl-5 shadow-(--shadow-lg) md:top-3.5 md:mx-6 md:mt-3.5">
         <Link
           href="/admin"
           className="flex flex-none items-baseline gap-2 transition-opacity hover:opacity-80"
         >
+          {/* Back to the fixed cream tokens — the header is solid and
+              permanently dark again, so the theme-reactive text color from
+              the transparent-header phase would go dark-on-dark in light
+              mode instead. */}
           <span className="font-(family-name:--font-heading) text-[20px] leading-none text-(--color-admin-text) md:text-[22px]">
             D&amp;G
           </span>
