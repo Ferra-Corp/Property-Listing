@@ -17,6 +17,7 @@ import {
   ProfileIcon,
   ServicesIcon,
   SettingsIcon,
+  SubscribersIcon,
   ValuationsIcon,
   ViewingsIcon,
 } from "./icons"
@@ -81,6 +82,11 @@ export const SECONDARY: Item[] = [
   { href: "/admin/agents", label: "Staff", icon: AgentsIcon },
   { href: "/admin/insights", label: "Insights", icon: InsightsIcon },
   { href: "/admin/services", label: "Services", icon: ServicesIcon },
+  {
+    href: "/admin/subscribers",
+    label: "Subscribers",
+    icon: SubscribersIcon,
+  },
   { href: "/admin/analytics", label: "Analytics", icon: AnalyticsIcon },
 ]
 

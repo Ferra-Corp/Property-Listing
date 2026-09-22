@@ -4,7 +4,11 @@ import * as React from "react"
  * The admin's Lucide set, inlined so no icon package is needed.
  * Every glyph inherits currentColor at 1.6 stroke — the system's weight.
  */
-function Svg({ size = 15, children, ...props }: React.ComponentProps<"svg"> & { size?: number }) {
+function Svg({
+  size = 15,
+  children,
+  ...props
+}: React.ComponentProps<"svg"> & { size?: number }) {
   return (
     <svg
       width={size}
@@ -98,6 +102,15 @@ export function ServicesIcon(props: IconProps) {
     <Svg {...props}>
       <rect x="2" y="7" width="20" height="14" rx="2" />
       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </Svg>
+  )
+}
+
+export function SubscribersIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m2 6 8.75 6.5a2 2 0 0 0 2.5 0L22 6" />
     </Svg>
   )
 }

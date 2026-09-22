@@ -14,6 +14,7 @@ import TagContextProvider from "../../_lib/Context/Tag"
 import MediaContextProvider from "../../_lib/Context/Media"
 import ActivityContextProvider from "../../_lib/Context/Lead Activity"
 import NotificationContextProvider from "../../_lib/Context/Notification"
+import SubscriberContextProvider from "../../_lib/Context/Subscriber"
 
 /**
  * The dashboard navbar and its ~11 data contexts have nothing to do before
@@ -40,7 +41,9 @@ export function AdminShellGate({ children }: { children: React.ReactNode }) {
                       <MediaContextProvider>
                         <ActivityContextProvider>
                           <NotificationContextProvider>
-                            <AdminShell>{children}</AdminShell>
+                            <SubscriberContextProvider>
+                              <AdminShell>{children}</AdminShell>
+                            </SubscriberContextProvider>
                           </NotificationContextProvider>
                         </ActivityContextProvider>
                       </MediaContextProvider>

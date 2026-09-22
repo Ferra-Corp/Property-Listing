@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ButtonLink } from "./_components/ui/button"
+import { Button, ButtonLink } from "./_components/ui/button"
 import { Card, CardKicker, CardTitle } from "./_components/ui/card"
 import { Input, Segmented, Select } from "./_components/ui/field"
 import { Plate } from "./_components/ui/plate"
@@ -28,12 +28,27 @@ const PURPOSE_MAP: Record<(typeof PURPOSE_OPTIONS)[number], ListingPurpose> = {
   Rent: "rent",
 }
 
+/**
+ * The one grouping used both for browsing (subtypes/category, matched
+ * against a listing) and for the "new listings by email" signup (interest,
+ * the same grouping the backend's SUBTYPES_BY_INTEREST map mirrors) — so a
+ * subscriber's choice here and a published listing's subtype always agree
+ * on what counts as, say, "Yard / plot".
+ */
 const PROPERTY_KIND_OPTIONS = [
-  { label: "Go-down / warehouse", subtypes: ["go_down", "warehouse"] },
-  { label: "Office", subtypes: ["office"] },
-  { label: "Retail / showroom", subtypes: ["retail", "showroom"] },
-  { label: "Yard / plot", subtypes: ["yard", "plot"] },
-  { label: "Residential", category: "residential" },
+  {
+    label: "Go-down / warehouse",
+    subtypes: ["go_down", "warehouse"],
+    interest: "go_down_warehouse",
+  },
+  { label: "Office", subtypes: ["office"], interest: "office" },
+  {
+    label: "Retail / showroom",
+    subtypes: ["retail", "showroom"],
+    interest: "retail_showroom",
+  },
+  { label: "Yard / plot", subtypes: ["yard", "plot"], interest: "yard_plot" },
+  { label: "Residential", category: "residential", interest: "residential" },
 ] as const
 
 const SUBTYPE_LABEL: Record<string, string> = {
@@ -158,6 +173,45 @@ export default function HomePage() {
     >(""),
     [searchKind, setSearchKind] = React.useState(""),
     [searchLocation, setSearchLocation] = React.useState("")
+
+  const [subscribeKind, setSubscribeKind] = React.useState(""),
+    [subscribeEmail, setSubscribeEmail] = React.useState(""),
+    [subscribing, setSubscribing] = React.useState(false),
+    [subscribed, setSubscribed] = React.useState(false),
+    [subscribeError, setSubscribeError] = React.useState<string | null>(null)
+
+  async function handleSubscribe(event: React.FormEvent) {
+    event.preventDefault()
+    setSubscribeError(null)
+
+    const kind = PROPERTY_KIND_OPTIONS.find((k) => k.label === subscribeKind)
+
+    if (!kind) {
+      setSubscribeError("Choose which space interests you.")
+      return
+    }
+
+    setSubscribing(true)
+    try {
+      const request = await fetch("/system/api/v1/subscribers", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            email: subscribeEmail,
+            interest: kind.interest,
+          }),
+        }),
+        response = await request.json()
+
+      if (!request.ok) throw new Error(response.error)
+
+      setSubscribed(true)
+    } catch (err) {
+      setSubscribeError((err as Error).message)
+    } finally {
+      setSubscribing(false)
+    }
+  }
 
   const selectedKind = PROPERTY_KIND_OPTIONS.find(
     (kind) => kind.label === searchKind
@@ -643,23 +697,53 @@ export default function HomePage() {
           <h4 className="mt-2 mb-0 text-[19px] font-normal md:text-[22px]">
             One note a fortnight, only what is new
           </h4>
-          <p className="text-neutral-700) mt-2 mb-3.5 text-[13px] leading-[1.65]">
-            Choose a segment and we will send new mandates and rate movements as
-            they happen. Unsubscribe in one click.
-          </p>
-          <div className="flex flex-col gap-2">
-            <Select defaultValue="">
-              <option value="">Which space interests you?</option>
-              <option>Go-downs &amp; warehousing</option>
-              <option>Offices</option>
-              <option>Retail</option>
-              <option>Residential</option>
-            </Select>
-            <Input placeholder="Email address" type="email" />
-            <ButtonLink href="/system/contact" variant="primary" block>
-              Send me new listings
-            </ButtonLink>
-          </div>
+          {subscribed ? (
+            <p className="text-neutral-700) mt-2 mb-0 text-[13px] leading-[1.65]">
+              You&apos;re signed up — we&apos;ll only email when a{" "}
+              {subscribeKind.toLowerCase()} listing goes live.
+            </p>
+          ) : (
+            <>
+              <p className="text-neutral-700) mt-2 mb-3.5 text-[13px] leading-[1.65]">
+                Choose a segment and we will send new mandates and rate
+                movements as they happen. Unsubscribe in one click.
+              </p>
+              <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+                {subscribeError ? (
+                  <p className="text-[12.5px] text-(--color-accent-2)">
+                    {subscribeError}
+                  </p>
+                ) : null}
+                <Select
+                  value={subscribeKind}
+                  onChange={(e) => setSubscribeKind(e.target.value)}
+                  required
+                >
+                  <option value="">Which space interests you?</option>
+                  {PROPERTY_KIND_OPTIONS.map((kind) => (
+                    <option key={kind.label} value={kind.label}>
+                      {kind.label}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  placeholder="Email address"
+                  type="email"
+                  required
+                  value={subscribeEmail}
+                  onChange={(e) => setSubscribeEmail(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  variant="primary"
+                  block
+                  disabled={subscribing}
+                >
+                  {subscribing ? "Sending…" : "Send me new listings"}
+                </Button>
+              </form>
+            </>
+          )}
           <div className="cl-k text-neutral-600) mt-3">
             We hold your details only to answer you · DPA 2019
           </div>
