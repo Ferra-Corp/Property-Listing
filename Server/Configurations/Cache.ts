@@ -29,6 +29,7 @@ export const Resource = {
   Tag: "Tag",
   InsightTag: "InsightTag",
   Service: "Service",
+  Subscriber: "Subscriber",
 } as const;
 
 export type Resource = (typeof Resource)[keyof typeof Resource];

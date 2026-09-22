@@ -67,7 +67,11 @@ export type permission_group =
 
   // Valuation Requests
   | "Edit valuation request"
-  | "Delete valuation request";
+  | "Delete valuation request"
+
+  // Subscribers
+  | "Edit subscriber"
+  | "Delete subscriber";
 
 const ALL_PERMISSIONS: permission_group[] = [
   "Create insight",
@@ -104,6 +108,8 @@ const ALL_PERMISSIONS: permission_group[] = [
   "Delete viewing request",
   "Edit valuation request",
   "Delete valuation request",
+  "Edit subscriber",
+  "Delete subscriber",
 ];
 
 /** Each role's allowed actions — checked as a plain array membership test, nothing fancier. */
@@ -136,6 +142,8 @@ const ROLE_PERMISSIONS: Record<UserRole, permission_group[]> = {
     "Delete viewing request",
     "Edit valuation request",
     "Delete valuation request",
+    "Edit subscriber",
+    "Delete subscriber",
   ],
 
   viewer: ["View listing"],

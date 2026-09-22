@@ -44,6 +44,8 @@ import { TagRepo } from "../Modules/Content & SEO/Tags/tag.repository.js";
 import { TagServ } from "../Modules/Content & SEO/Tags/tag.service.js";
 import { ServiceRepo } from "../Modules/Content & SEO/Services/service.repository.js";
 import { ServiceServ } from "../Modules/Content & SEO/Services/service.service.js";
+import { SubscriberRepo } from "../Modules/Demand/Subscribers/subscriber.repository.js";
+import { SubscriberServ } from "../Modules/Demand/Subscribers/subscriber.service.js";
 
 const db = new Database();
 const cache = new Cache();
@@ -69,7 +71,8 @@ export const logRepo = new LogRepo(db),
   insightListingRepo = new InsightListingRepo(db),
   tagRepo = new TagRepo(db),
   insightTagRepo = new InsightTagRepo(db),
-  serviceRepo = new ServiceRepo(db);
+  serviceRepo = new ServiceRepo(db),
+  subscriberRepo = new SubscriberRepo(db);
 
 export const logService = new LogServ(logRepo),
   currencyService = new CurrencyServ(currencyRepo, cache),
@@ -79,7 +82,13 @@ export const logService = new LogServ(logRepo),
   redirectService = new RedirectServ(redirectRepo, cache),
   settingsService = new SettingsServ(settingsRepo, cache),
   mediaService = new MediaServ(mediaRepo, cache),
-  listingService = new ListingServ(listingRepo, mediaService, cache),
+  subscriberService = new SubscriberServ(subscriberRepo),
+  listingService = new ListingServ(
+    listingRepo,
+    mediaService,
+    cache,
+    subscriberService,
+  ),
   userService = new UserServ(userRepo, cache),
   agentService = new AgentServ(agentRepo, cache),
   authService = new AuthServ(authRepo, userService),
