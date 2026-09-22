@@ -1,12 +1,16 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { activityService, logService } from "../../../../Data Objects/DTO.js";
+import {
+  activityService,
+  leadService,
+  logService,
+} from "../../../../Data Objects/DTO.js";
 import {
   ErrorFormatter,
   getClientDetails,
   getRequestBody,
   sendResponseMessage,
 } from "../../../../Utilities/Http.js";
-import { AuthToken } from "../../../../Middleware/Authentication.js";
+import { Authorized } from "../../../../Middleware/Authorization.js";
 
 export const ActivityController = async (
   request: IncomingMessage,
@@ -19,23 +23,35 @@ export const ActivityController = async (
   const service = activityService;
 
   try {
-    const user = await AuthToken(request);
-
     switch (request.method) {
-      case "GET":
-        const leadId = pathnames[2],
-          result = leadId
-            ? await service.getActivitiesByLead(leadId)
-            : await service.getActivities();
+      case "GET": {
+        const user = await Authorized(request, "View lead");
+
+        const leadId = pathnames[2];
+
+        // A lead an Agent can't see shouldn't leak its activity trail
+        // either — the same "not found" ownership check getLead uses.
+        if (leadId) await leadService.getLead(leadId, user);
+
+        const result = leadId
+          ? await service.getActivitiesByLead(leadId)
+          : await service.getActivities();
 
         sendResponseMessage(200, false, result, response);
         break;
-      case "POST":
-        const postRequestBody: any = await getRequestBody(request),
-          newActivity = await service.createActivity({
-            ...postRequestBody,
-            user_id: user.id,
-          });
+      }
+      case "POST": {
+        const user = await Authorized(request, "Edit lead");
+
+        const postRequestBody: any = await getRequestBody(request);
+
+        if (postRequestBody?.lead_id)
+          await leadService.getLead(postRequestBody.lead_id, user);
+
+        const newActivity = await service.createActivity({
+          ...postRequestBody,
+          user_id: user.id,
+        });
 
         await logService.createLog({
           action: "Lead activity creation",
@@ -49,6 +65,7 @@ export const ActivityController = async (
 
         sendResponseMessage(201, false, newActivity, response);
         break;
+      }
       default:
         sendResponseMessage(405, true, "Invalid HTTP Header method", response);
         break;

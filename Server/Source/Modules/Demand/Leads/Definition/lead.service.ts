@@ -9,8 +9,15 @@ import type {
   Lead,
   LeadRepository,
   LeadService,
+  RequestingStaff,
   UpdateLeadDTO,
 } from "./lead.types.js";
+
+/** An Agent only ever sees/touches their own book; every other role that
+ * can reach this module at all (Admin, Viewer) sees the whole one. */
+function ownsLead(lead: Lead, requester: RequestingStaff): boolean {
+  return requester.role !== "agent" || lead.assigned_agent_id === requester.id;
+}
 
 const REQUIRED_LEAD_FIELDS: (keyof createLeadDTO)[] = ["full_name", "phone"];
 
@@ -72,9 +79,17 @@ export class LeadServ implements LeadService {
     return newLead;
   }
 
-  async editLead(id: string, details: UpdateLeadDTO): Promise<Lead> {
+  async editLead(
+    id: string,
+    details: UpdateLeadDTO,
+    requester: RequestingStaff,
+  ): Promise<Lead> {
     if (!id || !details)
       throw new ServiceError("Lead id and details must be provided", 400);
+
+    // Same "not found" an owner-check on getLead would give — an Agent
+    // probing an id that isn't theirs shouldn't learn it exists at all.
+    await this.getLead(id, requester);
 
     let filteredDetails: UpdateLeadDTO = {};
 
@@ -99,22 +114,34 @@ export class LeadServ implements LeadService {
     return patchedLead;
   }
 
-  async getLead(id: string): Promise<Lead> {
+  async getLead(id: string, requester: RequestingStaff): Promise<Lead> {
     if (!id) throw new ServiceError("Lead id must be provided", 400);
 
-    return this.cache.remember(CacheKeys.single(Resource.Lead, id), async () => {
-      const lead = await this.repo.getLead(id);
+    const lead = await this.cache.remember(
+      CacheKeys.single(Resource.Lead, id),
+      async () => {
+        const found = await this.repo.getLead(id);
 
-      if (!lead) throw new ServiceError("Lead not found", 404);
+        if (!found) throw new ServiceError("Lead not found", 404);
 
-      return lead;
-    });
+        return found;
+      },
+    );
+
+    if (!ownsLead(lead, requester))
+      throw new ServiceError("Lead not found", 404);
+
+    return lead;
   }
 
-  async getLeads(): Promise<Lead[]> {
-    return this.cache.remember(CacheKeys.all(Resource.Lead), () =>
+  async getLeads(requester: RequestingStaff): Promise<Lead[]> {
+    const leads = await this.cache.remember(CacheKeys.all(Resource.Lead), () =>
       this.repo.getLeads(),
     );
+
+    if (requester.role !== "agent") return leads;
+
+    return leads.filter((lead) => ownsLead(lead, requester));
   }
 
   async findLeadByPhone(phone: string): Promise<Lead | null> {
@@ -125,8 +152,10 @@ export class LeadServ implements LeadService {
     return this.repo.findLeadByPhone(phone);
   }
 
-  async deleteLead(id: string): Promise<void> {
+  async deleteLead(id: string, requester: RequestingStaff): Promise<void> {
     if (!id) throw new ServiceError("Lead id must be provided", 404);
+
+    await this.getLead(id, requester);
 
     await this.repo.deleteLead(id);
 

@@ -3,11 +3,24 @@ import { Cache, CacheKeys, Resource } from "../../../../Configurations/Cache.js"
 import type { LeadService } from "../Leads/Definition/lead.types.js";
 import type {
   createViewingRequestDTO,
+  RequestingStaff,
   UpdateViewingRequestDTO,
   ViewingRepository,
   ViewingRequest,
   ViewingService,
 } from "./viewing.types.js";
+
+/** An Agent only ever sees/touches their own book; every other role that
+ * can reach this module at all (Admin, Viewer) sees the whole one. */
+function ownsViewingRequest(
+  viewingRequest: ViewingRequest,
+  requester: RequestingStaff,
+): boolean {
+  return (
+    requester.role !== "agent" ||
+    viewingRequest.assigned_agent_id === requester.id
+  );
+}
 
 const REQUIRED_VIEWING_FIELDS: (keyof createViewingRequestDTO)[] = [
   "listing_id",
@@ -88,12 +101,17 @@ export class ViewingServ implements ViewingService {
   async editViewingRequest(
     id: string,
     details: UpdateViewingRequestDTO,
+    requester: RequestingStaff,
   ): Promise<ViewingRequest> {
     if (!id || !details)
       throw new ServiceError(
         "Viewing request id and details must be provided",
         400,
       );
+
+    // Same "not found" an owner-check on getViewingRequest would give — an
+    // Agent probing an id that isn't theirs shouldn't learn it exists.
+    await this.getViewingRequest(id, requester);
 
     let filteredDetails: UpdateViewingRequestDTO = {};
 
@@ -130,32 +148,53 @@ export class ViewingServ implements ViewingService {
     return patchedViewingRequest;
   }
 
-  async getViewingRequest(id: string): Promise<ViewingRequest> {
+  async getViewingRequest(
+    id: string,
+    requester: RequestingStaff,
+  ): Promise<ViewingRequest> {
     if (!id)
       throw new ServiceError("Viewing request id must be provided", 400);
 
-    return this.cache.remember(
+    const viewingRequest = await this.cache.remember(
       CacheKeys.single(Resource.ViewingRequest, id),
       async () => {
-        const viewingRequest = await this.repo.getViewingRequest(id);
+        const found = await this.repo.getViewingRequest(id);
 
-        if (!viewingRequest)
-          throw new ServiceError("Viewing request not found", 404);
+        if (!found) throw new ServiceError("Viewing request not found", 404);
 
-        return viewingRequest;
+        return found;
       },
     );
+
+    if (!ownsViewingRequest(viewingRequest, requester))
+      throw new ServiceError("Viewing request not found", 404);
+
+    return viewingRequest;
   }
 
-  async getViewingRequests(): Promise<ViewingRequest[]> {
-    return this.cache.remember(CacheKeys.all(Resource.ViewingRequest), () =>
-      this.repo.getViewingRequests(),
+  async getViewingRequests(
+    requester: RequestingStaff,
+  ): Promise<ViewingRequest[]> {
+    const viewingRequests = await this.cache.remember(
+      CacheKeys.all(Resource.ViewingRequest),
+      () => this.repo.getViewingRequests(),
+    );
+
+    if (requester.role !== "agent") return viewingRequests;
+
+    return viewingRequests.filter((viewingRequest) =>
+      ownsViewingRequest(viewingRequest, requester),
     );
   }
 
-  async deleteViewingRequest(id: string): Promise<void> {
+  async deleteViewingRequest(
+    id: string,
+    requester: RequestingStaff,
+  ): Promise<void> {
     if (!id)
       throw new ServiceError("Viewing request id must be provided", 404);
+
+    await this.getViewingRequest(id, requester);
 
     await this.repo.deleteViewingRequest(id);
 

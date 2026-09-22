@@ -11,6 +11,7 @@ import {
   AuthToken,
   OptionalAuthToken,
 } from "../../../../Middleware/Authentication.js";
+import { Authorized } from "../../../../Middleware/Authorization.js";
 
 export const AgentController = async (
   request: IncomingMessage,
@@ -33,11 +34,19 @@ export const AgentController = async (
 
         sendResponseMessage(200, false, result, response);
         break;
-      case "PATCH":
+      case "PATCH": {
         const patchUser = await AuthToken(request);
 
         const patchAgentId = PathnameValidator(pathnames),
-          patchRequestBody = await getRequestBody(request),
+          existingProfile = await service.getAgentProfile(patchAgentId, false);
+
+        // Editing your own public profile needs nothing beyond being
+        // signed in — that's My Profile. Editing anyone else's is an
+        // admin action, same as editing anyone else's account.
+        if (existingProfile.user_id !== patchUser.id)
+          await Authorized(request, "Manage user roles");
+
+        const patchRequestBody = await getRequestBody(request),
           patchedAgentProfile = await service.editAgentProfile(
             patchAgentId,
             patchRequestBody,
@@ -55,10 +64,18 @@ export const AgentController = async (
 
         sendResponseMessage(200, false, patchedAgentProfile, response);
         break;
-      case "DELETE":
+      }
+      case "DELETE": {
         const deleteUser = await AuthToken(request);
 
-        const deleteAgentId = PathnameValidator(pathnames);
+        const deleteAgentId = PathnameValidator(pathnames),
+          existingDeleteProfile = await service.getAgentProfile(
+            deleteAgentId,
+            false,
+          );
+
+        if (existingDeleteProfile.user_id !== deleteUser.id)
+          await Authorized(request, "Manage user roles");
 
         await service.deleteAgentProfile(deleteAgentId);
 
@@ -74,6 +91,7 @@ export const AgentController = async (
 
         sendResponseMessage(204, false, null, response);
         break;
+      }
       default:
         sendResponseMessage(405, true, "Invalid HTTP Header method", response);
         break;

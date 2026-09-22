@@ -91,4 +91,15 @@ export class UserRepo implements UserRepository {
       throw new RepositoryError((error as Error).message, error);
     }
   }
+
+  async hardDeleteUser(id: string): Promise<void> {
+    try {
+      // agent_profiles, auth_sessions and password_reset_token all cascade
+      // off users(id), so a straight row delete is enough to leave nothing
+      // behind from an invite that never completed.
+      await this.db.query("DELETE FROM users WHERE id=$1", [id]);
+    } catch (error) {
+      throw new RepositoryError((error as Error).message, error);
+    }
+  }
 }

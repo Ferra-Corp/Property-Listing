@@ -7,7 +7,6 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
 
 export const ViewingController = async (
@@ -23,12 +22,12 @@ export const ViewingController = async (
   try {
     switch (request.method) {
       case "GET": {
-        await AuthToken(request);
+        const viewUser = await Authorized(request, "View viewing request");
 
         const viewingId = pathnames[2],
           result = viewingId
-            ? await service.getViewingRequest(viewingId)
-            : await service.getViewingRequests();
+            ? await service.getViewingRequest(viewingId, viewUser)
+            : await service.getViewingRequests(viewUser);
 
         sendResponseMessage(200, false, result, response);
         break;
@@ -49,6 +48,7 @@ export const ViewingController = async (
           patchedViewingRequest = await service.editViewingRequest(
             patchViewingId,
             patchRequestBody,
+            user,
           );
 
         await logService.createLog({
@@ -68,7 +68,7 @@ export const ViewingController = async (
         const user = await Authorized(request, "Delete viewing request"),
           deleteViewingId = PathnameValidator(pathnames);
 
-        await service.deleteViewingRequest(deleteViewingId);
+        await service.deleteViewingRequest(deleteViewingId, user);
 
         await logService.createLog({
           action: "Viewing request deletion",

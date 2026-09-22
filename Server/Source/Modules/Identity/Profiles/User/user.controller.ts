@@ -11,6 +11,7 @@ import {
   getRequestBody,
   sendResponseMessage,
   PathnameValidator,
+  ServiceError,
 } from "../../../../Utilities/Http.js";
 import { AuthToken } from "../../../../Middleware/Authentication.js";
 import { Authorized } from "../../../../Middleware/Authorization.js";
@@ -56,44 +57,69 @@ export const UserController = async (
             password_hash,
           });
 
-        await logService.createLog({
-          action: "User invite",
-          entity_id: newUser.id,
-          entity_type: "User",
-          user_id: newUser.id,
-          user_agent: userAgent.deviceName,
-          ip_address: userAgent.ipAddress,
-          changes: newUser,
-        });
+        // Nothing from here on is logged or reported as done until the
+        // invite email is actually away — an admin re-reading the audit
+        // trail should never find a "User invite" entry for an invite that
+        // failed silently. If any step fails, the account is rolled back
+        // (a genuine hard delete, not the usual soft delete) rather than
+        // left behind as an orphaned, never-notified user nobody can retry
+        // the same email address against.
+        try {
+          let newAgentProfile = null;
 
-        if (newUser.role == "agent") {
-          const newAgentProfile = await agentService.createAgentProfile({
-            user_id: newUser.id,
-            display_name: newUser.name,
-            slug: slugify(newUser.name),
-            phone: newUser.phone,
-            whatsapp_number: newUser.whatsapp_number ?? newUser.phone,
-          });
+          if (newUser.role == "agent") {
+            newAgentProfile = await agentService.createAgentProfile({
+              user_id: newUser.id,
+              display_name: newUser.name,
+              slug: slugify(newUser.name),
+              phone: newUser.phone,
+              whatsapp_number: newUser.whatsapp_number ?? newUser.phone,
+            });
+          }
+
+          const setupToken = await authService.createPasswordSetupToken(
+            newUser.id,
+          );
+          console.log(`${REDIRECT_LINK}/admin/auth/invite/${setupToken}`);
+          await InviteAgent(
+            newUser.email,
+            `${REDIRECT_LINK}/admin/auth/invite/${setupToken}`,
+          );
 
           await logService.createLog({
-            action: "Agent profile creation",
-            entity_id: newAgentProfile.id,
-            entity_type: "Agent Profile",
+            action: "User invite",
+            entity_id: newUser.id,
+            entity_type: "User",
             user_id: newUser.id,
             user_agent: userAgent.deviceName,
             ip_address: userAgent.ipAddress,
-            changes: newAgentProfile,
+            changes: newUser,
           });
-        }
 
-        const setupToken = await authService.createPasswordSetupToken(
-          newUser.id,
-        );
-        console.log(`${REDIRECT_LINK}/admin/auth/invite/${setupToken}`);
-        await InviteAgent(
-          newUser.email,
-          `${REDIRECT_LINK}/admin/auth/invite/${setupToken}`,
-        );
+          if (newAgentProfile) {
+            await logService.createLog({
+              action: "Agent profile creation",
+              entity_id: newAgentProfile.id,
+              entity_type: "Agent Profile",
+              user_id: newUser.id,
+              user_agent: userAgent.deviceName,
+              ip_address: userAgent.ipAddress,
+              changes: newAgentProfile,
+            });
+          }
+        } catch (inviteError) {
+          await service.hardDeleteUser(newUser.id).catch((cleanupError) => {
+            console.error(
+              `Failed to roll back invite for user ${newUser.id} after invite error`,
+              cleanupError,
+            );
+          });
+
+          throw new ServiceError(
+            "Couldn't send the invite email, so the account was not created. Check the email address and try again.",
+            502,
+          );
+        }
 
         sendResponseMessage(201, false, newUser, response);
         break;
@@ -102,7 +128,11 @@ export const UserController = async (
         const patchUserId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request);
 
-        if (patchRequestBody.role)
+        // Editing your own record needs nothing beyond being signed in —
+        // that's My Profile. Editing anyone else's, for any field, is an
+        // admin action; a role change is one even on your own record,
+        // though the UI never sends one there.
+        if (patchUserId !== user.id || patchRequestBody.role)
           await Authorized(request, "Manage user roles");
 
         const patchedUser = await service.editUser(

@@ -94,6 +94,10 @@ export type UpdateValuationRequestDTO = Partial<createValuationRequestDTO> & {
   status?: RequestStatus;
 };
 
+/** Just enough of the signed-in staff member to decide whose requests they
+ * can see or touch — an Agent's own book only, everyone else unrestricted. */
+export type RequestingStaff = { id: string; role: string };
+
 export interface ValuationRepository {
   createValuationRequest: (
     details: createValuationRequestDTO,
@@ -114,8 +118,17 @@ export interface ValuationService {
   editValuationRequest: (
     id: string,
     details: UpdateValuationRequestDTO,
+    requester: RequestingStaff,
   ) => Promise<ValuationRequest>;
-  getValuationRequest: (id: string) => Promise<ValuationRequest>;
-  getValuationRequests: () => Promise<ValuationRequest[]>;
-  deleteValuationRequest: (id: string) => Promise<void>;
+  getValuationRequest: (
+    id: string,
+    requester: RequestingStaff,
+  ) => Promise<ValuationRequest>;
+  getValuationRequests: (
+    requester: RequestingStaff,
+  ) => Promise<ValuationRequest[]>;
+  deleteValuationRequest: (
+    id: string,
+    requester: RequestingStaff,
+  ) => Promise<void>;
 }

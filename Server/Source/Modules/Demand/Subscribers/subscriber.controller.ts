@@ -7,7 +7,6 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
 
 export const SubscriberController = async (
@@ -35,9 +34,9 @@ export const SubscriberController = async (
           break;
         }
 
-        // Admin subscriber list — any signed-in staff can view, matching
-        // how leads/valuations/viewing requests are read.
-        await AuthToken(request);
+        // Admin subscriber list — Editor and Admin only; a newsletter is a
+        // marketing artifact, not Agent's or Viewer's concern.
+        await Authorized(request, "View subscriber");
 
         const subscribers = await subscriberService.getSubscribers();
 

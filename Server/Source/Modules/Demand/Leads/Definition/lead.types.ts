@@ -110,6 +110,10 @@ export type UpdateLeadDTO = Partial<createLeadDTO> & {
   lost_reason?: string | null;
 };
 
+/** Just enough of the signed-in staff member to decide whose leads they can
+ * see or touch — an Agent's own book only, everyone else unrestricted. */
+export type RequestingStaff = { id: string; role: string };
+
 export interface LeadRepository {
   createLead: (details: createLeadDTO) => Promise<Lead>;
   editLead: (id: string, details: UpdateLeadDTO) => Promise<Lead>;
@@ -122,9 +126,13 @@ export interface LeadRepository {
 
 export interface LeadService {
   createLead: (details: createLeadDTO) => Promise<Lead>;
-  editLead: (id: string, details: UpdateLeadDTO) => Promise<Lead>;
-  getLead: (id: string) => Promise<Lead>;
-  getLeads: () => Promise<Lead[]>;
-  deleteLead: (id: string) => Promise<void>;
+  editLead: (
+    id: string,
+    details: UpdateLeadDTO,
+    requester: RequestingStaff,
+  ) => Promise<Lead>;
+  getLead: (id: string, requester: RequestingStaff) => Promise<Lead>;
+  getLeads: (requester: RequestingStaff) => Promise<Lead[]>;
+  deleteLead: (id: string, requester: RequestingStaff) => Promise<void>;
   findLeadByPhone: (phone: string) => Promise<Lead | null>;
 }

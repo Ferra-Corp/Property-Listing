@@ -7,7 +7,6 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../Utilities/Http.js";
-import { AuthToken } from "../../../Middleware/Authentication.js";
 import { Authorized } from "../../../Middleware/Authorization.js";
 
 export const ValuationController = async (
@@ -23,12 +22,12 @@ export const ValuationController = async (
   try {
     switch (request.method) {
       case "GET": {
-        await AuthToken(request);
+        const viewUser = await Authorized(request, "View valuation request");
 
         const valuationId = pathnames[2],
           result = valuationId
-            ? await service.getValuationRequest(valuationId)
-            : await service.getValuationRequests();
+            ? await service.getValuationRequest(valuationId, viewUser)
+            : await service.getValuationRequests(viewUser);
 
         sendResponseMessage(200, false, result, response);
         break;
@@ -49,6 +48,7 @@ export const ValuationController = async (
           patchedValuationRequest = await service.editValuationRequest(
             patchValuationId,
             patchRequestBody,
+            user,
           );
 
         await logService.createLog({
@@ -68,7 +68,7 @@ export const ValuationController = async (
         const user = await Authorized(request, "Delete valuation request"),
           deleteValuationId = PathnameValidator(pathnames);
 
-        await service.deleteValuationRequest(deleteValuationId);
+        await service.deleteValuationRequest(deleteValuationId, user);
 
         await logService.createLog({
           action: "Valuation deletion",

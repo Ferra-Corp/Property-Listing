@@ -43,6 +43,11 @@ export interface UserRepository {
   getUser: (id: string) => Promise<PublicUser | null>;
   getUsers: () => Promise<PublicUser[]>;
   deleteUser: (id: string) => Promise<void>;
+  // A genuine row removal, distinct from deleteUser's soft delete. Only for
+  // undoing an invite that never finished (e.g. the invite email failed to
+  // send) — the account never existed as far as anyone but the admin who
+  // triggered it is concerned, so nothing should be left behind to soft-delete.
+  hardDeleteUser: (id: string) => Promise<void>;
 }
 
 export interface UserService {
@@ -51,6 +56,7 @@ export interface UserService {
   getUser: (id: string) => Promise<PublicUser>;
   getUsers: () => Promise<PublicUser[]>;
   deleteUser: (id: string) => Promise<void>;
+  hardDeleteUser: (id: string) => Promise<void>;
   // For writes that land through a different repository (e.g. the OTP
   // secret, owned by AuthRepository) but still need the cached PublicUser
   // to drop its stale mfa_enabled snapshot.

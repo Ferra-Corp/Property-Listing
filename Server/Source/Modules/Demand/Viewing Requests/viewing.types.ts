@@ -51,6 +51,10 @@ export type UpdateViewingRequestDTO = Partial<createViewingRequestDTO> & {
   cancelled_reason?: string | null;
 };
 
+/** Just enough of the signed-in staff member to decide whose requests they
+ * can see or touch — an Agent's own book only, everyone else unrestricted. */
+export type RequestingStaff = { id: string; role: string };
+
 export interface ViewingRepository {
   createViewingRequest: (
     details: createViewingRequestDTO,
@@ -71,8 +75,12 @@ export interface ViewingService {
   editViewingRequest: (
     id: string,
     details: UpdateViewingRequestDTO,
+    requester: RequestingStaff,
   ) => Promise<ViewingRequest>;
-  getViewingRequest: (id: string) => Promise<ViewingRequest>;
-  getViewingRequests: () => Promise<ViewingRequest[]>;
-  deleteViewingRequest: (id: string) => Promise<void>;
+  getViewingRequest: (
+    id: string,
+    requester: RequestingStaff,
+  ) => Promise<ViewingRequest>;
+  getViewingRequests: (requester: RequestingStaff) => Promise<ViewingRequest[]>;
+  deleteViewingRequest: (id: string, requester: RequestingStaff) => Promise<void>;
 }

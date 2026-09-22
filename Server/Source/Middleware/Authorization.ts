@@ -58,18 +58,22 @@ export type permission_group =
   | "Edit notification"
 
   // Leads
+  | "View lead"
   | "Edit lead"
   | "Delete lead"
 
   // Viewing Requests
+  | "View viewing request"
   | "Edit viewing request"
   | "Delete viewing request"
 
   // Valuation Requests
+  | "View valuation request"
   | "Edit valuation request"
   | "Delete valuation request"
 
   // Subscribers
+  | "View subscriber"
   | "Edit subscriber"
   | "Delete subscriber";
 
@@ -102,12 +106,16 @@ const ALL_PERMISSIONS: permission_group[] = [
   "Delete site setting",
   "Create notification",
   "Edit notification",
+  "View lead",
   "Edit lead",
   "Delete lead",
+  "View viewing request",
   "Edit viewing request",
   "Delete viewing request",
+  "View valuation request",
   "Edit valuation request",
   "Delete valuation request",
+  "View subscriber",
   "Edit subscriber",
   "Delete subscriber",
 ];
@@ -127,6 +135,11 @@ const ROLE_PERMISSIONS: Record<UserRole, permission_group[]> = {
     "Edit tag",
     "Delete tag",
     "View listing",
+    // A newsletter is a marketing artifact, not a sales one — Subscribers
+    // sits with Editor alone, not Agent.
+    "View subscriber",
+    "Edit subscriber",
+    "Delete subscriber",
   ],
 
   agent: [
@@ -136,17 +149,26 @@ const ROLE_PERMISSIONS: Record<UserRole, permission_group[]> = {
     "View listing",
     "Create notification",
     "Edit notification",
+    "View lead",
     "Edit lead",
     "Delete lead",
+    "View viewing request",
     "Edit viewing request",
     "Delete viewing request",
+    "View valuation request",
     "Edit valuation request",
     "Delete valuation request",
-    "Edit subscriber",
-    "Delete subscriber",
   ],
 
-  viewer: ["View listing"],
+  // The junior-staff/intern role: read-only, but broadly — everything an
+  // Agent works with, minus any ability to change it. Explicitly does NOT
+  // include Subscribers (Editor's alone) or anything content/admin-side.
+  viewer: [
+    "View listing",
+    "View lead",
+    "View viewing request",
+    "View valuation request",
+  ],
 };
 
 export const Authorized = async (

@@ -7,7 +7,6 @@ import {
   sendResponseMessage,
   PathnameValidator,
 } from "../../../../Utilities/Http.js";
-import { AuthToken } from "../../../../Middleware/Authentication.js";
 import { Authorized } from "../../../../Middleware/Authorization.js";
 
 export const LeadController = async (
@@ -23,12 +22,12 @@ export const LeadController = async (
   try {
     switch (request.method) {
       case "GET": {
-        await AuthToken(request);
+        const viewUser = await Authorized(request, "View lead");
 
         const leadId = pathnames[2],
           result = leadId
-            ? await service.getLead(leadId)
-            : await service.getLeads();
+            ? await service.getLead(leadId, viewUser)
+            : await service.getLeads(viewUser);
 
         sendResponseMessage(200, false, result, response);
         break;
@@ -49,7 +48,11 @@ export const LeadController = async (
         const user = await Authorized(request, "Edit lead"),
           patchLeadId = PathnameValidator(pathnames),
           patchRequestBody = await getRequestBody(request),
-          patchedLead = await service.editLead(patchLeadId, patchRequestBody);
+          patchedLead = await service.editLead(
+            patchLeadId,
+            patchRequestBody,
+            user,
+          );
 
         await logService.createLog({
           action: "Lead update",
@@ -68,7 +71,7 @@ export const LeadController = async (
         const user = await Authorized(request, "Delete lead"),
           deleteLeadId = PathnameValidator(pathnames);
 
-        await service.deleteLead(deleteLeadId);
+        await service.deleteLead(deleteLeadId, user);
 
         await logService.createLog({
           action: "Lead deletion",
