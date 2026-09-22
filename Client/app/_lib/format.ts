@@ -37,7 +37,7 @@ export function slugify(input: string): string {
 /** e.g. "1,920,000" — grouped, no currency symbol/code. */
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(
-    value,
+    value
   )
 }
 
@@ -55,7 +55,11 @@ const PRICE_PERIOD_LABEL: Record<string, string> = {
   per_acre: "/ acre",
 }
 
-type RateLike = { base_currency: string; target_currency: string; rate: number | string }
+type RateLike = {
+  base_currency: string
+  target_currency: string
+  rate: number | string
+}
 
 /**
  * Converts an amount from one currency to another using whatever
@@ -66,17 +70,17 @@ export function convertAmount(
   amount: number,
   fromCurrency: string,
   toCurrency: string,
-  rates: RateLike[],
+  rates: RateLike[]
 ): number | null {
   if (fromCurrency === toCurrency) return amount
 
   const direct = rates.find(
-    (r) => r.base_currency === fromCurrency && r.target_currency === toCurrency,
+    (r) => r.base_currency === fromCurrency && r.target_currency === toCurrency
   )
   if (direct) return amount * Number(direct.rate)
 
   const inverse = rates.find(
-    (r) => r.base_currency === toCurrency && r.target_currency === fromCurrency,
+    (r) => r.base_currency === toCurrency && r.target_currency === fromCurrency
   )
   if (inverse) return amount / Number(inverse.rate)
 
@@ -94,7 +98,7 @@ export function formatPrice(
   currencyCode: string,
   pricePeriod: string,
   priceOnRequest: boolean,
-  convertTo?: { currency: string; rates: RateLike[] },
+  convertTo?: { currency: string; rates: RateLike[] }
 ): { price: string; priceUnit: string } {
   if (priceOnRequest || price == null)
     return { price: "On request", priceUnit: "rate quoted on enquiry" }
@@ -107,7 +111,7 @@ export function formatPrice(
       amount,
       currencyCode,
       convertTo.currency,
-      convertTo.rates,
+      convertTo.rates
     )
     if (converted !== null) {
       amount = converted
@@ -135,4 +139,15 @@ export function toWhatsAppDigits(phone: string): string {
 /** Builds a wa.me click-to-chat link with a prefilled, URL-encoded message. */
 export function buildWhatsAppLink(phone: string, message: string): string {
   return `https://wa.me/${toWhatsAppDigits(phone)}?text=${encodeURIComponent(message)}`
+}
+
+/**
+ * Display form of a stored phone number: "254711000003" → "+254 711 000 003".
+ * Only the Kenyan 12-digit shape is regrouped; anything else is shown
+ * digits-only behind a "+" rather than guessing at another country's grouping.
+ */
+export function formatPhoneDisplay(phone: string): string {
+  const digits = toWhatsAppDigits(phone)
+  const kenyan = digits.match(/^254(\d{3})(\d{3})(\d{3})$/)
+  return kenyan ? `+254 ${kenyan[1]} ${kenyan[2]} ${kenyan[3]}` : `+${digits}`
 }

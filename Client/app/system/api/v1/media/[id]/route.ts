@@ -1,5 +1,8 @@
 import { ServerUrl } from "@/app/_lib/config"
-import { RequestTokens } from "@/app/_lib/Middleware/Authorization"
+import {
+  applyAuthCookies,
+  authorizedFetch,
+} from "@/app/_lib/Middleware/Authorization"
 import { NextRequest, NextResponse } from "next/server"
 
 interface RouteParams {
@@ -8,18 +11,20 @@ interface RouteParams {
 
 export const PATCH = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      mediaId = (await params.params).id,
+    const mediaId = (await params.params).id,
       newDetails = await request.json()
 
-    const patchRequest = await fetch(`${ServerUrl}/api/media/${mediaId}`, {
-        method: "PATCH",
-        headers: {
-          authorization: `Bearer ${user.accessToken}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(newDetails),
-      }),
+    const { response: patchRequest, rotatedCookies } = await authorizedFetch(
+        request,
+        `${ServerUrl}/api/media/${mediaId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(newDetails),
+        }
+      ),
       patchResponse = await patchRequest.json()
 
     if (!patchRequest.ok)
@@ -28,9 +33,11 @@ export const PATCH = async (request: NextRequest, params: RouteParams) => {
         { status: patchRequest.status }
       )
 
-    return NextResponse.json(patchResponse.response.message, {
+    const response = NextResponse.json(patchResponse.response.message, {
       status: patchRequest.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":
@@ -55,15 +62,16 @@ export const PATCH = async (request: NextRequest, params: RouteParams) => {
 
 export const DELETE = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      mediaId = (await params.params).id
+    const mediaId = (await params.params).id
 
-    const deleteRequest = await fetch(`${ServerUrl}/api/media/${mediaId}`, {
-      method: "DELETE",
-      headers: {
-        authorization: `Bearer ${user.accessToken}`,
-      },
-    })
+    const { response: deleteRequest, rotatedCookies } = await authorizedFetch(
+      request,
+      `${ServerUrl}/api/media/${mediaId}`,
+      {
+        method: "DELETE",
+        headers: {},
+      }
+    )
 
     if (!deleteRequest.ok) {
       const deleteResponse = await deleteRequest.json()
@@ -73,7 +81,9 @@ export const DELETE = async (request: NextRequest, params: RouteParams) => {
       )
     }
 
-    return new NextResponse(null, { status: deleteRequest.status })
+    const response = new NextResponse(null, { status: deleteRequest.status })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":

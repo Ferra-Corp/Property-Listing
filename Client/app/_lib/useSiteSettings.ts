@@ -2,6 +2,14 @@
 
 import { useSettingContext } from "./Context/Site Setting"
 
+// Shown only until each setting is first saved from Site settings. Exported
+// so pages outside the settings context (the admin sign-in screens) fall
+// back to exactly what the rest of the site does.
+export const DEFAULT_CONTACT_PHONE = "254711000003"
+export const DEFAULT_CONTACT_EMAIL = "hello@entity.co.ke"
+export const DEFAULT_OFFICE_ADDRESS =
+  "2nd floor, Muthithi Road\nWestlands, Nairobi\nVisits by appointment"
+
 /** Reads one site-setting key's `{ value }` blob, falling back when the key
  * hasn't been set yet (or hasn't loaded) — so the site always renders
  * something sensible rather than a blank field. */
@@ -19,20 +27,17 @@ export function useSiteSettingValue(key: string, fallback: string): string {
  * setting is ever saved.
  */
 export function useContactPhone(): string {
-  return useSiteSettingValue("contact.phone", "254711000003")
+  return useSiteSettingValue("contact.phone", DEFAULT_CONTACT_PHONE)
 }
 
 /** Fallback enquiries address shown when no specific agent's own address applies. */
 export function useContactEmail(): string {
-  return useSiteSettingValue("contact.email", "hello@entity.co.ke")
+  return useSiteSettingValue("contact.email", DEFAULT_CONTACT_EMAIL)
 }
 
 /** The office address shown on the contact page — one line per `\n`. */
 export function useOfficeAddress(): string {
-  return useSiteSettingValue(
-    "contact.office_address",
-    "2nd floor, Muthithi Road\nWestlands, Nairobi\nVisits by appointment"
-  )
+  return useSiteSettingValue("contact.office_address", DEFAULT_OFFICE_ADDRESS)
 }
 
 /** Social links shown in the footer — empty string means "not set", so the

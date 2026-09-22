@@ -9,6 +9,10 @@ import {
   Notice,
   PaneHead,
 } from "../../../_components/Admin/Auth/auth-shell"
+import {
+  deskFact,
+  useAuthContact,
+} from "../../../_components/Admin/Auth/useAuthContact"
 import { OtpInput } from "../../../_components/Admin/Auth/otp-input"
 import { clearMfaChallenge, readMfaChallenge } from "../_lib/mfa-challenge"
 
@@ -17,29 +21,6 @@ import { clearMfaChallenge, readMfaChallenge } from "../_lib/mfa-challenge"
 // first client render onward, false during SSR/the first paint), so reading
 // sessionStorage below never runs during server rendering.
 const subscribeNever = () => () => {}
-
-const FACTS = [
-  {
-    label: "Lost the device?",
-    value: (
-      <>
-        Ring the desk
-        <br />
-        and ask for Fatuma
-      </>
-    ),
-  },
-  {
-    label: "The desk",
-    value: (
-      <>
-        +254 20 ••• 4400
-        <br />
-        ext. 200
-      </>
-    ),
-  },
-]
 
 function formatCountdown(msRemaining: number): string {
   const totalSeconds = Math.max(0, Math.ceil(msRemaining / 1000)),
@@ -50,7 +31,8 @@ function formatCountdown(msRemaining: number): string {
 }
 
 export default function TwoFactorPage() {
-  const router = useRouter(),
+  const contact = useAuthContact(),
+    router = useRouter(),
     mounted = React.useSyncExternalStore(
       subscribeNever,
       () => true,
@@ -119,7 +101,14 @@ export default function TwoFactorPage() {
       title="Two things, not one."
       lead="Publishing a listing puts the firm's licence behind it. Anyone who may publish signs in with a password and a figure from their own device — so a lost password is never enough on its own."
       quote="Every change lands in the ledger, against a name."
-      facts={FACTS}
+      facts={
+        contact.ready
+          ? [
+              { label: "Lost the device?", value: "Call or email the desk" },
+              deskFact(contact),
+            ]
+          : []
+      }
       back={{ href: "/admin/auth/sign-in", label: "Back to sign in" }}
       topRight={
         <Link href="/system/contact" className="cl-k text-neutral-600">

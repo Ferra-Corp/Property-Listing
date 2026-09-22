@@ -128,19 +128,29 @@ export function StaffForm({
     router = useRouter(),
     isSelf = variant === "self"
 
-  const [account, setAccount] = React.useState<AccountState>(() => accountFrom(user)),
+  const [account, setAccount] = React.useState<AccountState>(() =>
+      accountFrom(user)
+    ),
     [profile, setProfile] = React.useState<ProfileState | null>(() =>
       agent ? profileFrom(agent) : null
     ),
     [saving, setSaving] = React.useState(false),
     [uploading, setUploading] = React.useState(false),
-    [error, setError] = React.useState<string | null>(null)
+    [error, setError] = React.useState<string | null>(null),
+    [resettingPassword, setResettingPassword] = React.useState(false),
+    [resetSent, setResetSent] = React.useState(false)
 
-  function setAccountField<K extends keyof AccountState>(key: K, value: AccountState[K]) {
+  function setAccountField<K extends keyof AccountState>(
+    key: K,
+    value: AccountState[K]
+  ) {
     setAccount((a) => ({ ...a, [key]: value }))
   }
 
-  function setProfileField<K extends keyof ProfileState>(key: K, value: ProfileState[K]) {
+  function setProfileField<K extends keyof ProfileState>(
+    key: K,
+    value: ProfileState[K]
+  ) {
     setProfile((p) => (p ? { ...p, [key]: value } : p))
   }
 
@@ -154,6 +164,32 @@ export function StaffForm({
       setError((err as Error).message)
     } finally {
       setUploading(false)
+    }
+  }
+
+  // Reuses the forgotten-password flow itself rather than an in-place
+  // current/new-password form: it's already the one path that verifies a
+  // password change by email before letting it take effect, so a second,
+  // parallel "change password" endpoint would just be the same guarantee
+  // built twice.
+  async function handleRequestPasswordReset() {
+    setError(null)
+    setResettingPassword(true)
+    try {
+      const resetRequest = await fetch("/admin/api/auth/forgotpass", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email: user.email }),
+        }),
+        resetResponse = await resetRequest.json()
+
+      if (!resetRequest.ok) throw new Error(resetResponse.error)
+
+      setResetSent(true)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setResettingPassword(false)
     }
   }
 
@@ -221,7 +257,10 @@ export function StaffForm({
         redirectId = nextSlug
       }
 
-      push({ title: "Saved", body: (agent ? profile?.display_name : account.name)?.trim() })
+      push({
+        title: "Saved",
+        body: (agent ? profile?.display_name : account.name)?.trim(),
+      })
       router.push(isSelf ? "/admin/my-profile" : `/admin/agents/${redirectId}`)
     } catch (err) {
       setError((err as Error).message)
@@ -235,7 +274,11 @@ export function StaffForm({
   return (
     <>
       <PageHead
-        title={isSelf ? "My profile" : `Edit ${agent ? profile?.display_name : account.name}`}
+        title={
+          isSelf
+            ? "My profile"
+            : `Edit ${agent ? profile?.display_name : account.name}`
+        }
         meta={
           isSelf
             ? agent
@@ -306,7 +349,9 @@ export function StaffForm({
                   <Label htmlFor="acc_role">Role</Label>
                   <Select
                     value={account.role}
-                    onValueChange={(value) => setAccountField("role", value as UserRole)}
+                    onValueChange={(value) =>
+                      setAccountField("role", value as UserRole)
+                    }
                   >
                     <SelectTrigger id="acc_role" className="w-full">
                       <SelectValue />
@@ -321,9 +366,8 @@ export function StaffForm({
                   </Select>
                   {!agent && account.role === "agent" ? (
                     <p className="text-xs text-muted-foreground">
-                      Saving this alone won&apos;t give them a public profile
-                      — there&apos;s no page for that yet outside a fresh
-                      invite.
+                      Saving this alone won&apos;t give them a public profile —
+                      there&apos;s no page for that yet outside a fresh invite.
                     </p>
                   ) : null}
                 </div>
@@ -341,9 +385,7 @@ export function StaffForm({
                       setAccountField("account_active", checked === true)
                     }
                   />
-                  <span className="text-sm">
-                    Account enabled — can sign in
-                  </span>
+                  <span className="text-sm">Account enabled — can sign in</span>
                 </label>
               )}
             </CardContent>
@@ -352,10 +394,48 @@ export function StaffForm({
           {isSelf ? (
             <Card>
               <CardHeader>
+                <CardTitle>Password</CardTitle>
+                <CardDescription>
+                  Changed the same way a forgotten one is — by email link, not
+                  from here directly.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {resetSent ? (
+                  <p className="text-sm">
+                    A reset link has been sent to {user.email}. It lasts one
+                    hour and works once.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    <p className="text-sm text-muted-foreground">
+                      We&apos;ll email a link to {user.email} that lets you set
+                      a new one.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="w-fit"
+                      disabled={resettingPassword}
+                      onClick={handleRequestPasswordReset}
+                    >
+                      {resettingPassword
+                        ? "Sending…"
+                        : "Send password reset email"}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {isSelf ? (
+            <Card>
+              <CardHeader>
                 <CardTitle>Two-factor authentication</CardTitle>
                 <CardDescription>
-                  Asked for at sign-in if you may publish a listing or approve
-                  a valuation.
+                  Asked for at sign-in if you may publish a listing or approve a
+                  valuation.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -367,8 +447,7 @@ export function StaffForm({
                 ) : (
                   <div className="flex flex-col gap-2.5">
                     <p className="text-sm text-muted-foreground">
-                      Not set up yet — signing in only asks for your
-                      password.
+                      Not set up yet — signing in only asks for your password.
                     </p>
                     <ButtonLink
                       href="/admin/auth/pair-authenticator?next=/admin/my-profile"
@@ -395,7 +474,7 @@ export function StaffForm({
                       matted={false}
                       src={profile.photo_url || undefined}
                       alt={profile.display_name}
-                      className="h-[86px] w-[86px] flex-none rounded-full"
+                      className="h-21.5 w-21.5 flex-none rounded-full"
                       label={initialsFor(profile.display_name)}
                     />
                     <div className="flex min-w-0 flex-1 flex-col gap-2.5">
@@ -421,7 +500,7 @@ export function StaffForm({
                         <button
                           type="button"
                           onClick={() => setProfileField("photo_url", "")}
-                          className="w-fit text-[12.5px] text-[var(--color-accent-2)] underline underline-offset-2"
+                          className="w-fit text-[12.5px] text-(--color-accent-2) underline underline-offset-2"
                         >
                           Remove photo
                         </button>
@@ -447,7 +526,9 @@ export function StaffForm({
                       <Input
                         id="display_name"
                         value={profile.display_name}
-                        onChange={(e) => setProfileField("display_name", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("display_name", e.target.value)
+                        }
                         required
                       />
                     </div>
@@ -456,8 +537,12 @@ export function StaffForm({
                       <Input
                         id="slug"
                         value={profile.slug}
-                        onChange={(e) => setProfileField("slug", e.target.value)}
-                        onBlur={() => setProfileField("slug", slugify(profile.slug))}
+                        onChange={(e) =>
+                          setProfileField("slug", e.target.value)
+                        }
+                        onBlur={() =>
+                          setProfileField("slug", slugify(profile.slug))
+                        }
                         className="font-mono text-sm"
                       />
                     </div>
@@ -469,7 +554,9 @@ export function StaffForm({
                       <Input
                         id="title"
                         value={profile.title}
-                        onChange={(e) => setProfileField("title", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("title", e.target.value)
+                        }
                         placeholder="Senior Agent"
                       />
                     </div>
@@ -478,7 +565,9 @@ export function StaffForm({
                       <Input
                         id="license"
                         value={profile.license_number}
-                        onChange={(e) => setProfileField("license_number", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("license_number", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -499,7 +588,9 @@ export function StaffForm({
                       <Input
                         id="specializations"
                         value={profile.specializations}
-                        onChange={(e) => setProfileField("specializations", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("specializations", e.target.value)
+                        }
                         placeholder="Apartments, Land, Commercial"
                       />
                     </div>
@@ -508,7 +599,9 @@ export function StaffForm({
                       <Input
                         id="languages"
                         value={profile.languages}
-                        onChange={(e) => setProfileField("languages", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("languages", e.target.value)
+                        }
                         placeholder="English, Swahili"
                       />
                     </div>
@@ -522,7 +615,9 @@ export function StaffForm({
                       min={0}
                       className="max-w-35"
                       value={profile.years_experience}
-                      onChange={(e) => setProfileField("years_experience", e.target.value)}
+                      onChange={(e) =>
+                        setProfileField("years_experience", e.target.value)
+                      }
                     />
                   </div>
 
@@ -534,7 +629,9 @@ export function StaffForm({
                       <Input
                         id="profile_phone"
                         value={profile.phone}
-                        onChange={(e) => setProfileField("phone", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("phone", e.target.value)
+                        }
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -542,7 +639,9 @@ export function StaffForm({
                       <Input
                         id="whatsapp"
                         value={profile.whatsapp_number}
-                        onChange={(e) => setProfileField("whatsapp_number", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("whatsapp_number", e.target.value)
+                        }
                         placeholder="Leave blank to use the public phone"
                       />
                     </div>
@@ -554,7 +653,9 @@ export function StaffForm({
                       id="email_public"
                       type="email"
                       value={profile.email_public}
-                      onChange={(e) => setProfileField("email_public", e.target.value)}
+                      onChange={(e) =>
+                        setProfileField("email_public", e.target.value)
+                      }
                       placeholder="Defaults to none shown"
                     />
                   </div>
@@ -565,7 +666,9 @@ export function StaffForm({
                       <Input
                         id="linkedin"
                         value={profile.linkedin_url}
-                        onChange={(e) => setProfileField("linkedin_url", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("linkedin_url", e.target.value)
+                        }
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -573,7 +676,9 @@ export function StaffForm({
                       <Input
                         id="instagram"
                         value={profile.instagram_url}
-                        onChange={(e) => setProfileField("instagram_url", e.target.value)}
+                        onChange={(e) =>
+                          setProfileField("instagram_url", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -606,7 +711,9 @@ export function StaffForm({
                     <Input
                       id="meta_title"
                       value={profile.meta_title}
-                      onChange={(e) => setProfileField("meta_title", e.target.value)}
+                      onChange={(e) =>
+                        setProfileField("meta_title", e.target.value)
+                      }
                       placeholder="Falls back to the name if left blank"
                     />
                   </div>
@@ -615,7 +722,9 @@ export function StaffForm({
                     <Textarea
                       id="meta_description"
                       value={profile.meta_description}
-                      onChange={(e) => setProfileField("meta_description", e.target.value)}
+                      onChange={(e) =>
+                        setProfileField("meta_description", e.target.value)
+                      }
                       placeholder="Falls back to the bio if left blank"
                     />
                   </div>
@@ -624,9 +733,7 @@ export function StaffForm({
             </>
           ) : null}
 
-          {error ? (
-            <p className="text-sm text-destructive">{error}</p>
-          ) : null}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
           <div className="flex items-center justify-end gap-3">
             <ButtonLink href={backHref} variant="ghost">

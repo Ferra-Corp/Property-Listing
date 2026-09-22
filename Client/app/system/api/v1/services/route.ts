@@ -1,7 +1,8 @@
 import { ServerUrl } from "@/app/_lib/config"
 import {
-  OptionalRequestTokens,
-  RequestTokens,
+  applyAuthCookies,
+  authorizedFetch,
+  optionalAuthorizedFetch,
 } from "@/app/_lib/Middleware/Authorization"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -9,15 +10,13 @@ import { NextRequest, NextResponse } from "next/server"
 // session (if present) sees everything.
 export const GET = async (request: NextRequest) => {
   try {
-    const user = OptionalRequestTokens(request)
-
-    const servicesFetch = await fetch(`${ServerUrl}/api/services`, {
-        method: "GET",
-        headers: {
-          ...(user ? { authorization: `Bearer ${user.accessToken}` } : {}),
-          accept: "application/json",
-        },
-      }),
+    const { response: servicesFetch, rotatedCookies } =
+        await optionalAuthorizedFetch(request, `${ServerUrl}/api/services`, {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        }),
       servicesResponse = await servicesFetch.json()
 
     if (!servicesFetch.ok)
@@ -30,9 +29,11 @@ export const GET = async (request: NextRequest) => {
         }
       )
 
-    return NextResponse.json(servicesResponse.response.message, {
+    const response = NextResponse.json(servicesResponse.response.message, {
       status: servicesFetch.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
@@ -43,17 +44,19 @@ export const GET = async (request: NextRequest) => {
 
 export const POST = async (request: NextRequest) => {
   try {
-    const user = RequestTokens(request),
-      body = await request.json()
+    const body = await request.json()
 
-    const creationRequest = await fetch(`${ServerUrl}/api/services`, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${user.accessToken}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }),
+    const { response: creationRequest, rotatedCookies } = await authorizedFetch(
+        request,
+        `${ServerUrl}/api/services`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      ),
       creationResponse = await creationRequest.json()
 
     if (!creationRequest.ok)
@@ -64,9 +67,11 @@ export const POST = async (request: NextRequest) => {
         { status: creationRequest.status }
       )
 
-    return NextResponse.json(creationResponse.response.message, {
+    const response = NextResponse.json(creationResponse.response.message, {
       status: creationRequest.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":

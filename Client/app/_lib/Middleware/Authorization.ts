@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { ServerUrl } from "../config"
 
 const ACCESS_TOKEN_COOKIE = "accessToken",
   REFRESH_TOKEN_COOKIE = "refreshToken"
@@ -98,9 +99,7 @@ export function applyAuthCookies(
     secure: isSecureCookie,
     sameSite: "lax",
     path: "/",
-    ...(refresh.maxAgeSeconds != null
-      ? { maxAge: refresh.maxAgeSeconds }
-      : {}),
+    ...(refresh.maxAgeSeconds != null ? { maxAge: refresh.maxAgeSeconds } : {}),
   })
 
   return true
@@ -116,4 +115,88 @@ export function clearAuthCookies(response: NextResponse): void {
  * ever exists on this server-to-server call, never in the browser. */
 export function backendRefreshCookieHeader(refreshToken: string): string {
   return `refresh_token=${encodeURIComponent(refreshToken)}`
+}
+
+type AuthorizedFetchResult = {
+  response: Response
+  /** Set-Cookie headers from a refresh this call had to spend — pass to
+   * `applyAuthCookies` so the browser gets the rotated pair, or the next
+   * request arrives with a refresh token the backend already revoked. */
+  rotatedCookies: string[] | null
+}
+
+async function attemptWithRefresh(
+  tokens: { accessToken: string; refreshToken: string },
+  url: string,
+  init: RequestInit
+): Promise<AuthorizedFetchResult> {
+  const attempt = (accessToken: string) =>
+    fetch(url, {
+      ...init,
+      headers: { ...init.headers, authorization: `Bearer ${accessToken}` },
+    })
+
+  const first = await attempt(tokens.accessToken)
+
+  if (first.status !== 401) return { response: first, rotatedCookies: null }
+
+  // The access token lives 15 minutes; the refresh token is good for 30
+  // days. A bare 401 this far in almost always just means the former
+  // expired mid-session — spend the latter once, transparently, rather
+  // than bounce an otherwise-valid session back to sign-in.
+  const refreshRequest = await fetch(`${ServerUrl}/api/auth/refresh`, {
+    method: "POST",
+    headers: { cookie: backendRefreshCookieHeader(tokens.refreshToken) },
+  })
+
+  if (!refreshRequest.ok) return { response: first, rotatedCookies: null }
+
+  const setCookieHeaders = refreshRequest.headers.getSetCookie(),
+    newAccessToken = parseSetCookie(setCookieHeaders, "access_token")?.value
+
+  if (!newAccessToken) return { response: first, rotatedCookies: null }
+
+  const retry = await attempt(newAccessToken)
+
+  return { response: retry, rotatedCookies: setCookieHeaders }
+}
+
+/**
+ * The authenticated counterpart of a plain `fetch` to the backend: attaches
+ * the caller's access token, and on a 401 spends the refresh token once and
+ * retries before giving up. Every BFF route that requires a session should
+ * call the backend through this rather than `fetch` directly — without it,
+ * a session dies after 15 minutes of activity instead of lasting the full
+ * 30-day refresh window, forcing a re-login the rest of the session doesn't
+ * expect.
+ */
+export async function authorizedFetch(
+  request: NextRequest,
+  url: string,
+  init: RequestInit = {}
+): Promise<AuthorizedFetchResult> {
+  return attemptWithRefresh(RequestTokens(request), url, init)
+}
+
+/**
+ * Same retry-once-on-401 behavior as `authorizedFetch`, for a route an
+ * anonymous visitor may also hit: with no session at all it just forwards
+ * the plain request, and if a present session's tokens are both dead (the
+ * refresh failed too) it falls back to one final anonymous request rather
+ * than surface a staff member's expired session as an error on a public page.
+ */
+export async function optionalAuthorizedFetch(
+  request: NextRequest,
+  url: string,
+  init: RequestInit = {}
+): Promise<AuthorizedFetchResult> {
+  const tokens = OptionalRequestTokens(request)
+
+  if (!tokens) return { response: await fetch(url, init), rotatedCookies: null }
+
+  const result = await attemptWithRefresh(tokens, url, init)
+
+  if (result.response.status !== 401) return result
+
+  return { response: await fetch(url, init), rotatedCookies: null }
 }

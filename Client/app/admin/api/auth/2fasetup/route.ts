@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ServerUrl } from "@/app/_lib/config"
-import { RequestTokens } from "@/app/_lib/Middleware/Authorization"
+import {
+  applyAuthCookies,
+  authorizedFetch,
+} from "@/app/_lib/Middleware/Authorization"
 
 // Two-step 2FA enrolment for the signed-in user, mirroring the backend's
 // "generateotp" and "verifyotp" auth actions:
@@ -9,12 +12,13 @@ import { RequestTokens } from "@/app/_lib/Middleware/Authorization"
 
 export const POST = async (request: NextRequest) => {
   try {
-    const user = RequestTokens(request)
-
-    const generateRequest = await fetch(`${ServerUrl}/api/auth/generateotp`, {
-        method: "POST",
-        headers: { authorization: `Bearer ${user.accessToken}` },
-      }),
+    const { response: generateRequest, rotatedCookies } = await authorizedFetch(
+        request,
+        `${ServerUrl}/api/auth/generateotp`,
+        {
+          method: "POST",
+        }
+      ),
       generateResponse = await generateRequest.json()
 
     if (!generateRequest.ok)
@@ -23,9 +27,11 @@ export const POST = async (request: NextRequest) => {
         { status: generateRequest.status }
       )
 
-    return NextResponse.json(generateResponse.response.message, {
+    const response = NextResponse.json(generateResponse.response.message, {
       status: 200,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":
@@ -44,17 +50,19 @@ export const POST = async (request: NextRequest) => {
 
 export const PUT = async (request: NextRequest) => {
   try {
-    const user = RequestTokens(request),
-      { code } = await request.json()
+    const { code } = await request.json()
 
-    const verifyRequest = await fetch(`${ServerUrl}/api/auth/verifyotp`, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${user.accessToken}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ code }),
-      }),
+    const { response: verifyRequest, rotatedCookies } = await authorizedFetch(
+        request,
+        `${ServerUrl}/api/auth/verifyotp`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ code }),
+        }
+      ),
       verifyResponse = await verifyRequest.json()
 
     if (!verifyRequest.ok)
@@ -63,10 +71,12 @@ export const PUT = async (request: NextRequest) => {
         { status: verifyRequest.status }
       )
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       { message: verifyResponse.response.message },
       { status: 200 }
     )
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":

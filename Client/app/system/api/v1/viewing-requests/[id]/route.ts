@@ -1,5 +1,8 @@
 import { ServerUrl } from "@/app/_lib/config"
-import { RequestTokens } from "@/app/_lib/Middleware/Authorization"
+import {
+  applyAuthCookies,
+  authorizedFetch,
+} from "@/app/_lib/Middleware/Authorization"
 import { NextRequest, NextResponse } from "next/server"
 
 interface RouteParams {
@@ -8,15 +11,14 @@ interface RouteParams {
 
 export const GET = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      viewingId = (await params.params).id
+    const viewingId = (await params.params).id
 
-    const fetchRequest = await fetch(
+    const { response: fetchRequest, rotatedCookies } = await authorizedFetch(
+        request,
         `${ServerUrl}/api/viewing-requests/${viewingId}`,
         {
           method: "GET",
           headers: {
-            authorization: `Bearer ${user.accessToken}`,
             accept: "application/json",
           },
         }
@@ -29,9 +31,11 @@ export const GET = async (request: NextRequest, params: RouteParams) => {
         { status: fetchRequest.status }
       )
 
-    return NextResponse.json(fetchResponse.response.message, {
+    const response = NextResponse.json(fetchResponse.response.message, {
       status: fetchRequest.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":
@@ -56,16 +60,15 @@ export const GET = async (request: NextRequest, params: RouteParams) => {
 
 export const PATCH = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      viewingId = (await params.params).id,
+    const viewingId = (await params.params).id,
       newDetails = await request.json()
 
-    const patchRequest = await fetch(
+    const { response: patchRequest, rotatedCookies } = await authorizedFetch(
+        request,
         `${ServerUrl}/api/viewing-requests/${viewingId}`,
         {
           method: "PATCH",
           headers: {
-            authorization: `Bearer ${user.accessToken}`,
             "content-type": "application/json",
           },
           body: JSON.stringify(newDetails),
@@ -79,9 +82,11 @@ export const PATCH = async (request: NextRequest, params: RouteParams) => {
         { status: patchRequest.status }
       )
 
-    return NextResponse.json(patchResponse.response.message, {
+    const response = NextResponse.json(patchResponse.response.message, {
       status: patchRequest.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":
@@ -106,16 +111,14 @@ export const PATCH = async (request: NextRequest, params: RouteParams) => {
 
 export const DELETE = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      viewingId = (await params.params).id
+    const viewingId = (await params.params).id
 
-    const deleteRequest = await fetch(
+    const { response: deleteRequest, rotatedCookies } = await authorizedFetch(
+      request,
       `${ServerUrl}/api/viewing-requests/${viewingId}`,
       {
         method: "DELETE",
-        headers: {
-          authorization: `Bearer ${user.accessToken}`,
-        },
+        headers: {},
       }
     )
 
@@ -127,7 +130,9 @@ export const DELETE = async (request: NextRequest, params: RouteParams) => {
       )
     }
 
-    return new NextResponse(null, { status: deleteRequest.status })
+    const response = new NextResponse(null, { status: deleteRequest.status })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":

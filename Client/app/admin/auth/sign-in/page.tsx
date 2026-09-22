@@ -10,41 +10,14 @@ import {
   Notice,
   PaneHead,
 } from "../../../_components/Admin/Auth/auth-shell"
+import {
+  Lines,
+  officeFact,
+  useAuthContact,
+} from "../../../_components/Admin/Auth/useAuthContact"
 import { PasswordField } from "../../../_components/Admin/Auth/password-field"
+import { formatPhoneDisplay } from "../../../_lib/format"
 import { safeAdminPath, writeMfaChallenge } from "../_lib/mfa-challenge"
-
-const FACTS = [
-  {
-    label: "Office",
-    value: (
-      <>
-        Enterprise Road
-        <br />
-        Industrial Area
-      </>
-    ),
-  },
-  {
-    label: "The desk",
-    value: (
-      <>
-        Mon–Fri 08:30–17:30
-        <br />
-        +254 20 ••• 4400
-      </>
-    ),
-  },
-  {
-    label: "Licensed",
-    value: (
-      <>
-        EARB/2011/0342
-        <br />
-        ISK member firm
-      </>
-    ),
-  },
-]
 
 export default function SignInPage() {
   return (
@@ -55,7 +28,8 @@ export default function SignInPage() {
 }
 
 function SignInForm() {
-  const router = useRouter(),
+  const contact = useAuthContact(),
+    router = useRouter(),
     searchParams = useSearchParams(),
     [email, setEmail] = React.useState(""),
     [password, setPassword] = React.useState(""),
@@ -106,10 +80,21 @@ function SignInForm() {
       title="The register, the diary and the ledger."
       lead="Eighty-four instructions, nine agents and every enquiry that has come through the door since 2011 — all of it kept in one place, and every change to it recorded against a name."
       quote="Walk a site twice. Once with the owner, once alone."
-      facts={FACTS}
+      facts={
+        contact.ready
+          ? [
+              officeFact(contact),
+              {
+                label: "Phone",
+                value: <Lines lines={[formatPhoneDisplay(contact.phone)]} />,
+              },
+              { label: "Email", value: contact.email },
+            ]
+          : []
+      }
       topRight={
         <div className="flex items-center gap-2.5">
-          <Link href="/system" className="cl-k text-neutral-600">
+          <Link href="/" className="cl-k text-neutral-600">
             Public site
           </Link>
           <span className="cl-k text-neutral-400">·</span>

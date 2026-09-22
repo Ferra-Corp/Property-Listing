@@ -1,5 +1,8 @@
 import { ServerUrl } from "@/app/_lib/config"
-import { RequestTokens } from "@/app/_lib/Middleware/Authorization"
+import {
+  applyAuthCookies,
+  authorizedFetch,
+} from "@/app/_lib/Middleware/Authorization"
 import { NextRequest, NextResponse } from "next/server"
 
 interface RouteParams {
@@ -8,16 +11,14 @@ interface RouteParams {
 
 export const DELETE = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      { insightId, listingId } = await params.params
+    const { insightId, listingId } = await params.params
 
-    const deleteRequest = await fetch(
+    const { response: deleteRequest, rotatedCookies } = await authorizedFetch(
+      request,
       `${ServerUrl}/api/insight-listings/${insightId}/${listingId}`,
       {
         method: "DELETE",
-        headers: {
-          authorization: `Bearer ${user.accessToken}`,
-        },
+        headers: {},
       }
     )
 
@@ -29,7 +30,9 @@ export const DELETE = async (request: NextRequest, params: RouteParams) => {
       )
     }
 
-    return new NextResponse(null, { status: deleteRequest.status })
+    const response = new NextResponse(null, { status: deleteRequest.status })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":

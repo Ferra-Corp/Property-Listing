@@ -10,31 +10,12 @@ import {
   PaneHead,
   Step,
 } from "../../../_components/Admin/Auth/auth-shell"
+import {
+  deskFact,
+  useAuthContact,
+} from "../../../_components/Admin/Auth/useAuthContact"
 import { OtpInput } from "../../../_components/Admin/Auth/otp-input"
 import { safeAdminPath } from "../_lib/mfa-challenge"
-
-const FACTS = [
-  {
-    label: "Works with",
-    value: (
-      <>
-        Any authenticator app
-        <br />
-        No firm app to install
-      </>
-    ),
-  },
-  {
-    label: "The desk",
-    value: (
-      <>
-        +254 20 ••• 4400
-        <br />
-        ext. 200
-      </>
-    ),
-  },
-]
 
 /** Groups a raw base32 secret into 4-character blocks for easier reading —
  * purely cosmetic, doesn't change the value submitted anywhere. */
@@ -51,7 +32,8 @@ export default function PairAuthenticatorPage() {
 }
 
 function PairAuthenticatorForm() {
-  const router = useRouter(),
+  const contact = useAuthContact(),
+    router = useRouter(),
     searchParams = useSearchParams(),
     next = safeAdminPath(searchParams.get("next")),
     [loading, setLoading] = React.useState(true),
@@ -142,7 +124,23 @@ function PairAuthenticatorForm() {
       plateLabel="Photograph · the strongroom door · 3:2"
       title="Your own device, once."
       lead="Pair a phone to your account and it becomes the second half of your sign-in. It is asked of anyone who may publish a listing or approve a valuation — the licence stands behind both."
-      facts={FACTS}
+      facts={
+        contact.ready
+          ? [
+              {
+                label: "Works with",
+                value: (
+                  <>
+                    Any authenticator app
+                    <br />
+                    No firm app to install
+                  </>
+                ),
+              },
+              deskFact(contact),
+            ]
+          : []
+      }
       back={{ href: next, label: "Back to the admin" }}
       footNote="Pairing is recorded in the ledger"
     >

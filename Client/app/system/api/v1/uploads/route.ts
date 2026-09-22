@@ -1,20 +1,25 @@
 import { ServerUrl } from "@/app/_lib/config"
-import { RequestTokens } from "@/app/_lib/Middleware/Authorization"
+import {
+  applyAuthCookies,
+  authorizedFetch,
+} from "@/app/_lib/Middleware/Authorization"
 import { NextRequest, NextResponse } from "next/server"
 
 export const POST = async (request: NextRequest) => {
   try {
-    const user = RequestTokens(request),
-      detailsBody = await request.json().catch(() => ({}))
+    const detailsBody = await request.json().catch(() => ({}))
 
-    const signRequest = await fetch(`${ServerUrl}/api/uploads`, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${user.accessToken}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(detailsBody),
-      }),
+    const { response: signRequest, rotatedCookies } = await authorizedFetch(
+        request,
+        `${ServerUrl}/api/uploads`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(detailsBody),
+        }
+      ),
       signResponse = await signRequest.json()
 
     if (!signRequest.ok)
@@ -23,9 +28,11 @@ export const POST = async (request: NextRequest) => {
         { status: signRequest.status }
       )
 
-    return NextResponse.json(signResponse.response.message, {
+    const response = NextResponse.json(signResponse.response.message, {
       status: signRequest.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":

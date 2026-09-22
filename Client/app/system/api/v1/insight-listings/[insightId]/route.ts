@@ -1,5 +1,8 @@
 import { ServerUrl } from "@/app/_lib/config"
-import { RequestTokens } from "@/app/_lib/Middleware/Authorization"
+import {
+  applyAuthCookies,
+  authorizedFetch,
+} from "@/app/_lib/Middleware/Authorization"
 import { NextRequest, NextResponse } from "next/server"
 
 interface RouteParams {
@@ -8,15 +11,14 @@ interface RouteParams {
 
 export const GET = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      insightId = (await params.params).insightId
+    const insightId = (await params.params).insightId
 
-    const fetchRequest = await fetch(
+    const { response: fetchRequest, rotatedCookies } = await authorizedFetch(
+        request,
         `${ServerUrl}/api/insight-listings/${insightId}`,
         {
           method: "GET",
           headers: {
-            authorization: `Bearer ${user.accessToken}`,
             accept: "application/json",
           },
         }
@@ -29,9 +31,11 @@ export const GET = async (request: NextRequest, params: RouteParams) => {
         { status: fetchRequest.status }
       )
 
-    return NextResponse.json(fetchResponse.response.message, {
+    const response = NextResponse.json(fetchResponse.response.message, {
       status: fetchRequest.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":
@@ -56,16 +60,15 @@ export const GET = async (request: NextRequest, params: RouteParams) => {
 
 export const POST = async (request: NextRequest, params: RouteParams) => {
   try {
-    const user = RequestTokens(request),
-      insightId = (await params.params).insightId,
+    const insightId = (await params.params).insightId,
       detailsBody = await request.json()
 
-    const creationRequest = await fetch(
+    const { response: creationRequest, rotatedCookies } = await authorizedFetch(
+        request,
         `${ServerUrl}/api/insight-listings/${insightId}`,
         {
           method: "POST",
           headers: {
-            authorization: `Bearer ${user.accessToken}`,
             "content-type": "application/json",
           },
           body: JSON.stringify(detailsBody),
@@ -79,9 +82,11 @@ export const POST = async (request: NextRequest, params: RouteParams) => {
         { status: creationRequest.status }
       )
 
-    return NextResponse.json(creationResponse.response.message, {
+    const response = NextResponse.json(creationResponse.response.message, {
       status: creationRequest.status,
     })
+    if (rotatedCookies) applyAuthCookies(response, rotatedCookies)
+    return response
   } catch (error) {
     switch ((error as Error).message) {
       case "Access token and refresh token aren't provided":

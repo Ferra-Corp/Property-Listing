@@ -47,10 +47,14 @@ export function AuthShell({
 
   return (
     <div className="grid min-h-dvh grid-rows-[auto_1fr] md:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] md:grid-rows-1">
-      {/* ── Left pane / phone band ── */}
+      {/* ── Left pane / phone band ──
+          Pinned to the light theme's palette on purpose: the accent scale
+          inverts in dark mode (accent-900 becomes cream), which would turn
+          this pane light and leave dark text on it. It is a photo-backed
+          dark surface in both themes. */}
       <aside
         className={cn(
-          "relative isolate grid overflow-hidden bg-(--color-accent-900) px-5 py-5 text-(--color-bg)",
+          "relative isolate grid overflow-hidden bg-[#3a2714] px-5 py-5 text-[#f7f3e3]",
           "h-47.5 grid-rows-[auto_1fr] md:h-auto md:grid-rows-[auto_1fr_auto] md:px-10 md:py-8.5",
           compact && "md:px-8 md:py-7"
         )}
@@ -83,10 +87,7 @@ export function AuthShell({
 
         <div className="flex items-center gap-3 md:block">
           {back ? (
-            <Link
-              href={back.href}
-              className="cl-k text-(--color-accent-300) md:hidden"
-            >
+            <Link href={back.href} className="cl-k text-[#dbbb8f] md:hidden">
               ← {back.label}
             </Link>
           ) : null}
@@ -99,16 +100,14 @@ export function AuthShell({
               Realtors
             </span>
           </div>
-          <div className="cl-k mt-2 hidden text-(--color-accent-300) md:block">
+          <div className="cl-k mt-2 hidden text-[#dbbb8f] md:block">
             Property · Nairobi · since 2011
           </div>
         </div>
 
         <div className="flex flex-col justify-end gap-0 py-0 md:justify-center md:gap-4.5 md:py-6.5">
           {kicker ? (
-            <div className="cl-k hidden text-(--color-accent-300) md:block">
-              {kicker}
-            </div>
+            <div className="cl-k hidden text-[#dbbb8f] md:block">{kicker}</div>
           ) : null}
           <h1
             className={cn(
@@ -140,9 +139,7 @@ export function AuthShell({
           >
             {facts.map((fact) => (
               <div key={fact.label}>
-                <div className="cl-k text-(--color-accent-300)">
-                  {fact.label}
-                </div>
+                <div className="cl-k text-[#dbbb8f]">{fact.label}</div>
                 <div className="cl-fig mt-1.75 text-[13px] leading-[1.6]">
                   {fact.value}
                 </div>
