@@ -151,7 +151,15 @@ async function createAgent(details: {
         floor_area_unit: "sqft" as const,
         is_exclusive: true,
         agent_id: sarah.userId,
-        media: [{ url: "https://picsum.photos/seed/godown1/1600/1000", alt_text: "Go-down exterior, Mombasa Road", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1789115527/justin-wolff-7qD-iDyrdHY-unsplash_oxq1zm.jpg",
+            alt_text: "Go-down exterior, Mombasa Road",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "justin-wolff-7qD-iDyrdHY-unsplash_oxq1zm",
+          },
+        ],
       },
       {
         reference_code: "DEMO-IND-0002",
@@ -172,7 +180,15 @@ async function createAgent(details: {
         floor_area: 18400,
         floor_area_unit: "sqft" as const,
         agent_id: sarah.userId,
-        media: [{ url: "https://picsum.photos/seed/warehouse1/1600/1000", alt_text: "Warehouse, Eastern Bypass", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1789115530/arthur-baudry-4vioYQ9Nn9Y-unsplash_ewaiz2.jpg",
+            alt_text: "Warehouse, Eastern Bypass",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "arthur-baudry-4vioYQ9Nn9Y-unsplash_ewaiz2",
+          },
+        ],
       },
       {
         reference_code: "DEMO-IND-0003",
@@ -193,7 +209,15 @@ async function createAgent(details: {
         floor_area: 9800,
         floor_area_unit: "sqft" as const,
         agent_id: sarah.userId,
-        media: [{ url: "https://picsum.photos/seed/tatuunit/1600/1000", alt_text: "Unit C4, Tatu Industrial Park", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1789115527/aalo-lens-yGEohCLnrl0-unsplash_udf8v7.jpg",
+            alt_text: "Unit C4, Tatu Industrial Park",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "aalo-lens-yGEohCLnrl0-unsplash_udf8v7",
+          },
+        ],
       },
       {
         reference_code: "DEMO-IND-0004",
@@ -215,7 +239,15 @@ async function createAgent(details: {
         land_area_unit: "acre" as const,
         is_exclusive: true,
         agent_id: sarah.userId,
-        media: [{ url: "https://picsum.photos/seed/yardathi/1600/1000", alt_text: "Yard and workshop, Athi River", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1789115526/nastuh-abootalebi-yWwob8kwOCk-unsplash_h1nogg.jpg",
+            alt_text: "Yard and workshop, Athi River",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "nastuh-abootalebi-yWwob8kwOCk-unsplash_h1nogg",
+          },
+        ],
       },
       {
         reference_code: "DEMO-COM-0001",
@@ -236,7 +268,15 @@ async function createAgent(details: {
         floor_area: 6400,
         floor_area_unit: "sqft" as const,
         agent_id: james.userId,
-        media: [{ url: "https://picsum.photos/seed/officewestlands/1600/1000", alt_text: "Office floor, Westlands", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1789115526/nastuh-abootalebi-eHD8Y1Znfpk-unsplash_jcvi8s.jpg",
+            alt_text: "Office floor, Westlands",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "nastuh-abootalebi-eHD8Y1Znfpk-unsplash_jcvi8s",
+          },
+        ],
       },
       {
         reference_code: "DEMO-COM-0002",
@@ -257,7 +297,15 @@ async function createAgent(details: {
         floor_area: 2200,
         floor_area_unit: "sqft" as const,
         agent_id: james.userId,
-        media: [{ url: "https://picsum.photos/seed/retailkilimani/1600/1000", alt_text: "Retail showroom, Kilimani", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1789115525/mathias-reding-J-MU2AJNKiI-unsplash_ce4akp.jpg",
+            alt_text: "Retail showroom, Kilimani",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "mathias-reding-J-MU2AJNKiI-unsplash_ce4akp",
+          },
+        ],
       },
       {
         reference_code: "DEMO-RES-0001",
@@ -281,7 +329,15 @@ async function createAgent(details: {
         land_area_unit: "acre" as const,
         is_exclusive: true,
         agent_id: amina.userId,
-        media: [{ url: "https://picsum.photos/seed/villakaren/1600/1000", alt_text: "Family home, Karen Road", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1789115521/wrs-tm-pl-TCkIri6lxEo-unsplash_rijhjr.jpg",
+            alt_text: "Family home, Karen Road",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "wrs-tm-pl-TCkIri6lxEo-unsplash_rijhjr",
+          },
+        ],
       },
       {
         reference_code: "DEMO-RES-0002",
@@ -302,7 +358,15 @@ async function createAgent(details: {
         bedrooms: 2,
         bathrooms: 2,
         agent_id: amina.userId,
-        media: [{ url: "https://picsum.photos/seed/apartmentkilimani/1600/1000", alt_text: "Apartment, Kilimani", is_primary: true }],
+        media: [
+          {
+            url: "https://res.cloudinary.com/ixxvslrr/image/upload/v1788892350/frames-for-your-heart-2d4lAQAlbDA-unsplash_g8kgw9.jpg",
+            alt_text: "Apartment, Kilimani",
+            is_primary: true,
+            provider: "cloudinary",
+            provider_public_id: "frames-for-your-heart-2d4lAQAlbDA-unsplash_g8kgw9",
+          },
+        ],
       },
     ];
 
