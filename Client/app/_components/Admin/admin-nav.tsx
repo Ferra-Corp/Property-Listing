@@ -22,6 +22,10 @@ import {
   ViewingsIcon,
 } from "./icons"
 import { useUserContext } from "@/app/_lib/Context/User"
+import { useListingContext } from "@/app/_lib/Context/Listing"
+import { useLeadContext } from "@/app/_lib/Context/Lead"
+import { useViewingContext } from "@/app/_lib/Context/Viewing Request"
+import { useValuationContext } from "@/app/_lib/Context/Valuation Request"
 import { hasPermission, type Permission } from "@/app/_lib/permissions"
 import type { UserRole } from "@/app/_lib/Types/User"
 
@@ -55,34 +59,33 @@ export type NavGroup = {
 
 // --- CONSTANTS ---
 
+// Listings/Leads/Viewings/Valuations don't carry a `count` here — it used
+// to be a hardcoded placeholder ("84", "7 new"...) that never matched real
+// data. useAdminNav() now fills these in live from each item's own context,
+// keyed by href — see LIVE_COUNT_HREFS below.
 export const PRIMARY: Item[] = [
   { href: "/admin", label: "Dashboard", icon: DashboardIcon },
   {
     href: "/admin/listings",
     label: "Listings",
     icon: ListingsIcon,
-    count: "84",
   },
   {
     href: "/admin/leads",
     label: "Leads",
     icon: LeadsIcon,
-    count: "7 new",
-    urgent: true,
     permission: "View lead",
   },
   {
     href: "/admin/viewings",
     label: "Viewings",
     icon: ViewingsIcon,
-    count: "4",
     permission: "View viewing request",
   },
   {
     href: "/admin/valuations",
     label: "Valuations",
     icon: ValuationsIcon,
-    count: "3",
     permission: "View valuation request",
   },
 ]
@@ -161,13 +164,61 @@ function groupIndexForPath(pathname: string, groups: NavGroup[]): number {
   return index === -1 ? 0 : index
 }
 
+type LiveCount = { count: string; urgent?: boolean }
+
+/** Listings → published, Leads → new/uncontacted, Viewings/Valuations →
+ * pending — mirrors how each of those figures is already defined on the
+ * dashboard and on the pages' own queues, so the nav badge never disagrees
+ * with what the page itself says. A permission-denied role just sees "0"
+ * here (its context array stays empty), which is moot anyway since
+ * itemVisible() already hides the tab entirely for it. */
+function useLiveCounts(): Record<string, LiveCount> {
+  const { listings } = useListingContext()
+  const { leads } = useLeadContext()
+  const { viewingRequests } = useViewingContext()
+  const { valuationRequests } = useValuationContext()
+
+  return React.useMemo(() => {
+    const newLeads = leads.filter((l) => l.status === "new").length
+    const pendingViewings = viewingRequests.filter(
+      (v) => v.status === "pending"
+    ).length
+    const pendingValuations = valuationRequests.filter(
+      (v) => v.status === "pending"
+    ).length
+    const publishedListings = listings.filter(
+      (l) => l.status === "published"
+    ).length
+
+    return {
+      "/admin/listings": { count: String(publishedListings) },
+      "/admin/leads": { count: String(newLeads), urgent: newLeads > 0 },
+      "/admin/viewings": { count: String(pendingViewings) },
+      "/admin/valuations": { count: String(pendingValuations) },
+    }
+  }, [listings, leads, viewingRequests, valuationRequests])
+}
+
+function withLiveCounts(
+  groups: NavGroup[],
+  counts: Record<string, LiveCount>
+): NavGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    items: group.items.map((item) =>
+      counts[item.href] ? { ...item, ...counts[item.href] } : item
+    ),
+  }))
+}
+
 export function useAdminNav() {
   const pathname = usePathname() ?? ""
   const { currentUser } = useUserContext()
+  const liveCounts = useLiveCounts()
 
   const groups = React.useMemo(
-    () => visibleGroups(currentUser?.role),
-    [currentUser?.role]
+    () => withLiveCounts(visibleGroups(currentUser?.role), liveCounts),
+    [currentUser?.role, liveCounts]
   )
 
   const routeGroupIndex = groupIndexForPath(pathname, groups)
@@ -202,8 +253,16 @@ function TopTabItem({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
+      // Icon-only below md: the row was still cramped/scroll-only with
+      // every tab spelling its name out, and the page's own big <h1>
+      // title already says which page this is — the tab strip's job on a
+      // phone is just switching, so the icon (plus the aria-label, since
+      // `hidden` also removes the visible label from the a11y tree) carries
+      // that on its own. Desktop keeps the icon+label it already had.
+      title={label}
+      aria-label={label}
       className={cn(
-        "relative flex flex-none items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)",
+        "relative flex flex-none items-center gap-2 rounded-full px-2.5 py-1.5 text-[13px] whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-(--color-admin-accent) md:px-3.5",
         "text-(--color-admin-text-muted) hover:text-(--color-admin-text)",
         "[&_svg]:flex-none [&_svg]:opacity-70 [&_svg]:transition-opacity hover:[&_svg]:opacity-100"
       )}
@@ -222,7 +281,7 @@ function TopTabItem({
         )}
       >
         <Icon size={15} />
-        <span className="truncate">{label}</span>
+        <span className="hidden truncate md:inline">{label}</span>
         {count && (
           <span
             className={cn(
@@ -234,7 +293,11 @@ function TopTabItem({
                   : "text-(--color-admin-accent)"
             )}
           >
-            {count}
+            {/* "7 new" is fine with a label next to it (desktop); bare
+                next to just an icon (mobile) it reads as clipped text
+                rather than a badge, so mobile gets just the figure. */}
+            <span className="md:hidden">{count.split(" ")[0]}</span>
+            <span className="hidden md:inline">{count}</span>
           </span>
         )}
       </span>
@@ -389,11 +452,45 @@ function ProfileMenu() {
 // --- MAIN COMPONENTS ---
 
 export function AdminGroupTabs({ items }: { items: Item[] }) {
+  const pathname = usePathname() ?? ""
+  const navRef = React.useRef<HTMLElement>(null)
+
+  // Deferred a frame: right on mount/navigation the browser hasn't always
+  // finished layout for this row yet, so scrollIntoView's own measurement
+  // of "is this already visible" can be wrong and silently no-op.
+  //
+  // Finds the active tab by index from `items`/`pathname` directly rather
+  // than reading `aria-current` back off the DOM — right after a fresh
+  // navigation that attribute isn't reliably committed yet even though the
+  // ref itself already is, which was silently turning this into a no-op.
+  React.useEffect(() => {
+    const activeIndex = items.findIndex((item) => matchesItem(pathname, item.href))
+    if (activeIndex === -1) return
+
+    const frame = requestAnimationFrame(() => {
+      const activeItem = navRef.current?.children[activeIndex] as
+        | HTMLElement
+        | undefined
+      activeItem?.scrollIntoView({
+        block: "nearest",
+        inline: "center",
+        behavior: "smooth",
+      })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [pathname, items])
+
   return (
     <nav
+      ref={navRef}
       aria-label="Section pages"
+      // justify-start on mobile: with more tabs than fit, justify-center
+      // clips both ends of the overflow and leaves them unreachable by
+      // scrolling — starting flush left keeps every tab reachable, same as
+      // the state-filter chip rows elsewhere. Desktop never overflows here,
+      // so it keeps the centered look.
       // Its own glass tint (30%), layered inside the header wrapper's.
-      className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] p-1 shadow-(--shadow-sm) backdrop-blur-md"
+      className="flex min-w-0 items-center justify-start gap-1 overflow-x-auto rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] p-1 shadow-(--shadow-sm) backdrop-blur-md md:justify-center"
     >
       {items.map((item) => (
         <TopTabItem key={item.href} item={item} />

@@ -17,12 +17,20 @@ export default function AdminInsightPage({
 
   return (
     <PageIn>
-      <div className="grid md:grid-cols-[minmax(0,1fr)_430px]">
-        <div className="hidden md:block">
+      {/* Same xl: threshold and reasoning as admin/insights/page.tsx — a
+          tablet like an iPad Mini no longer tries to cram the list's
+          desktop table into a narrow column next to the fixed 440px
+          detail pane. min-w-0 on the aside: without it, a grid item sizes
+          itself off its content's min-content width (a flex button row
+          here is wide enough to force the whole pane past the viewport,
+          silently clipped by <main>'s overflow-x-hidden) — see the same
+          comment in admin/leads/[id]/page.tsx. */}
+      <div className="grid xl:h-[calc(100dvh-178px)] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-4 xl:p-4">
+        <div className="hidden min-w-0 xl:block xl:h-full xl:overflow-y-auto xl:rounded-2xl xl:border xl:border-(--color-divider) xl:bg-(--color-bg)">
           <InsightList selectedId={id} />
         </div>
-        <aside className="border-l-0 border-(--color-divider) md:border-l">
-          <div className="flex items-center gap-3 border-b border-(--color-divider) bg-(--color-bg) px-4 py-3.5 md:hidden">
+        <aside className="min-w-0 border-l-0 border-(--color-divider) xl:h-full xl:overflow-y-auto xl:rounded-2xl xl:border xl:bg-(--color-bg)">
+          <div className="flex items-center gap-3 border-b border-(--color-divider) bg-(--color-bg) px-4 py-3.5 xl:hidden">
             <ButtonLink
               href="/admin/insights"
               variant="secondary"

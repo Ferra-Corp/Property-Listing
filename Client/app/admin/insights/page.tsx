@@ -16,22 +16,25 @@ export default function AdminInsightsPage() {
 
   return (
     <PageIn>
-      {/* 
-        Added md:gap-6 and md:p-6 to create that slight margin division. 
-        This gives the layout room to breathe and frames the content beautifully.
-      */}
-      <div className="grid min-h-[calc(100vh-4rem)] bg-(--color-neutral-50) md:grid-cols-[minmax(0,1fr)_440px] md:gap-6 md:p-6 lg:gap-8 lg:p-8">
+      {/* The split waits for xl: (1280px) — same reasoning as
+          admin/leads/page.tsx: a fixed ~440px detail pane plus this list's
+          own desktop table need real room, which a tablet (iPad Mini
+          included) never has at md: (768px). Below xl: it's just the list
+          at full width. Padding/gap escalation shifted from md:/lg: to
+          xl:/2xl: to match — no point adding breathing room around a
+          split that isn't happening yet. */}
+      <div className="grid min-h-[calc(100vh-4rem)] bg-(--color-neutral-50) xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-6 xl:p-6 2xl:gap-8 2xl:p-8">
         {/* Left Panel Container */}
-        <div className="min-w-0 overflow-hidden bg-(--color-bg) md:rounded-2xl md:border md:border-(--color-divider) md:shadow-sm">
+        <div className="min-w-0 overflow-hidden bg-(--color-bg) xl:rounded-2xl xl:border xl:border-(--color-divider) xl:shadow-sm">
           <InsightList selectedId={selected?.id} />
         </div>
 
-        {/* 
+        {/*
           Right Panel Container (Aside)
-          Removed the harsh `border-l` and replaced it with a fully contained, 
+          Removed the harsh `border-l` and replaced it with a fully contained,
           elevated modern card look to emphasize the separation.
         */}
-        <aside className="hidden overflow-hidden rounded-2xl border border-(--color-divider) bg-(--color-bg) shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] transition-all duration-300 md:block">
+        <aside className="hidden min-w-0 overflow-hidden rounded-2xl border border-(--color-divider) bg-(--color-bg) shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] transition-all duration-300 xl:block">
           {selected ? (
             <PanelIn panelKey={selected.id}>
               <InsightPanel id={selected.id} />

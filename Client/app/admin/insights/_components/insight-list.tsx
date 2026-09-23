@@ -92,11 +92,13 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
   }
 
   return (
-    <div className="min-w-0 border-r-0 border-(--color-divider) bg-(--color-bg) md:border-r">
+    <div className="min-w-0 bg-(--color-bg)">
       <PageHead
         title="Insights"
         meta={`${counts.published} in print · ${counts.draft} draft${counts.draft === 1 ? "" : "s"} · ${counts.archived} archived`}
         search="Title, summary or tag"
+        searchValue={query}
+        onSearchChange={setQuery}
       >
         {canCreate ? (
           <ButtonLink href="/admin/insights/new" variant="primary">
@@ -104,16 +106,6 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
           </ButtonLink>
         ) : null}
       </PageHead>
-
-      {/* Mobile Search */}
-      <div className="px-4 pt-4 md:hidden">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Title, summary or tag..."
-          className="cl-input w-full rounded-lg text-[13.5px] transition-all duration-200 focus:ring-2 focus:ring-neutral-300 focus:outline-none"
-        />
-      </div>
 
       {/* Filters Bar */}
       <div className="scr flex items-center gap-3 overflow-x-auto px-4 pt-4 pb-2 md:flex-wrap md:overflow-visible md:px-6 md:pt-6 md:pb-4">

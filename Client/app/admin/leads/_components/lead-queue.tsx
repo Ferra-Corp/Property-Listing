@@ -145,6 +145,8 @@ export function LeadQueue({ selectedId }: { selectedId?: string }) {
         title="Leads"
         meta={`${counts.new} new · ${counts.contacted} contacted · ${counts.open} open · ${thisMonth} this month${unclaimedAssigneeName ? ` · unclaimed go to ${unclaimedAssigneeName}` : ""}`}
         search="Name, phone or requirements"
+        searchValue={query}
+        onSearchChange={setQuery}
       >
         <ButtonLink
           href="/admin/leads"
@@ -154,15 +156,6 @@ export function LeadQueue({ selectedId }: { selectedId?: string }) {
           Export
         </ButtonLink>
       </PageHead>
-
-      <div className="px-4 pt-3.5 md:hidden">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Name, phone or requirements"
-          className="cl-input w-full text-[13px]"
-        />
-      </div>
 
       <div className="scr flex items-center gap-2.5 overflow-x-auto px-4 pt-3.5 md:flex-wrap md:overflow-visible md:px-6">
         <div className="cl-seg hidden flex-none md:inline-flex">

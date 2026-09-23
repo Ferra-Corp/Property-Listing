@@ -47,11 +47,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-3 mt-2.5 mb-2.5 min-w-0 overflow-x-hidden rounded-(--cl-radius-lg) border border-(--color-divider) bg-(--color-bg) shadow-(--shadow-sm) md:mx-6 md:mt-3.5 md:mb-3.5">
+      {/* pb-24 reserves room for the floating dock below: without it, the
+          last bit of a page's content ends up scrolled to directly behind
+          the dock instead of clear above it. */}
+      <main className="mx-3 mt-2.5 mb-2.5 min-w-0 overflow-x-hidden rounded-(--cl-radius-lg) border border-(--color-divider) bg-(--color-bg) pb-24 shadow-(--shadow-sm) md:mx-6 md:mt-3.5 md:mb-3.5">
         {children}
       </main>
 
-      <div className="sticky bottom-2.5 z-20 mb-2.5 flex justify-center md:bottom-3.5 md:mb-3.5">
+      <div className="sticky bottom-2.5 z-20 mb-2.5 flex justify-center px-3 md:bottom-3.5 md:mb-3.5 md:px-0">
         <AdminDock
           groups={groups}
           activeGroupIndex={activeGroupIndex}
@@ -70,12 +73,19 @@ export function PageHead({
   title,
   meta,
   search,
+  searchValue,
+  onSearchChange,
   children,
 }: {
   title: React.ReactNode
   meta?: React.ReactNode
   /** placeholder for the page's search field; omitted when the page has none */
   search?: string
+  /** Controlled together with `search` — one field, working the same way
+   * (and in the same place, via `order-last`/`md:order-0`) at every width,
+   * instead of each page inventing its own mobile-only or desktop-only copy. */
+  searchValue?: string
+  onSearchChange?: (value: string) => void
   children?: React.ReactNode
 }) {
   return (
@@ -91,6 +101,8 @@ export function PageHead({
         <label className="order-last flex min-h-9 w-full items-center gap-2 rounded-(--cl-radius-md) border border-(--color-divider) px-3 text-neutral-600 md:order-0 md:w-62.5">
           <SearchIcon size={14} className="flex-none" />
           <input
+            value={searchValue ?? ""}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             className="cl-input min-h-0 border-0 p-0 text-[13px]"
             placeholder={search}
             aria-label={search}

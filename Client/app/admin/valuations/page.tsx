@@ -16,9 +16,19 @@ export default function AdminValuationsPage() {
 
   return (
     <PageIn>
-      <div className="grid md:grid-cols-[minmax(0,1fr)_430px]">
-        <ValuationQueue selectedId={selected?.id} />
-        <aside className="hidden border-l border-(--color-divider) md:block">
+      {/* Split waits for xl: (1280px) — the fixed 430px pane plus the
+          list's own desktop table (~650px min) need roughly 1150px+ to sit
+          side by side without one crowding the other. Below that (a
+          tablet like an iPad Mini included, at 768–1024px) this used to
+          hit md: and cram the table into a column so narrow its own
+          columns overflowed straight across the divider into the detail
+          pane. Now it's just the list at full width until there's
+          genuinely room, same as leads/page.tsx. */}
+      <div className="grid xl:h-[calc(100dvh-178px)] xl:grid-cols-[minmax(0,1fr)_430px] xl:gap-4 xl:p-4">
+        <div className="min-w-0 xl:h-full xl:overflow-y-auto xl:rounded-(--cl-radius-lg) xl:border xl:border-(--color-divider) xl:bg-(--color-bg)">
+          <ValuationQueue selectedId={selected?.id} />
+        </div>
+        <aside className="hidden min-w-0 xl:block xl:h-full xl:overflow-y-auto xl:rounded-(--cl-radius-lg) xl:border xl:border-(--color-divider) xl:bg-(--color-bg)">
           {selected ? (
             <PanelIn panelKey={selected.id}>
               <ValuationPanel id={selected.id} />

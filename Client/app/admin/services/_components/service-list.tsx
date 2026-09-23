@@ -112,6 +112,8 @@ export function ServiceList({ selectedId }: { selectedId?: string }) {
         title="Services"
         meta={`${services.length} on the shelf · ${activeCount} shown on the site · ${heldBackCount} held back`}
         search="Title or summary"
+        searchValue={query}
+        onSearchChange={setQuery}
       >
         <ButtonLink
           href="/system/services"
@@ -126,15 +128,6 @@ export function ServiceList({ selectedId }: { selectedId?: string }) {
           </ButtonLink>
         ) : null}
       </PageHead>
-
-      <div className="px-4 pt-3.5 md:hidden">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Title or summary"
-          className="cl-input w-full text-[13px]"
-        />
-      </div>
 
       <div className="scr flex items-center gap-2.5 overflow-x-auto px-4 pt-2.5 md:flex-wrap md:overflow-visible md:px-6">
         <div className="cl-seg flex-none">

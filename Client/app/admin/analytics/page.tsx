@@ -28,7 +28,7 @@ import { useListingContext } from "../../_lib/Context/Listing"
 import {
   byCity,
   dailyCounts,
-  exportLeadsCsv,
+  exportAnalyticsSummary,
   firstReplyMinutes,
   funnelStages,
   inRange,
@@ -254,7 +254,26 @@ export default function AdminAnalyticsPage() {
         <Button
           type="button"
           variant="primary"
-          onClick={() => exportLeadsCsv(periodLeads)}
+          onClick={() =>
+            exportAnalyticsSummary({
+              period,
+              cityFilter,
+              start,
+              end,
+              prevStart,
+              prevEnd,
+              kpis: KPIS.map(({ label, figure, note }) => ({
+                label,
+                figure,
+                note,
+              })),
+              sources,
+              funnel,
+              valStats,
+              timeSlot,
+              cityRows,
+            })
+          }
         >
           Export
         </Button>

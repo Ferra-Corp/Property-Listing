@@ -196,37 +196,77 @@ export function LeadPanel({ id }: { id: string }) {
         </ButtonLink>
       </div>
 
-      <div className="px-4 pt-5 md:px-5.5">
-        <div className="flex items-start gap-3">
-          <div className="min-w-0">
-            <h2 className="m-0 text-[27px] leading-[1.15] font-normal md:text-[29px]">
-              {lead.full_name}
-            </h2>
-            <div className="cl-fig mt-1.5 text-[13.5px] text-neutral-700">
-              {lead.phone}
-              {lead.email ? ` · ${lead.email}` : ""}
+      {/* Capped like the viewing/valuation detail pages' own content — this
+          panel was only ever laid out for a ~430px desktop sidebar or a
+          phone-width screen. Once a tablet started rendering it at full
+          width instead of squeezed into that sidebar (viewing it directly,
+          not through the split list+detail view), button rows and
+          label/value pairs stretched edge to edge with nothing to stop
+          them. */}
+      <div className="max-w-160">
+        <div className="px-4 pt-5 md:px-5.5">
+          <div className="flex items-start gap-3">
+            <div className="min-w-0">
+              <h2 className="m-0 text-[27px] leading-[1.15] font-normal md:text-[29px]">
+                {lead.full_name}
+              </h2>
+              <div className="cl-fig mt-1.5 text-[13.5px] text-neutral-700">
+                {lead.phone}
+                {lead.email ? ` · ${lead.email}` : ""}
+              </div>
+            </div>
+            <span className="flex-1" />
+            <Status tone={STATUS_TONE[lead.status]}>
+              {STATUS_LABEL[lead.status]}
+            </Status>
+          </div>
+
+          <div className="mt-4 hidden flex-col gap-2 md:flex">
+            <div className="flex gap-2">
+              <ButtonLink href={waLink} variant="primary" className="flex-1">
+                WhatsApp reply
+              </ButtonLink>
+              <ButtonLink
+                href={`tel:${lead.phone}`}
+                variant="primary"
+                className="flex-1"
+              >
+                Call now
+              </ButtonLink>
+            </div>
+            <div className="flex gap-2">
+              {lead.email ? (
+                <ButtonLink
+                  href={`mailto:${lead.email}`}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  Email
+                </ButtonLink>
+              ) : (
+                <Button variant="secondary" className="flex-1" disabled>
+                  No email on file
+                </Button>
+              )}
+              <ButtonLink
+                href="/admin/viewings"
+                variant="secondary"
+                className="flex-1"
+              >
+                Book a viewing
+              </ButtonLink>
             </div>
           </div>
-          <span className="flex-1" />
-          <Status tone={STATUS_TONE[lead.status]}>
-            {STATUS_LABEL[lead.status]}
-          </Status>
-        </div>
 
-        <div className="mt-4 hidden flex-col gap-2 md:flex">
-          <div className="flex gap-2">
-            <ButtonLink href={waLink} variant="primary" className="flex-1">
-              WhatsApp reply
-            </ButtonLink>
-            <ButtonLink
-              href={`tel:${lead.phone}`}
-              variant="primary"
-              className="flex-1"
-            >
-              Call now
-            </ButtonLink>
+          <div className="mt-4 rounded-(--cl-radius-lg) border border-(--color-divider) bg-(--color-bg) p-4">
+            <K>What they wrote</K>
+            <p className="mt-2.5 mb-0 text-[13.5px] leading-[1.75] md:text-[14px]">
+              {lead.requirements ||
+                "Nothing written — check how they came in below."}
+            </p>
           </div>
-          <div className="flex gap-2">
+
+          <div className="mt-3 flex gap-2 md:hidden">
             {lead.email ? (
               <ButtonLink
                 href={`mailto:${lead.email}`}
@@ -235,11 +275,7 @@ export function LeadPanel({ id }: { id: string }) {
               >
                 Email
               </ButtonLink>
-            ) : (
-              <Button variant="secondary" className="flex-1" disabled>
-                No email on file
-              </Button>
-            )}
+            ) : null}
             <ButtonLink
               href="/admin/viewings"
               variant="secondary"
@@ -250,292 +286,271 @@ export function LeadPanel({ id }: { id: string }) {
           </div>
         </div>
 
-        <div className="mt-4 rounded-(--cl-radius-lg) border border-(--color-divider) bg-(--color-bg) p-4">
-          <K>What they wrote</K>
-          <p className="mt-2.5 mb-0 text-[13.5px] leading-[1.75] md:text-[14px]">
-            {lead.requirements ||
-              "Nothing written — check how they came in below."}
-          </p>
-        </div>
-
-        <div className="mt-3 flex gap-2 md:hidden">
-          {lead.email ? (
-            <ButtonLink
-              href={`mailto:${lead.email}`}
-              variant="secondary"
-              className="flex-1"
-            >
-              Email
-            </ButtonLink>
-          ) : null}
-          <ButtonLink
-            href="/admin/viewings"
-            variant="secondary"
-            className="flex-1"
-          >
-            Book a viewing
-          </ButtonLink>
-        </div>
-      </div>
-
-      <div className="px-4 pt-4.5 md:px-5.5">
-        <SectionHead>The enquiry</SectionHead>
-        <Pair label="Intention">{INTENT_LABEL[lead.intent]}</Pair>
-        <Pair label="Property type">
-          {lead.property_type ? lead.property_type : "Not specified"}
-          {lead.property_subtype
-            ? ` · ${lead.property_subtype.replaceAll("_", " ")}`
-            : ""}
-        </Pair>
-        <Pair label="Preferred location">{lead.preferred_location || "—"}</Pair>
-        <Pair label="Budget">{budgetLabel(lead) ?? "Not given"}</Pair>
-        <Pair label="Based in">
-          {[lead.city, lead.state_region, lead.country_code]
-            .filter(Boolean)
-            .join(", ") || "—"}
-        </Pair>
-        <Pair label="Marketing consent">
-          <span
-            className={`cl-k ${lead.consent_marketing ? "text-(--color-accent)" : "text-neutral-600"}`}
-          >
-            {lead.consent_marketing ? "Given" : "Not given"}
-          </span>
-        </Pair>
-      </div>
-
-      <div className="px-4 pt-4.5 md:px-5.5">
-        <SectionHead>Came from</SectionHead>
-        {listing ? (
-          <div className="flex items-start gap-3 border-b border-(--color-divider) py-3.5">
-            <Plate
-              matted={false}
-              src={listing.thumbnail_url}
-              alt={listing.title}
-              className="h-12.5 w-18 flex-none"
-              label={listing.thumbnail_url ? "" : "No plate"}
-            />
-            <div>
-              <div className="text-[13.5px] leading-[1.4]">{listing.title}</div>
-              <K className="cl-fig mt-1.25">
-                {listing.reference_code} · {priceLabel(listing).price}{" "}
-                {priceLabel(listing).priceUnit}
-              </K>
-              <Link
-                href={`/admin/listings/${listing.id}`}
-                className="mt-1.5 inline-block text-[12.5px]"
-              >
-                Open listing →
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="border-b border-(--color-divider) py-3.5 text-[13px] text-neutral-600">
-            Not tied to a specific listing — a general enquiry.
-          </div>
-        )}
-        <Pair label="Source">{SOURCE_LABEL[lead.source]}</Pair>
-        {lead.source_page ? (
-          <Pair label="Landing page">
-            <code className="cl-mono text-[11.5px]">{lead.source_page}</code>
-          </Pair>
-        ) : null}
-        {lead.referrer ? <Pair label="Referrer">{lead.referrer}</Pair> : null}
-        {lead.utm_source ? (
-          <Pair label="UTM source">{lead.utm_source}</Pair>
-        ) : null}
-        {lead.utm_campaign ? (
-          <Pair label="UTM campaign">{lead.utm_campaign}</Pair>
-        ) : null}
-      </div>
-
-      <div className="px-4 pt-4.5 md:px-5.5">
-        <SectionHead>Assignment</SectionHead>
-        {canEdit ? (
-          <div className="mt-3 flex gap-2">
-            <Select
-              value={assignAgent}
-              onChange={(e) => setAssignAgent(e.target.value)}
-              className="flex-1 text-[13px]"
-            >
-              <option value="">Unassigned</option>
-              {agents.map((a) => (
-                <option key={a.id} value={a.user_id}>
-                  {a.display_name}
-                </option>
-              ))}
-            </Select>
-            <Button
-              type="button"
-              variant="secondary"
-              className="flex-none"
-              disabled={assignAgent === (lead.assigned_agent_id ?? "")}
-              onClick={handleReassign}
-            >
-              Reassign
-            </Button>
-          </div>
-        ) : (
-          <Pair label="Assigned to">
-            {lead.assigned_agent_id
-              ? (agents.find((a) => a.user_id === lead.assigned_agent_id)
-                  ?.display_name ?? "—")
-              : "Unassigned"}
-          </Pair>
-        )}
-      </div>
-
-      <div className="px-4 pt-4.5 md:px-5.5">
-        <SectionHead>Notification receipt</SectionHead>
-        {receipts.length === 0 ? (
-          <div className="mt-3 text-[13px] text-neutral-600">
-            No delivery record for this lead yet.
-          </div>
-        ) : (
-          receipts.map((r) => (
-            <Pair key={r.id} label={`${r.channel} to ${r.recipient}`}>
-              <span
-                className={`cl-k ${r.status === "sent" ? "text-(--color-accent)" : "text-neutral-600"}`}
-              >
-                {r.status}
-                {r.sent_at ? ` · ${dateTimeLabel(r.sent_at)}` : ""}
-              </span>
-            </Pair>
-          ))
-        )}
-      </div>
-
-      {canEdit ? (
         <div className="px-4 pt-4.5 md:px-5.5">
-          <SectionHead>Record an encounter</SectionHead>
-          <K className="mt-2.25">
-            Writes a row to <code className="cl-mono">lead_activities</code>
-          </K>
-
-          <div className="scr mt-3 flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
-            {QUICK_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setActivityType(type)}
-                className={`cl-mono inline-flex flex-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] ${
-                  activityType === type
-                    ? "border-(--color-accent) bg-(--color-accent-100) text-(--color-accent-800)"
-                    : "border-(--color-divider) text-neutral-700"
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-          <Input
-            value={activityType}
-            onChange={(e) => setActivityType(e.target.value)}
-            placeholder="Or type a custom activity kind"
-            className="mt-2 text-[13px]"
-          />
-
-          <Textarea
-            value={activityBody}
-            onChange={(e) => setActivityBody(e.target.value)}
-            className="mt-3 min-h-20.5 text-[13px]"
-            placeholder="What was said, what was agreed, what they're waiting on — kept internal, never sent to the lead"
-          />
-
-          <div className="mt-2.5 grid gap-2 md:grid-cols-2">
-            <label className="flex flex-col gap-1.5">
-              <K className="cl-mono">occurred_at</K>
-              <Input
-                type="datetime-local"
-                value={occurredAt}
-                onChange={(e) => setOccurredAt(e.target.value)}
-                className="cl-fig text-[13px]"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <K>Also set the state</K>
-              <Select
-                value={nextStatus}
-                onChange={(e) =>
-                  setNextStatus(e.target.value as LeadStatus | "")
-                }
-                className="text-[13px]"
-              >
-                <option value="">Leave as {STATUS_LABEL[lead.status]}</option>
-                {(Object.keys(STATUS_LABEL) as LeadStatus[])
-                  .filter((s) => s !== lead.status)
-                  .map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABEL[s]}
-                    </option>
-                  ))}
-              </Select>
-            </label>
-          </div>
-
-          <div className="mt-3 flex items-center gap-2.5">
-            <span className="flex-1" />
-            <Button
-              type="button"
-              variant="primary"
-              className="flex-none"
-              disabled={saving}
-              onClick={handleRecordActivity}
+          <SectionHead>The enquiry</SectionHead>
+          <Pair label="Intention">{INTENT_LABEL[lead.intent]}</Pair>
+          <Pair label="Property type">
+            {lead.property_type ? lead.property_type : "Not specified"}
+            {lead.property_subtype
+              ? ` · ${lead.property_subtype.replaceAll("_", " ")}`
+              : ""}
+          </Pair>
+          <Pair label="Preferred location">
+            {lead.preferred_location || "—"}
+          </Pair>
+          <Pair label="Budget">{budgetLabel(lead) ?? "Not given"}</Pair>
+          <Pair label="Based in">
+            {[lead.city, lead.state_region, lead.country_code]
+              .filter(Boolean)
+              .join(", ") || "—"}
+          </Pair>
+          <Pair label="Marketing consent">
+            <span
+              className={`cl-k ${lead.consent_marketing ? "text-(--color-accent)" : "text-neutral-600"}`}
             >
-              {saving ? "Recording…" : "Record it"}
-            </Button>
-          </div>
-          <K className="mt-2.25 leading-[1.7]">
-            Changing the state records a{" "}
-            <span className="cl-fig">status_change</span> on the lead itself,
-            whether or not you write a body.
-          </K>
-        </div>
-      ) : null}
-
-      <div className="px-4 pt-4.5 pb-7 md:px-5.5">
-        <div className="flex items-baseline gap-3 border-b-2 border-(--color-text) pb-1.5">
-          <K>The trail</K>
-          <span className="flex-1" />
-          <K className="cl-fig">
-            {trail.length} activit{trail.length === 1 ? "y" : "ies"} · newest
-            first
-          </K>
+              {lead.consent_marketing ? "Given" : "Not given"}
+            </span>
+          </Pair>
         </div>
 
-        {trail.length === 0 ? (
-          <div className="py-6 text-center text-[13px] text-neutral-600">
-            Nothing recorded for this lead yet.
-          </div>
-        ) : (
-          <div className="flex flex-col">
-            {[...trail]
-              .sort(
-                (a, b) =>
-                  new Date(b.occurred_at).getTime() -
-                  new Date(a.occurred_at).getTime()
-              )
-              .map((entry) => (
-                <div
-                  key={entry.id}
-                  className="border-b border-(--color-divider) py-3.5 last:border-b-0"
-                >
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <Status tone="neutral">{entry.type}</Status>
-                    <K className="cl-fig">{dateTimeLabel(entry.occurred_at)}</K>
-                    <span className="hidden flex-1 md:block" />
-                    <K>
-                      {users.find((u) => u.id === entry.user_id)?.name ?? "—"}
-                    </K>
-                  </div>
-                  {entry.body ? (
-                    <p className="mt-2 mb-0 text-[13.5px] leading-[1.7]">
-                      {entry.body}
-                    </p>
-                  ) : null}
+        <div className="px-4 pt-4.5 md:px-5.5">
+          <SectionHead>Came from</SectionHead>
+          {listing ? (
+            <div className="flex items-start gap-3 border-b border-(--color-divider) py-3.5">
+              <Plate
+                matted={false}
+                src={listing.thumbnail_url}
+                alt={listing.title}
+                className="h-12.5 w-18 flex-none"
+                label={listing.thumbnail_url ? "" : "No plate"}
+              />
+              <div>
+                <div className="text-[13.5px] leading-[1.4]">
+                  {listing.title}
                 </div>
+                <K className="cl-fig mt-1.25">
+                  {listing.reference_code} · {priceLabel(listing).price}{" "}
+                  {priceLabel(listing).priceUnit}
+                </K>
+                <Link
+                  href={`/admin/listings/${listing.id}`}
+                  className="mt-1.5 inline-block text-[12.5px]"
+                >
+                  Open listing →
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="border-b border-(--color-divider) py-3.5 text-[13px] text-neutral-600">
+              Not tied to a specific listing — a general enquiry.
+            </div>
+          )}
+          <Pair label="Source">{SOURCE_LABEL[lead.source]}</Pair>
+          {lead.source_page ? (
+            <Pair label="Landing page">
+              <code className="cl-mono text-[11.5px]">{lead.source_page}</code>
+            </Pair>
+          ) : null}
+          {lead.referrer ? <Pair label="Referrer">{lead.referrer}</Pair> : null}
+          {lead.utm_source ? (
+            <Pair label="UTM source">{lead.utm_source}</Pair>
+          ) : null}
+          {lead.utm_campaign ? (
+            <Pair label="UTM campaign">{lead.utm_campaign}</Pair>
+          ) : null}
+        </div>
+
+        <div className="px-4 pt-4.5 md:px-5.5">
+          <SectionHead>Assignment</SectionHead>
+          {canEdit ? (
+            <div className="mt-3 flex gap-2">
+              <Select
+                value={assignAgent}
+                onChange={(e) => setAssignAgent(e.target.value)}
+                className="flex-1 text-[13px]"
+              >
+                <option value="">Unassigned</option>
+                {agents.map((a) => (
+                  <option key={a.id} value={a.user_id}>
+                    {a.display_name}
+                  </option>
+                ))}
+              </Select>
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-none"
+                disabled={assignAgent === (lead.assigned_agent_id ?? "")}
+                onClick={handleReassign}
+              >
+                Reassign
+              </Button>
+            </div>
+          ) : (
+            <Pair label="Assigned to">
+              {lead.assigned_agent_id
+                ? (agents.find((a) => a.user_id === lead.assigned_agent_id)
+                    ?.display_name ?? "—")
+                : "Unassigned"}
+            </Pair>
+          )}
+        </div>
+
+        <div className="px-4 pt-4.5 md:px-5.5">
+          <SectionHead>Notification receipt</SectionHead>
+          {receipts.length === 0 ? (
+            <div className="mt-3 text-[13px] text-neutral-600">
+              No delivery record for this lead yet.
+            </div>
+          ) : (
+            receipts.map((r) => (
+              <Pair key={r.id} label={`${r.channel} to ${r.recipient}`}>
+                <span
+                  className={`cl-k ${r.status === "sent" ? "text-(--color-accent)" : "text-neutral-600"}`}
+                >
+                  {r.status}
+                  {r.sent_at ? ` · ${dateTimeLabel(r.sent_at)}` : ""}
+                </span>
+              </Pair>
+            ))
+          )}
+        </div>
+
+        {canEdit ? (
+          <div className="px-4 pt-4.5 md:px-5.5">
+            <SectionHead>Record an encounter</SectionHead>
+            <K className="mt-2.25">
+              Writes a row to <code className="cl-mono">lead_activities</code>
+            </K>
+
+            <div className="scr mt-3 flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
+              {QUICK_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setActivityType(type)}
+                  className={`cl-mono inline-flex flex-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] ${
+                    activityType === type
+                      ? "border-(--color-accent) bg-(--color-accent-100) text-(--color-accent-800)"
+                      : "border-(--color-divider) text-neutral-700"
+                  }`}
+                >
+                  {type}
+                </button>
               ))}
+            </div>
+            <Input
+              value={activityType}
+              onChange={(e) => setActivityType(e.target.value)}
+              placeholder="Or type a custom activity kind"
+              className="mt-2 text-[13px]"
+            />
+
+            <Textarea
+              value={activityBody}
+              onChange={(e) => setActivityBody(e.target.value)}
+              className="mt-3 min-h-20.5 text-[13px]"
+              placeholder="What was said, what was agreed, what they're waiting on — kept internal, never sent to the lead"
+            />
+
+            <div className="mt-2.5 grid gap-2 md:grid-cols-2">
+              <label className="flex flex-col gap-1.5">
+                <K className="cl-mono">occurred_at</K>
+                <Input
+                  type="datetime-local"
+                  value={occurredAt}
+                  onChange={(e) => setOccurredAt(e.target.value)}
+                  className="cl-fig text-[13px]"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <K>Also set the state</K>
+                <Select
+                  value={nextStatus}
+                  onChange={(e) =>
+                    setNextStatus(e.target.value as LeadStatus | "")
+                  }
+                  className="text-[13px]"
+                >
+                  <option value="">Leave as {STATUS_LABEL[lead.status]}</option>
+                  {(Object.keys(STATUS_LABEL) as LeadStatus[])
+                    .filter((s) => s !== lead.status)
+                    .map((s) => (
+                      <option key={s} value={s}>
+                        {STATUS_LABEL[s]}
+                      </option>
+                    ))}
+                </Select>
+              </label>
+            </div>
+
+            <div className="mt-3 flex items-center gap-2.5">
+              <span className="flex-1" />
+              <Button
+                type="button"
+                variant="primary"
+                className="flex-none"
+                disabled={saving}
+                onClick={handleRecordActivity}
+              >
+                {saving ? "Recording…" : "Record it"}
+              </Button>
+            </div>
+            <K className="mt-2.25 leading-[1.7]">
+              Changing the state records a{" "}
+              <span className="cl-fig">status_change</span> on the lead itself,
+              whether or not you write a body.
+            </K>
           </div>
-        )}
+        ) : null}
+
+        <div className="px-4 pt-4.5 pb-7 md:px-5.5">
+          <div className="flex items-baseline gap-3 border-b-2 border-(--color-text) pb-1.5">
+            <K>The trail</K>
+            <span className="flex-1" />
+            <K className="cl-fig">
+              {trail.length} activit{trail.length === 1 ? "y" : "ies"} · newest
+              first
+            </K>
+          </div>
+
+          {trail.length === 0 ? (
+            <div className="py-6 text-center text-[13px] text-neutral-600">
+              Nothing recorded for this lead yet.
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {[...trail]
+                .sort(
+                  (a, b) =>
+                    new Date(b.occurred_at).getTime() -
+                    new Date(a.occurred_at).getTime()
+                )
+                .map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="border-b border-(--color-divider) py-3.5 last:border-b-0"
+                  >
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <Status tone="neutral">{entry.type}</Status>
+                      <K className="cl-fig">
+                        {dateTimeLabel(entry.occurred_at)}
+                      </K>
+                      <span className="hidden flex-1 md:block" />
+                      <K>
+                        {users.find((u) => u.id === entry.user_id)?.name ?? "—"}
+                      </K>
+                    </div>
+                    {entry.body ? (
+                      <p className="mt-2 mb-0 text-[13.5px] leading-[1.7]">
+                        {entry.body}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="sticky bottom-0 flex gap-2 border-t border-(--color-divider) bg-(--color-bg) px-4 py-3 md:hidden">

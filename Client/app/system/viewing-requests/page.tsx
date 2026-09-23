@@ -96,6 +96,13 @@ function ViewingRequestContent() {
     if (targetListing?.agent_id) setPreferredAgentId(targetListing.agent_id)
   }, [targetListing?.agent_id])
 
+  // Derived, not stored — agents load asynchronously, so a useEffect+state
+  // pair here would only find a match once and could go stale once the
+  // agent list actually finishes loading. Reading it fresh off `agents` on
+  // every render avoids that race entirely.
+  const preferredAgent =
+    agents.find((agent) => agent.user_id === preferredAgentId) ?? null
+
   const whatsappHref = buildWhatsAppLink(
     ADMIN_WHATSAPP_NUMBER,
     targetListing
@@ -375,7 +382,9 @@ function ViewingRequestContent() {
             <div className="cl-fig text-neutral-600) text-[12.5px]">
               {status === "error"
                 ? `Something went wrong: ${error}`
-                : "One agent reads this — usually confirming within two hours during office hours."}
+                : preferredAgent
+                  ? `${preferredAgent.display_name} will read this — usually confirming within two hours during office hours. `
+                  : "One agent reads this — usually confirming within two hours during office hours."}
             </div>
           </div>
 

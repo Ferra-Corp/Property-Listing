@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, Moon, Search, Sun, TrendingUp } from "lucide-react"
+import { ChevronDown, Menu, Moon, Search, Sun, TrendingUp } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "next-themes"
 import { ButtonLink } from "./ui/button"
 import { SiteSearch } from "./site-search"
+import { MobileSearchDialog } from "./mobile-search-dialog"
 import { useCurrencyContext } from "../_lib/Context/Currencies"
 import { useSelectedCurrency } from "../_lib/Context/SelectedCurrency"
 
@@ -78,6 +79,46 @@ function AnimatedCurrencySwitcher({
 }
 
 /**
+ * The segmented switcher only fits two or three codes before it runs out
+ * of room, so on a phone it was silently dropping EUR/GBP/AED — this picks
+ * from the full list instead, in the space of one small badge. A native
+ * select is deliberate here: on mobile it opens the OS's own picker sheet,
+ * which is a better way to choose one of five short codes than anything
+ * custom would be.
+ */
+function CurrencyPicker({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="relative flex-none md:hidden">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="Currency"
+        className="cl-mono h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[11px] font-medium text-(--color-text) backdrop-blur-sm focus:outline-none"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        size={11}
+        strokeWidth={2.25}
+        className="pointer-events-none absolute top-1/2 right-1.75 -translate-y-1/2 text-neutral-600"
+      />
+    </div>
+  )
+}
+
+/**
  * Circular light/dark toggle. Sits beside the main header bar (~5% of its
  * width) rather than inside it, per the requested layout.
  */
@@ -123,6 +164,7 @@ export function SiteHeader() {
   const { currencies } = useCurrencyContext(),
     { currency, setCurrency } = useSelectedCurrency(),
     [isMenuOpen, setIsMenuOpen] = React.useState(false),
+    [isSearchOpen, setIsSearchOpen] = React.useState(false),
     menuRef = React.useRef<HTMLDivElement>(null)
 
   const activeCurrencies = currencies
@@ -229,26 +271,22 @@ export function SiteHeader() {
           layoutIdPrefix="desktop-currency"
         />
 
-        {/* Mobile Animated Switcher */}
-        <AnimatedCurrencySwitcher
-          options={currencyOptions.slice(0, 2)}
-          value={
-            currencyOptions.slice(0, 2).includes(currency)
-              ? currency
-              : currencyOptions[0]
-          }
+        {/* Mobile currency picker — all five codes, not just whichever two
+            happened to fit in the segmented control. */}
+        <CurrencyPicker
+          options={currencyOptions}
+          value={currency}
           onChange={setCurrency}
-          className="flex-none md:hidden"
-          itemClassName="px-[8px] py-[2px] text-[11px]"
-          layoutIdPrefix="mobile-currency"
         />
 
         <motion.button
           whileTap={{ scale: 0.9 }}
           type="button"
+          onClick={() => setIsSearchOpen(true)}
           // Also added rounded-xl to this icon button to maintain the consistent styling rule
           className="cl-btn cl-btn-secondary cl-btn-icon size-7.5 flex-none rounded-xl md:hidden"
           title="Search"
+          aria-label="Search listings"
         >
           <Search size={14} strokeWidth={2} />
         </motion.button>
@@ -274,6 +312,11 @@ export function SiteHeader() {
       </motion.header>
 
       <ThemeToggle />
+
+      <MobileSearchDialog
+        open={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </div>
   )
 }

@@ -5,30 +5,9 @@ import Link from "next/link"
 import { Search } from "lucide-react"
 import { Input } from "./ui/field"
 import { useListingContext } from "../_lib/Context/Listing"
-import type { ListingWithThumbnail } from "../_lib/Types/Listing"
+import { searchListings } from "../_lib/searchListings"
 
 const MAX_SUGGESTIONS = 6
-
-/** Lowercases and turns punctuation/hyphens into spaces, so "go-down" and
- * "go down" — or "Two-bedroom, Kilimani" and "Two bedroom - Kilimani" —
- * normalize to the same word set. */
-function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
-}
-
-/** Matches when every word in the query appears somewhere in the listing's
- * searchable text, in any order — not one exact contiguous substring. */
-function matches(listing: ListingWithThumbnail, query: string): boolean {
-  const haystack = normalize(
-      `${listing.title} ${listing.location_label} ${listing.reference_code} ${listing.property_subtype ?? ""}`
-    ),
-    words = normalize(query).split(" ").filter(Boolean)
-
-  return words.length > 0 && words.every((word) => haystack.includes(word))
-}
 
 /**
  * YouTube-style search: typing shows an inline dropdown of matching
@@ -41,11 +20,7 @@ export function SiteSearch({ className }: { className?: string }) {
     [query, setQuery] = React.useState(""),
     [open, setOpen] = React.useState(false),
     trimmed = query.trim(),
-    results = trimmed
-      ? listings
-          .filter((listing) => matches(listing, trimmed))
-          .slice(0, MAX_SUGGESTIONS)
-      : []
+    results = searchListings(listings, trimmed, MAX_SUGGESTIONS)
 
   const select = () => {
     setOpen(false)

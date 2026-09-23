@@ -97,6 +97,8 @@ export function AuditList({ selectedId }: { selectedId?: string }) {
         title="Audit log"
         meta={`${logs.length} rows · append only · created_at in EAT`}
         search="entity_id or entity_type"
+        searchValue={query}
+        onSearchChange={setQuery}
       >
         <Button
           type="button"
@@ -135,12 +137,6 @@ export function AuditList({ selectedId }: { selectedId?: string }) {
             </option>
           ))}
         </Select>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search entity_id or entity_type"
-          className="cl-input hidden min-w-55 flex-1 text-[13px] md:block"
-        />
       </div>
 
       <div className="px-4 pt-2 md:px-6">

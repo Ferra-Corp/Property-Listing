@@ -143,6 +143,8 @@ export default function AdminListingsPage() {
         title="Listings"
         meta={`${listings.length} total · ${counts.published} published · ${counts.draft} draft · ${counts.pending} pending review · ${counts.archived} archived`}
         search="Reference, title or location"
+        searchValue={query}
+        onSearchChange={setQuery}
       >
         <ButtonLink
           href="/admin/listings/new"
@@ -153,15 +155,6 @@ export default function AdminListingsPage() {
           New listing
         </ButtonLink>
       </PageHead>
-
-      <div className="px-4 pt-4 md:hidden">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Reference, title or location"
-          className="cl-input w-full text-[13.5px]"
-        />
-      </div>
 
       <Toolbar>
         <div className="cl-seg hidden flex-none md:inline-flex">

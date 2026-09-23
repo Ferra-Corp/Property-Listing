@@ -91,7 +91,7 @@ export function ValuationQueue({ selectedId }: { selectedId?: string }) {
   }
 
   return (
-    <div className="min-w-0 border-r-0 border-(--color-divider) md:border-r">
+    <div className="min-w-0">
       <PageHead
         title="Valuations"
         meta={`${counts.pending} pending · ${counts.scheduled} scheduled · ${counts.completed} completed`}

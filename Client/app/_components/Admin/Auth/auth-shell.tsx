@@ -85,13 +85,16 @@ export function AuthShell({
           </span>
         </div>
 
+        {/* Both left-aligned on mobile: this row used to push the wordmark
+            all the way to the far right with a spacer, straight into the
+            caption's own top-right corner (also visible in the plate
+            below, sharing the same absolute-positioned space). */}
         <div className="flex items-center gap-3 md:block">
           {back ? (
             <Link href={back.href} className="cl-k text-[#dbbb8f] md:hidden">
               ← {back.label}
             </Link>
           ) : null}
-          <span className="flex-1 md:hidden" />
           <div className="flex items-baseline gap-1.5 md:gap-2">
             <span className="font-(family-name:--font-heading) text-[16px] leading-none md:text-[19px]">
               D&amp;G

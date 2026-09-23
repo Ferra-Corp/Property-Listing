@@ -284,38 +284,143 @@ export function byCity(
     .sort((a, b) => b.enquiries - a.enquiries)
 }
 
-export function exportLeadsCsv(leads: Lead[]): void {
-  const headers = [
-      "Name",
-      "Phone",
-      "Email",
-      "Source",
-      "Status",
-      "City",
-      "Created",
-    ],
-    rows = leads.map((l) => [
-      l.full_name,
-      l.phone,
-      l.email ?? "",
-      SOURCE_LABEL[l.source],
-      l.status,
-      l.city ?? "",
-      l.created_at,
-    ])
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (c) =>
+      (
+        {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        } as Record<string, string>
+      )[c]!
+  )
+}
 
-  const csv = [headers, ...rows]
-    .map((row) =>
-      row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
-    )
-    .join("\n")
+function fmtDate(date: Date): string {
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+}
 
-  const blob = new Blob([csv], { type: "text/csv" }),
-    url = URL.createObjectURL(blob),
-    a = document.createElement("a")
+export type AnalyticsSummaryInput = {
+  period: Period
+  cityFilter: string
+  start: Date
+  end: Date
+  prevStart: Date
+  prevEnd: Date
+  kpis: { label: string; figure: string; note: string }[]
+  sources: { label: string; count: number; pct: number }[]
+  funnel: FunnelStage[]
+  valStats: {
+    total: number
+    completed: number
+    daysToReport: number | null
+    converted: number
+  }
+  timeSlot: string
+  cityRows: CityRow[]
+}
 
-  a.href = url
-  a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+/** What "Export" used to do — dump the raw lead rows — had nothing to do
+ * with the page it sat on. This instead writes up the same figures the
+ * page itself shows (KPIs, sources, funnel, valuations, city table) into a
+ * printable summary, titled and dated, and hands it to the browser's own
+ * print dialog — "Save as PDF" there is the export. No client-side
+ * download here needs a library: the title on the printed/saved document
+ * comes from this window's own <title>. */
+export function exportAnalyticsSummary(input: AnalyticsSummaryInput): void {
+  const generatedOn = fmtDate(new Date()),
+    title = `D&G Realtors : Analytics - ${generatedOn}`,
+    rangeLabel =
+      input.period === "all"
+        ? "Everything on file"
+        : `${fmtDate(input.start)} – ${fmtDate(input.end)} (previous period: ${fmtDate(input.prevStart)} – ${fmtDate(input.prevEnd)})`
+
+  const win = window.open("", "_blank", "width=900,height=1000")
+  if (!win) return // popup blocked — nothing to fall back to silently
+
+  const kpiRows = input.kpis
+      .map(
+        (k) =>
+          `<tr><td>${escapeHtml(k.label)}</td><td class="num">${escapeHtml(k.figure)}</td><td class="note">${escapeHtml(k.note)}</td></tr>`
+      )
+      .join(""),
+    sourceRows = input.sources
+      .map(
+        (s) =>
+          `<tr><td>${escapeHtml(s.label)}</td><td class="num">${s.count}</td><td class="num">${s.pct}%</td></tr>`
+      )
+      .join(""),
+    funnelRows = input.funnel
+      .map(
+        (f) =>
+          `<tr><td>${escapeHtml(f.label)}</td><td class="num">${f.value}</td></tr>`
+      )
+      .join(""),
+    cityTableRows = input.cityRows
+      .map(
+        (c) =>
+          `<tr><td>${escapeHtml(c.city)}</td><td class="num">${c.listings}</td><td class="num">${c.enquiries}</td><td class="num">${c.viewings > 0 ? `${c.held}/${c.viewings}` : "—"}</td><td class="num">${c.won}</td><td class="num">${minutesLabel(c.replyMedianMinutes)}</td></tr>`
+      )
+      .join("")
+
+  win.document.write(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${escapeHtml(title)}</title>
+<style>
+  body { font-family: Georgia, "Times New Roman", serif; color: #2b2118; margin: 44px; background: #fff; }
+  h1 { font-size: 21px; font-weight: normal; margin: 0 0 4px; }
+  .meta { font-family: ui-monospace, "SFMono-Regular", monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #7c7365; margin-bottom: 30px; }
+  h2 { font-size: 13px; font-weight: normal; text-transform: uppercase; letter-spacing: .08em; color: #7c7365; border-bottom: 1px solid #ded7c4; padding-bottom: 6px; margin: 30px 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td, th { padding: 6px 4px; border-bottom: 1px solid #efeada; text-align: left; vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.note { color: #7c7365; font-size: 12px; }
+  .footer { margin-top: 40px; font-size: 11px; color: #9e9585; }
+  @media print { body { margin: 20px; } }
+</style>
+</head>
+<body>
+  <h1>D&amp;G Realtors &mdash; Analytics summary</h1>
+  <div class="meta">${escapeHtml(rangeLabel)}${input.cityFilter ? ` &middot; ${escapeHtml(input.cityFilter)} only` : ""}</div>
+
+  <h2>Headline figures</h2>
+  <table>${kpiRows}</table>
+
+  <h2>Where enquiries came from</h2>
+  <table>${sourceRows || `<tr><td>No enquiries in this period.</td></tr>`}</table>
+
+  <h2>What the register did</h2>
+  <table>${funnelRows}</table>
+
+  <h2>Valuations &amp; the diary</h2>
+  <table>
+    <tr><td>Requests</td><td class="num">${input.valStats.total}</td></tr>
+    <tr><td>Reports issued</td><td class="num">${input.valStats.completed}</td></tr>
+    <tr><td>Days to report</td><td class="num">${daysLabel(input.valStats.daysToReport)}</td></tr>
+    <tr><td>Converted to a listing</td><td class="num">${input.valStats.total > 0 ? `${input.valStats.converted} of ${input.valStats.total}` : "—"}</td></tr>
+    <tr><td>Most requested time</td><td class="num" style="text-transform:capitalize">${escapeHtml(input.timeSlot)}</td></tr>
+  </table>
+
+  <h2>By city</h2>
+  <table>
+    <tr><th>City</th><th class="num">Listings</th><th class="num">Enquiries</th><th class="num">Viewings</th><th class="num">Won</th><th class="num">First reply</th></tr>
+    ${cityTableRows || `<tr><td colspan="6">No listings have a city on file yet.</td></tr>`}
+  </table>
+
+  <div class="footer">Generated ${escapeHtml(generatedOn)} &middot; D&amp;G Realtors admin desk</div>
+
+  <script>window.onload = function () { setTimeout(function () { window.print(); }, 200); };</script>
+</body>
+</html>`)
+  win.document.close()
 }

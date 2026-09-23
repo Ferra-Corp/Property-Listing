@@ -150,7 +150,11 @@ export default function AdminViewingPage({
         </div>
 
         <div className="bg-neutral-100 pb-7">
-          <Pad className="max-w-160 pt-4.5">
+          {/* No max-w cap — this page has no aside competing for width
+              (unlike the Lead/Valuation split panes that pattern came
+              from), so the content fills the full panel width at every
+              breakpoint instead of leaving space unused. */}
+          <Pad className="pt-4.5">
             <h2 className="m-0 text-[27px] leading-[1.15] font-normal">
               {lead?.full_name ?? "Visitor unavailable"}
             </h2>
