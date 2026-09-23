@@ -21,7 +21,7 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  title: "Entity — commercial & upmarket residential property, Nairobi",
+  title: "D&G Realtors — Real Estate Agency",
   description:
     "Go-downs, offices, retail and yards across the Nairobi metropolitan area, alongside a short list of upmarket homes.",
 }
