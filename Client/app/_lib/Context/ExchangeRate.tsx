@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import {
   createExchangeRateDTO,
   ExchangeRate,
+  RefreshRatesResult,
   UpdateExchangeRateDTO,
   type RateContext,
 } from "../Types/ExchangeRate"
@@ -14,6 +15,7 @@ const RateContext = createContext<RateContext>({
   editRate: () => Promise.resolve(),
   getRates: () => Promise.resolve(),
   deleteRate: () => Promise.resolve(),
+  refreshRates: () => Promise.resolve({ updated: [], skipped: [], source: "" }),
 })
 
 export const useRatesContext = () => useContext(RateContext)
@@ -57,14 +59,11 @@ export default function RateContextProvider({
     },
     editRate = async (id: string, details: UpdateExchangeRateDTO) => {
       try {
-        const editRequest = await fetch(
-            `/system/api/v1/exchange-rates/${id}`,
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(details),
-            },
-          ),
+        const editRequest = await fetch(`/system/api/v1/exchange-rates/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(details),
+          }),
           editResponse = await editRequest.json()
 
         if (!editRequest.ok) throw new Error(editResponse.error)
@@ -80,7 +79,7 @@ export default function RateContextProvider({
           `/system/api/v1/exchange-rates/${id}`,
           {
             method: "DELETE",
-          },
+          }
         )
 
         if (!deleteRequest.ok) {
@@ -92,6 +91,22 @@ export default function RateContextProvider({
       } catch (error) {
         throw error
       }
+    },
+    refreshRates = async (): Promise<RefreshRatesResult> => {
+      try {
+        const refreshRequest = await fetch(
+            "/system/api/v1/exchange-rates/refresh",
+            { method: "POST" }
+          ),
+          refreshResponse = await refreshRequest.json()
+
+        if (!refreshRequest.ok) throw new Error(refreshResponse.error)
+
+        await getRates()
+        return refreshResponse
+      } catch (error) {
+        throw error
+      }
     }
 
   useEffect(() => {
@@ -100,7 +115,14 @@ export default function RateContextProvider({
 
   return (
     <RateContext.Provider
-      value={{ createRate, editRate, getRates, deleteRate, rates }}
+      value={{
+        createRate,
+        editRate,
+        getRates,
+        deleteRate,
+        refreshRates,
+        rates,
+      }}
     >
       {children}
     </RateContext.Provider>
