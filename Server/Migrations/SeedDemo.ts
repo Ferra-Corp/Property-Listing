@@ -9,6 +9,7 @@ import {
   userService,
   agentService,
   currencyService,
+  rateService,
   listingService,
   insightService,
   tagService,
@@ -69,9 +70,60 @@ async function createAgent(details: {
 (async () => {
   try {
     // ── Currencies ──────────────────────────────────────────────────────
+    // Mirrors exactly what's active on the live site right now: KES is the
+    // till currency every listing price is stored in, USD/EUR/GBP/SAR are
+    // the four the currency switcher currently offers, and AED is on file
+    // but currently switched off — see admin/currencies for how the "up to
+    // 4 others" picker manages this day to day.
     for (const currency of [
-      { code: "GBP", symbol: "£", name: "British Pound", decimal_places: 2, is_active: true, sort_order: 4 },
-      { code: "AED", symbol: "د.إ", name: "UAE Dirham", decimal_places: 2, is_active: true, sort_order: 5 },
+      {
+        code: "KES",
+        symbol: "KES",
+        name: "Kenyan Shilling",
+        decimal_places: 2,
+        is_active: true,
+        sort_order: 0,
+      },
+      {
+        code: "USD",
+        symbol: "$",
+        name: "United States Dollar",
+        decimal_places: 2,
+        is_active: true,
+        sort_order: 0,
+      },
+      {
+        code: "EUR",
+        symbol: "€",
+        name: "Euro",
+        decimal_places: 2,
+        is_active: true,
+        sort_order: 0,
+      },
+      {
+        code: "GBP",
+        symbol: "£",
+        name: "British Pound",
+        decimal_places: 2,
+        is_active: true,
+        sort_order: 4,
+      },
+      {
+        code: "SAR",
+        symbol: "﷼",
+        name: "Saudi Riyal",
+        decimal_places: 2,
+        is_active: true,
+        sort_order: 5,
+      },
+      {
+        code: "AED",
+        symbol: "د.إ",
+        name: "UAE Dirham",
+        decimal_places: 2,
+        is_active: false,
+        sort_order: 5,
+      },
     ]) {
       try {
         await currencyService.createCurrency(currency);
@@ -80,6 +132,34 @@ async function createAgent(details: {
       }
     }
     Info("Currencies seeded");
+
+    // ── Exchange rates ──────────────────────────────────────────────────
+    // KES → each currency above (bar KES itself), matching the live rates
+    // on file at seed time — admin/currencies' "Refresh from source" keeps
+    // these current from then on; this just means a fresh database isn't
+    // stuck on "Never fetched" until someone remembers to press it.
+    const seedRateDate = new Date().toISOString().slice(0, 10);
+
+    for (const rate of [
+      { target_currency: "USD", rate: 0.007722 },
+      { target_currency: "EUR", rate: 0.006767 },
+      { target_currency: "GBP", rate: 0.005814 },
+      { target_currency: "SAR", rate: 0.028957 },
+      { target_currency: "AED", rate: 0.028359 },
+    ]) {
+      try {
+        await rateService.createRate({
+          base_currency: "KES",
+          target_currency: rate.target_currency,
+          rate: rate.rate,
+          source: "open.er-api.com",
+          rate_date: seedRateDate,
+        });
+      } catch {
+        // already exists — fine
+      }
+    }
+    Info("Exchange rates seeded");
 
     // ── Agents ──────────────────────────────────────────────────────────
     const sarah = await createAgent({
@@ -364,7 +444,8 @@ async function createAgent(details: {
             alt_text: "Apartment, Kilimani",
             is_primary: true,
             provider: "cloudinary",
-            provider_public_id: "frames-for-your-heart-2d4lAQAlbDA-unsplash_g8kgw9",
+            provider_public_id:
+              "frames-for-your-heart-2d4lAQAlbDA-unsplash_g8kgw9",
           },
         ],
       },
@@ -376,9 +457,18 @@ async function createAgent(details: {
     Info("Listings seeded");
 
     // ── Tags ────────────────────────────────────────────────────────────
-    const ratesTag = await tagService.createTag({ name: "Rates & yields", slug: "rates-yields" }),
-      areaGuideTag = await tagService.createTag({ name: "Area guides", slug: "area-guides" }),
-      abroadTag = await tagService.createTag({ name: "Buying from abroad", slug: "buying-from-abroad" });
+    const ratesTag = await tagService.createTag({
+        name: "Rates & yields",
+        slug: "rates-yields",
+      }),
+      areaGuideTag = await tagService.createTag({
+        name: "Area guides",
+        slug: "area-guides",
+      }),
+      abroadTag = await tagService.createTag({
+        name: "Buying from abroad",
+        slug: "buying-from-abroad",
+      });
 
     Info("Tags seeded");
 
@@ -468,7 +558,10 @@ async function createAgent(details: {
 
     for (const { tagId, ...insightDef } of insightDefs) {
       const insight = await insightService.createInsight(insightDef);
-      await insightTagService.attachTag({ insight_id: insight.id, tag_id: tagId });
+      await insightTagService.attachTag({
+        insight_id: insight.id,
+        tag_id: tagId,
+      });
     }
     Info("Insights seeded");
 

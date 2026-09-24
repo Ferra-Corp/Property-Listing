@@ -1,5 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { logService, rateService } from "../../../Data Objects/DTO.js";
+import {
+  currencyService,
+  logService,
+  rateService,
+} from "../../../Data Objects/DTO.js";
 import {
   ErrorFormatter,
   getClientDetails,
@@ -27,6 +31,31 @@ export const RateController = async (
         sendResponseMessage(200, false, rates, response);
         break;
       case "POST":
+        if (pathnames[2] === "refresh") {
+          const refreshUser = await Authorized(
+            request,
+            "Create exchange rate",
+          );
+
+          const activeCodes = (await currencyService.getCurrencies())
+              .filter((currency) => currency.is_active)
+              .map((currency) => currency.code),
+            refreshResult = await service.refreshRates(activeCodes);
+
+          await logService.createLog({
+            action: "Exchange rates refreshed",
+            entity_id: "bulk",
+            entity_type: "Exchange Rate",
+            user_id: refreshUser.id,
+            user_agent: userAgent.deviceName,
+            ip_address: userAgent.ipAddress,
+            changes: refreshResult,
+          });
+
+          sendResponseMessage(200, false, refreshResult, response);
+          break;
+        }
+
         const postUser = await Authorized(request, "Create exchange rate");
 
         const postRequestBody: any = await getRequestBody(request),

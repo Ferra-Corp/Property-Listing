@@ -1,5 +1,5 @@
 import { ServiceError } from "../../../Utilities/Http.js";
-import { Cache, CacheKeys, Resource } from "../../../../Configurations/Cache.js";
+import { Cache } from "../../../../Configurations/Cache.js";
 import type {
   Currency,
   CurrencyRepository,
@@ -7,6 +7,13 @@ import type {
   UpdateCurrencyDTO,
 } from "./currency.types.js";
 
+// Deliberately uncached: this table is a handful of rows, changed rarely,
+// and read on every public page to decide the currency switcher — the sort
+// of resource where an invalidate/refetch race (two toggles in quick
+// succession leaving a stale value sitting in Redis for up to its TTL)
+// costs real correctness for a saving that doesn't matter at this size.
+// `cache` stays as a constructor param for interface consistency with the
+// other services even though it's unused here.
 export class CurrencyServ implements CurrencyService {
   constructor(
     private repo: CurrencyRepository,
@@ -33,11 +40,7 @@ export class CurrencyServ implements CurrencyService {
         throw new ServiceError(`${key} has an invalid value`, 400);
     }
 
-    const newCurrency = await this.repo.createCurrency(details);
-
-    await this.cache.invalidate(CacheKeys.all(Resource.Currency));
-
-    return newCurrency;
+    return this.repo.createCurrency(details);
   }
 
   async editCurrency(
@@ -72,24 +75,16 @@ export class CurrencyServ implements CurrencyService {
     if (Object.keys(filteredDetails).length == 0)
       throw new ServiceError("Nothing to update", 400);
 
-    const patchedCurrency = await this.repo.editCurrency(code, filteredDetails);
-
-    await this.cache.invalidate(CacheKeys.all(Resource.Currency));
-
-    return patchedCurrency;
+    return this.repo.editCurrency(code, filteredDetails);
   }
 
   async getCurrencies(): Promise<Currency[]> {
-    return this.cache.remember(CacheKeys.all(Resource.Currency), () =>
-      this.repo.getCurrencies(),
-    );
+    return this.repo.getCurrencies();
   }
 
   async deleteCurrency(code: string): Promise<void> {
     if (!code) throw new ServiceError("Currency Code must be provided", 404);
 
     await this.repo.deleteCurrency(code);
-
-    await this.cache.invalidate(CacheKeys.all(Resource.Currency));
   }
 }

@@ -2,6 +2,7 @@ import http, { IncomingMessage, ServerResponse } from "http";
 import Router from "./Router.js";
 import { PORT } from "./Configurations/Env.js";
 import { ErrorMsg, Info } from "./Source/Utilities/Logger.js";
+import { startRateRefreshSchedule } from "./Source/Utilities/RateScheduler.js";
 
 const httpServer = http.createServer(
   (request: IncomingMessage, response: ServerResponse<IncomingMessage>) =>
@@ -10,6 +11,7 @@ const httpServer = http.createServer(
 
 httpServer.listen(PORT, () => {
   Info(`Server is up and running at port, ${PORT}`);
+  startRateRefreshSchedule();
 });
 
 process.on("uncaughtException", (error) => ErrorMsg(error));

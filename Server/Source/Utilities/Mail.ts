@@ -188,7 +188,7 @@ export const ListingAlertMail = async (
     );
 
   const alert = await getResendClient().emails.send({
-    from: "listings@ferracorp.com",
+    from: "announcements@ferracorp.com",
     to: email,
     template: {
       id: RESEND_LISTING_ALERT_TEMPLATE_ID,

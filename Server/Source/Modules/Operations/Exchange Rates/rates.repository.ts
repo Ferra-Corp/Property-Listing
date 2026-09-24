@@ -75,4 +75,27 @@ export class RateRepo implements RateRepository {
       throw new RepositoryError((error as Error).message, error);
     }
   }
+
+  async upsertRate(details: createExchangeRateDTO): Promise<ExchangeRate> {
+    try {
+      const sqlString: string =
+          `INSERT INTO exchange_rates(base_currency,target_currency,rate,source,rate_date)
+           VALUES($1,$2,$3,$4,$5)
+           ON CONFLICT (base_currency, target_currency, rate_date)
+           DO UPDATE SET rate=EXCLUDED.rate, source=EXCLUDED.source, fetched_at=now()
+           RETURNING *`,
+        sqlQuery = await this.db.query(sqlString, [
+          details["base_currency"],
+          details["target_currency"],
+          details["rate"],
+          details["source"],
+          details["rate_date"],
+        ]),
+        rateQuery = sqlQuery as QueryResult<ExchangeRate>;
+
+      return rateQuery.rows[0]!;
+    } catch (error) {
+      throw new RepositoryError((error as Error).message, error);
+    }
+  }
 }
