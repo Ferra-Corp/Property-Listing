@@ -44,13 +44,16 @@ export default function SystemLayout({
       )}
     >
       <body>
-        <ThemeProvider>
-          <PublicDataProviders>
-            <ReactLenis>
+        <ReactLenis
+          root
+          options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}
+        >
+          <ThemeProvider>
+            <PublicDataProviders>
               <SiteChrome>{children}</SiteChrome>
-            </ReactLenis>
-          </PublicDataProviders>
-        </ThemeProvider>
+            </PublicDataProviders>
+          </ThemeProvider>
+        </ReactLenis>
       </body>
     </html>
   )
