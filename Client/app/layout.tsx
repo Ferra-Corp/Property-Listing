@@ -7,6 +7,7 @@ import "./classical.css"
 import { SiteChrome } from "./_components/site-chrome"
 import { PublicDataProviders } from "./_components/public-data-providers"
 import { ThemeProvider } from "@/components/theme-provider"
+import ReactLenis from "lenis/react"
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -45,7 +46,9 @@ export default function SystemLayout({
       <body>
         <ThemeProvider>
           <PublicDataProviders>
-            <SiteChrome>{children}</SiteChrome>
+            <ReactLenis>
+              <SiteChrome>{children}</SiteChrome>
+            </ReactLenis>
           </PublicDataProviders>
         </ThemeProvider>
       </body>
