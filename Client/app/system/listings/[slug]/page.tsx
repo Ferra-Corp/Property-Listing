@@ -167,8 +167,13 @@ export default function ListingDetailPage() {
 
   if (status === "loading")
     return (
-      <div className="text-neutral-600) px-3 py-16 text-center text-[13.5px] md:px-6">
-        Loading…
+      <div className="px-3 pt-4 md:px-6">
+        <div className="cl-skeleton h-[300px] w-full rounded-xl md:h-[500px]" />
+        <div className="mt-6 grid gap-3">
+          <div className="cl-skeleton h-6 w-1/2 rounded-md" />
+          <div className="cl-skeleton h-4 w-1/3 rounded-full" />
+          <div className="cl-skeleton mt-4 h-24 w-full rounded-md" />
+        </div>
       </div>
     )
 

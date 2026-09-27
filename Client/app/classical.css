@@ -65,6 +65,14 @@
   --shadow-sm: 0 1px 2px color-mix(in srgb, #2b2118 14%, transparent);
   --shadow-md: 0 3px 10px color-mix(in srgb, #2b2118 16%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, #2b2118 22%, transparent);
+  --shadow-glow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 24%, transparent);
+
+  /* Motion tokens — used by buttons, cards, skeletons, toasts, price fades. */
+  --motion-fast: 150ms;
+  --motion-med: 220ms;
+  --motion-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
   --plate-filter: sepia(0.22) saturate(0.82) contrast(1.05);
   --ph-label: block;
@@ -563,4 +571,63 @@
   .cl-dialog-title { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: 20px; }
   .cl-dialog-body { font-size: 14px; opacity: 0.85; }
   .cl-dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+  /* — skeleton shimmer — respects prefers-reduced-motion (via the global
+     rule in globals.css that clamps all animations near zero). */
+  .cl-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--color-text) 8%, var(--color-bg));
+    border-radius: var(--cl-radius-md);
+  }
+  .cl-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-bg) 60%, transparent),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: cl-shimmer 1.4s var(--ease-in-out) infinite;
+  }
+  @keyframes cl-shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  /* — sticky header, once scrolled — a firmer surface with a hairline. */
+  html[data-scrolled] .cl-header-surface {
+    background: color-mix(in srgb, var(--color-bg) 96%, transparent);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* — button sheen — a 4% linear-gradient overlay on primary buttons.
+     Uses ::after so it stacks above the background but under text. */
+  .cl-btn-primary {
+    position: relative;
+    overflow: hidden;
+  }
+  .cl-btn-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff 8%, transparent) 0%,
+      transparent 45%,
+      color-mix(in srgb, #000 6%, transparent) 100%
+    );
+    opacity: 0.9;
+  }
+  .cl-btn-primary > * { position: relative; z-index: 1; }
+}
+
+/* Backdrop-filter fallback — some Android WebViews don't ship it. */
+@supports not (backdrop-filter: blur(1px)) {
+  .cl-root .backdrop-blur-sm {
+    background: var(--color-bg) !important;
+  }
 }

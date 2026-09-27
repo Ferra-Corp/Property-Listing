@@ -67,8 +67,15 @@ export default function AgentDetailPage() {
 
   if (agents.length === 0)
     return (
-      <div className="px-3 py-16 text-center text-[13.5px] text-neutral-600 md:px-6">
-        Loading…
+      <div className="px-3 pt-6 md:px-6">
+        <div className="grid gap-4 md:grid-cols-[430px_1fr] md:gap-6">
+          <div className="cl-skeleton aspect-4/5 w-full rounded-xl md:h-117.5" />
+          <div className="grid gap-3 pt-2">
+            <div className="cl-skeleton h-5 w-1/3 rounded-full" />
+            <div className="cl-skeleton h-8 w-3/4 rounded-md" />
+            <div className="cl-skeleton mt-3 h-20 w-full rounded-md" />
+          </div>
+        </div>
       </div>
     )
 

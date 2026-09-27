@@ -198,7 +198,7 @@ export function SiteHeader() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         // Increased header radius to rounded-2xl for a softer, floating look
-        className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] py-2 pr-2 pl-3 shadow-(--shadow-sm) backdrop-blur-sm md:gap-3.5 md:py-2.5 md:pr-2.5 md:pl-4"
+        className="cl-header-surface flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] py-2 pr-2 pl-3 shadow-(--shadow-sm) backdrop-blur-sm transition-[background,box-shadow] duration-200 ease-out md:gap-3.5 md:py-2.5 md:pr-2.5 md:pl-4"
       >
         <div className="relative flex-none" ref={menuRef}>
           <motion.button
