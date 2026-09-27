@@ -14,6 +14,8 @@ import { useInsightContext } from "./_lib/Context/Insight"
 import { useServiceContext } from "./_lib/Context/Service"
 import { buildWhatsAppLink } from "./_lib/format"
 import { useContactPhone } from "./_lib/useSiteSettings"
+import { useToast } from "./_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 import {
   toRowListing,
   useCurrencyConversion,
@@ -113,6 +115,7 @@ const FAQ = [
 ]
 
 export default function HomePage() {
+  const { toast } = useToast()
   const { listings } = useListingContext(),
     { agents } = useAgentContext(),
     { insights: allInsights } = useInsightContext(),
@@ -188,6 +191,7 @@ export default function HomePage() {
 
     if (!kind) {
       setSubscribeError("Choose which space interests you.")
+      haptic("error")
       return
     }
 
@@ -206,8 +210,12 @@ export default function HomePage() {
       if (!request.ok) throw new Error(response.error)
 
       setSubscribed(true)
+      haptic("success")
+      toast("Thanks — you'll get an email when a match goes live.", "success")
     } catch (err) {
       setSubscribeError((err as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     } finally {
       setSubscribing(false)
     }

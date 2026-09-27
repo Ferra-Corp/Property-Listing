@@ -7,6 +7,7 @@ import { SiteFooter } from "./site-footer"
 import { MobileContactBar } from "./mobile-contact-bar"
 import { PageTransition } from "./page-transition"
 import { ToastProvider } from "./toast-provider"
+import { HapticsProvider } from "./haptics-provider"
 
 /** Sets a data-scrolled attribute on <html> once the viewport has scrolled
  *  past a threshold, so the sticky header can render its firmer surface. */
@@ -38,16 +39,18 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith("/admin")) return <>{children}</>
 
   return (
-    <ToastProvider>
-      <div className="cl-root flex min-h-dvh flex-col">
-        <ScrolledWatcher />
-        <SiteHeader />
-        <main className="flex-1">
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <SiteFooter />
-        <MobileContactBar />
-      </div>
-    </ToastProvider>
+    <HapticsProvider>
+      <ToastProvider>
+        <div className="cl-root flex min-h-dvh flex-col">
+          <ScrolledWatcher />
+          <SiteHeader />
+          <main className="flex-1">
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <SiteFooter />
+          <MobileContactBar />
+        </div>
+      </ToastProvider>
+    </HapticsProvider>
   )
 }

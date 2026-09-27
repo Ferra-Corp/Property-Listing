@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "cn"
+import { haptic } from "@/lib/haptics"
 
 export function Input({ className, ...props }: React.ComponentProps<"input">) {
   return <input data-slot="input" className={cn("cl-input", className)} {...props} />
@@ -81,8 +82,17 @@ export function Segmented({
             name={name}
             value={option}
             {...(value !== undefined
-              ? { checked: value === option, onChange: () => onChange?.(option) }
-              : { defaultChecked: (defaultValue ?? options[0]) === option })}
+              ? {
+                  checked: value === option,
+                  onChange: () => {
+                    if (value !== option) haptic("selection")
+                    onChange?.(option)
+                  },
+                }
+              : {
+                  defaultChecked: (defaultValue ?? options[0]) === option,
+                  onClick: () => haptic("selection"),
+                })}
           />
           {option}
         </label>

@@ -16,6 +16,8 @@ import { useInsightContext } from "../../../_lib/Context/Insight"
 import { useContactPhone } from "../../../_lib/useSiteSettings"
 import { buildWhatsAppLink, toWhatsAppDigits } from "../../../_lib/format"
 import { createLead } from "../../../_lib/Actions/Leads"
+import { useToast } from "../../../_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 import {
   toRowListing,
   useCurrencyConversion,
@@ -53,6 +55,7 @@ const NEED_MAP: Record<
 }
 
 export default function AgentDetailPage() {
+  const { toast } = useToast()
   const { slug } = useParams<{ slug: string }>(),
     { agents } = useAgentContext(),
     { listings } = useListingContext(),
@@ -145,9 +148,13 @@ export default function AgentDetailPage() {
 
       setStatus("success")
       form.reset()
+      haptic("success")
+      toast("Sent — an agent will be in touch shortly.", "success")
     } catch (submitError) {
       setStatus("error")
       setError((submitError as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     }
   }
 

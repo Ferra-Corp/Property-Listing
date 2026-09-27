@@ -16,6 +16,8 @@ import {
   useOfficeAddress,
 } from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink, toWhatsAppDigits } from "../../_lib/format"
+import { useToast } from "../../_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 
 const INTENT_OPTIONS = [
   "Renting or leasing",
@@ -140,6 +142,7 @@ const FAQ = [
 ]
 
 export default function ContactPage() {
+  const { toast } = useToast()
   const { agents } = useAgentContext(),
     ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     fallbackEmail = useContactEmail(),
@@ -247,9 +250,13 @@ export default function ContactPage() {
       setStatus("success")
       form.reset()
       setIntent(INTENT_OPTIONS[0])
+      haptic("success")
+      toast("Sent — an agent will be in touch shortly.", "success")
     } catch (submitError) {
       setStatus("error")
       setError((submitError as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     }
   }
 

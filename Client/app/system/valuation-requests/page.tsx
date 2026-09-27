@@ -9,6 +9,8 @@ import { Disclosure } from "../../_components/ui/section"
 import { createValuationRequest } from "../../_lib/Actions/Valuation Requests"
 import { useContactPhone } from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink } from "../../_lib/format"
+import { useToast } from "../../_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 
 const TYPE_OPTIONS = [
   "Go-down / warehouse",
@@ -132,6 +134,7 @@ const FAQ = [
 ]
 
 export default function ValuationRequestPage() {
+  const { toast } = useToast()
   const [condition, setCondition] = React.useState<
       (typeof CONDITION_OPTIONS)[number]
     >(CONDITION_OPTIONS[0]),
@@ -169,6 +172,8 @@ export default function ValuationRequestPage() {
     if (!type) {
       setStatus("error")
       setError("Choose a property type")
+      haptic("error")
+      toast("Choose a property type", "error")
       return
     }
 
@@ -211,9 +216,13 @@ export default function ValuationRequestPage() {
       form.reset()
       setCondition(CONDITION_OPTIONS[0])
       setIntention(INTENTION_OPTIONS[0])
+      haptic("success")
+      toast("Sent — an agent will arrange a visit shortly.", "success")
     } catch (submitError) {
       setStatus("error")
       setError((submitError as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     }
   }
 

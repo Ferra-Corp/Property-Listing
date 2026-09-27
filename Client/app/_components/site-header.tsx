@@ -10,6 +10,8 @@ import { SiteSearch } from "./site-search"
 import { MobileSearchDialog } from "./mobile-search-dialog"
 import { useCurrencyContext } from "../_lib/Context/Currencies"
 import { useSelectedCurrency } from "../_lib/Context/SelectedCurrency"
+import { haptic } from "@/lib/haptics"
+import { HapticsToggle } from "./haptics-toggle"
 
 const MENU = [
   { label: "Buy", href: "/system/listings?purpose=sale" },
@@ -54,7 +56,10 @@ function AnimatedCurrencySwitcher({
         return (
           <button
             key={option}
-            onClick={() => onChange(option)}
+            onClick={() => {
+              if (!isActive) haptic("selection")
+              onChange(option)
+            }}
             type="button"
             // Innermost elements get rounded-lg for perfect nesting geometry
             className={`relative flex items-center justify-center rounded-lg transition-colors hover:text-(--color-text) ${
@@ -99,7 +104,10 @@ function CurrencyPicker({
     <div className="relative flex-none md:hidden">
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          haptic("selection")
+          onChange(e.target.value)
+        }}
         aria-label="Currency"
         className="cl-mono h-11 md:h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[16px] md:text-[11px] font-medium text-(--color-text) backdrop-blur-sm focus:outline-none"
       >
@@ -243,6 +251,10 @@ export function SiteHeader() {
                     {item.label}
                   </Link>
                 ))}
+                <hr className="cl-hr mx-1 my-1.5" />
+                <div className="px-1.5 pt-0.5 pb-0.5 md:hidden">
+                  <HapticsToggle className="w-full" />
+                </div>
               </motion.nav>
             )}
           </AnimatePresence>

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { ButtonLink } from "./ui/button"
 import { useContactPhone } from "../_lib/useSiteSettings"
 import { buildWhatsAppLink } from "../_lib/format"
+import { haptic } from "@/lib/haptics"
 
 /** Sticky contact bar — small screens only, mirrors the mobile mock. */
 export function MobileContactBar() {
@@ -73,10 +74,16 @@ export function MobileContactBar() {
           rel="noopener noreferrer"
           variant="primary"
           className="flex-1 min-h-11"
+          onClick={() => haptic("light")}
         >
           WhatsApp us
         </ButtonLink>
-        <ButtonLink href={callHref} variant="secondary" className="flex-1 min-h-11">
+        <ButtonLink
+          href={callHref}
+          variant="secondary"
+          className="flex-1 min-h-11"
+          onClick={() => haptic("light")}
+        >
           Call
         </ButtonLink>
       </div>
