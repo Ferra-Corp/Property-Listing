@@ -152,6 +152,7 @@ export function ListingRow({
           label={listing.plate}
           src={listing.plateImage}
           alt={listing.title}
+          sizes="(min-width: 1024px) 300px, (min-width: 768px) 40vw, 100vw"
         />
 
         {/* Subtle gradient overlay to ensure tags are always readable */}
@@ -205,8 +206,8 @@ export function ListingRow({
       </div>
 
       {/* figures — right margin on desktop, a baseline row on mobile */}
-      <div className="mt-4 flex items-end justify-between gap-3 pt-1 md:mt-0 md:block md:text-right">
-        <div>
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-3 pt-1 md:mt-0 md:block md:text-right">
+        <div className="min-w-0">
           <div className="cl-fig font-(family-name:--font-heading) text-[25px] leading-[1.1] md:text-[31px]">
             {listing.price}
           </div>

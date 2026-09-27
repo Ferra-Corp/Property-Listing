@@ -280,6 +280,8 @@ export default function AgentsIndexPage() {
           <Input
             name="full_name"
             placeholder="Your name"
+            autoComplete="name"
+            enterKeyHint="next"
             className="rounded-xl"
             required
           />
@@ -287,6 +289,9 @@ export default function AgentsIndexPage() {
             name="phone"
             placeholder="Phone or WhatsApp"
             type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            enterKeyHint="send"
             className="rounded-xl"
             required
           />

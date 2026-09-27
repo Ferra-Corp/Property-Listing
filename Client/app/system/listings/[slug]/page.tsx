@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
+import { cn } from "cn"
 import { ButtonLink } from "../../../_components/ui/button"
 import { Card, CardKicker, CardTitle } from "../../../_components/ui/card"
 import { Plate } from "../../../_components/ui/plate"
@@ -246,7 +247,49 @@ export default function ListingDetailPage() {
     <>
       {/* ── Media Grid Setup with Custom View All Overlay ── */}
       <section className="relative mt-4 px-3 pt-3 md:px-6 md:pt-1.25">
-        <div className={gridContainerClass}>
+        {/* Mobile: swipeable scroll-snap strip. Every image is reachable
+            without opening the modal, and the browser handles inertia. */}
+        <div
+          className="mobile-gallery -mx-3 flex h-[300px] snap-x snap-mandatory gap-2 overflow-x-auto px-3 md:hidden"
+          style={{ scrollbarWidth: "none" }}
+          role="region"
+          aria-label="Listing photos"
+        >
+          {(visiblePlates.length > 0 ? visiblePlates : [null]).map(
+            (media, index) => (
+              <button
+                key={media?.id ?? "placeholder"}
+                type="button"
+                onClick={() => plates && plates.length > 0 && setIsModalOpen(true)}
+                className="relative h-full w-[85vw] flex-none snap-center overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-text)"
+                aria-label={media?.alt_text ?? `Photo ${index + 1}`}
+              >
+                {media && isVideo(media) ? (
+                  <video
+                    src={media.url}
+                    className="h-full w-full object-cover"
+                    muted
+                    playsInline
+                    loop
+                    autoPlay
+                  />
+                ) : (
+                  <Plate
+                    className="h-full w-full border-0 object-cover"
+                    label={media?.alt_text ?? listing.title}
+                    src={media?.url ?? null}
+                    alt={media?.alt_text ?? listing.title}
+                    sizes="85vw"
+                    priority={index === 0}
+                  />
+                )}
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Desktop: the existing mosaic. */}
+        <div className={cn(gridContainerClass, "hidden md:grid")}>
           {visiblePlates.length > 0 ? (
             visiblePlates.map((media, index) => (
               <div key={media.id} className={getItemClass(index)}>

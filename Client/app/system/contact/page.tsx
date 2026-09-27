@@ -342,13 +342,16 @@ export default function ContactPage() {
 
           <div className="mt-3 grid gap-3 md:mt-4.5 md:grid-cols-2 md:gap-4">
             <FieldRow label="Your name">
-              <Input name="full_name" placeholder="Full name" required />
+              <Input name="full_name" placeholder="Full name" autoComplete="name" enterKeyHint="next" required />
             </FieldRow>
             <FieldRow label="Phone">
               <Input
                 name="phone"
                 placeholder="+254 7•• ••• •••"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
                 required
               />
             </FieldRow>
@@ -361,10 +364,12 @@ export default function ContactPage() {
                 name="whatsapp_number"
                 placeholder="+254 7•• ••• •••"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
               />
             </FieldRow>
             <FieldRow label="Email" optional="optional">
-              <Input name="email" placeholder="you@example.com" type="email" />
+              <Input name="email" placeholder="you@example.com" type="email" inputMode="email" autoComplete="email" enterKeyHint="send" />
             </FieldRow>
             <FieldRow label="Where are you based?">
               <Select name="country" defaultValue={COUNTRY_OPTIONS[0]}>
@@ -415,8 +420,8 @@ export default function ContactPage() {
                   <option>GBP</option>
                   <option>AED</option>
                 </Select>
-                <Input name="budget_min" placeholder="From" type="number" />
-                <Input name="budget_max" placeholder="To" type="number" />
+                <Input name="budget_min" placeholder="From" type="number" inputMode="numeric" />
+                <Input name="budget_max" placeholder="To" type="number" inputMode="numeric" />
               </div>
             </FieldRow>
             <FieldRow

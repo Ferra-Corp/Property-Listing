@@ -295,7 +295,9 @@ export default function HomePage() {
             variant="secondary"
             className="bg-(--color-bg)"
           >
-            Browse all {listings.length} listings
+            {listings.length > 0
+              ? `Browse all ${listings.length} listings`
+              : "New mandates coming soon"}
           </ButtonLink>
         </div>
       </section>
@@ -729,6 +731,9 @@ export default function HomePage() {
                 <Input
                   placeholder="Email address"
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  enterKeyHint="send"
                   required
                   value={subscribeEmail}
                   onChange={(e) => setSubscribeEmail(e.target.value)}
@@ -753,7 +758,9 @@ export default function HomePage() {
       <div className="h-6" />
       <p className="px-3 pb-2 text-center text-[13px] md:hidden">
         <Link href="/system/listings">
-          Browse all {listings.length} listings →
+          {listings.length > 0
+            ? `Browse all ${listings.length} listings →`
+            : "New mandates coming soon →"}
         </Link>
       </p>
     </>

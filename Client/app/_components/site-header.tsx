@@ -101,7 +101,7 @@ function CurrencyPicker({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label="Currency"
-        className="cl-mono h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[11px] font-medium text-(--color-text) backdrop-blur-sm focus:outline-none"
+        className="cl-mono h-11 md:h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[16px] md:text-[11px] font-medium text-(--color-text) backdrop-blur-sm focus:outline-none"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -136,7 +136,7 @@ function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
-      className="flex size-9 flex-none cursor-pointer items-center justify-center rounded-full border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] text-(--color-text) shadow-(--shadow-sm) backdrop-blur-sm md:size-10"
+      className="flex size-11 md:size-10 flex-none cursor-pointer items-center justify-center rounded-full border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] text-(--color-text) shadow-(--shadow-sm) backdrop-blur-sm"
     >
       {mounted && (
         <AnimatePresence mode="wait" initial={false}>
@@ -205,7 +205,7 @@ export function SiteHeader() {
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             // Increased to rounded-xl
-            className="flex size-7.5 cursor-pointer list-none items-center justify-center rounded-sm border border-(--color-divider) text-(--color-text) md:size-8.5"
+            className="flex size-11 md:size-8.5 cursor-pointer list-none items-center justify-center rounded-sm border border-(--color-divider) text-(--color-text)"
             aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
           >
@@ -284,7 +284,7 @@ export function SiteHeader() {
           type="button"
           onClick={() => setIsSearchOpen(true)}
           // Also added rounded-xl to this icon button to maintain the consistent styling rule
-          className="cl-btn cl-btn-secondary cl-btn-icon size-7.5 flex-none rounded-xl md:hidden"
+          className="cl-btn cl-btn-secondary cl-btn-icon size-11 flex-none rounded-xl md:hidden"
           title="Search"
           aria-label="Search listings"
         >
@@ -304,7 +304,7 @@ export function SiteHeader() {
           href="/system/valuation-requests"
           variant="primary"
           size="icon"
-          className="size-7.5 flex-none transition-transform hover:scale-105 active:scale-95 md:hidden"
+          className="size-11 flex-none transition-transform hover:scale-105 active:scale-95 md:hidden"
           title="Sell or value"
         >
           <TrendingUp size={14} />

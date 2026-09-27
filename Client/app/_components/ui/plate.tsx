@@ -14,6 +14,8 @@ export function Plate({
   children,
   src,
   alt,
+  sizes,
+  priority,
   ...props
 }: React.ComponentProps<"div"> & {
   /** placeholder caption, e.g. "Plate 01 — Go-down, Eastern Bypass" */
@@ -23,6 +25,10 @@ export function Plate({
   /** a real photo — renders in place of the hatch/children when given */
   src?: string | StaticImageData | null
   alt?: string
+  /** override the next/image sizes hint for callers with tighter contexts */
+  sizes?: string
+  /** LCP hero images should pass priority to skip lazy loading */
+  priority?: boolean
 }) {
   return (
     <div
@@ -40,7 +46,8 @@ export function Plate({
           src={src}
           alt={alt ?? (typeof label === "string" ? label : "")}
           fill
-          sizes="(min-width: 768px) 50vw, 100vw"
+          sizes={sizes ?? "(min-width: 768px) 50vw, 100vw"}
+          priority={priority}
           className="object-cover"
         />
       ) : (

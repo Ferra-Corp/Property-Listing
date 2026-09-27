@@ -86,8 +86,8 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-10 bg-(--color-footer-bg) px-4 py-6 text-(--color-footer-text) md:px-10 md:pt-8.5 md:pb-7.5">
-      <div className="grid gap-9 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div>
+      <div className="grid gap-y-6 gap-x-6 grid-cols-2 md:gap-9 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="col-span-2 md:col-span-1">
           <div className="flex items-baseline gap-2">
             <span className="font-(family-name:--font-heading) text-[21px] leading-none text-(--color-footer-text) md:text-[23px]">
               D&amp;G

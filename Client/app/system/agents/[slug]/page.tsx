@@ -392,6 +392,8 @@ export default function AgentDetailPage() {
               <Input
                 name="full_name"
                 placeholder="Your name"
+                autoComplete="name"
+                enterKeyHint="next"
                 className="rounded-xl"
                 required
               />
@@ -399,6 +401,9 @@ export default function AgentDetailPage() {
                 name="phone"
                 placeholder="Phone or WhatsApp"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
                 className="rounded-xl"
                 required
               />
@@ -406,6 +411,9 @@ export default function AgentDetailPage() {
                 name="email"
                 placeholder="Email (optional)"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                enterKeyHint="send"
                 className="rounded-xl md:col-span-2"
               />
               <Select name="need" defaultValue="" className="rounded-xl">
