@@ -126,4 +126,39 @@
   html {
     @apply font-sans;
     }
+
+  /* Mobile polish — zoom, tap, motion */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    overflow-x: clip;
+  }
+  button, a, [role="button"], summary, label {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/*
+ * iOS Safari zooms the page whenever a focused input renders below 16px.
+ * Utility classes like text-[11px] / text-[13px] / md:text-sm on inputs would
+ * still trip this, so we force 16px on mobile only, with !important to beat
+ * Tailwind's utility layer. Desktop keeps whatever the design intended.
+ */
+@media (max-width: 767.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
