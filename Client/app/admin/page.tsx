@@ -181,7 +181,7 @@ function StatCard({
     >
       <K className="text-[10.5px] tracking-[0.14em]">{label}</K>
       <div
-        className={`font-(family-name:--font-heading) text-[32px] leading-none ${
+        className={`text-[22px] leading-none font-normal md:text-[24px] ${
           accent ? "text-[var(--color-accent-800)]" : "text-[var(--color-text)]"
         }`}
       >

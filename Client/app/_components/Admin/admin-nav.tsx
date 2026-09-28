@@ -277,7 +277,7 @@ function TopTabItem({
       <span
         className={cn(
           "relative z-10 flex items-center gap-2",
-          active && "font-medium text-(--color-admin-text) [&_svg]:opacity-100"
+          active && "font-semibold text-(--color-admin-text) [&_svg]:opacity-100"
         )}
       >
         <Icon size={15} />
@@ -537,7 +537,7 @@ export function AdminDock({
             >
               <group.icon size={20} />
               {active && (
-                <span className="text-[13px] font-medium whitespace-nowrap">
+                <span className="text-[13px] font-semibold whitespace-nowrap">
                   {group.label}
                 </span>
               )}

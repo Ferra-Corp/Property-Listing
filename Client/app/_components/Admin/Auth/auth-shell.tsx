@@ -95,13 +95,14 @@ export function AuthShell({
               ← {back.label}
             </Link>
           ) : null}
-          <div className="flex items-baseline gap-1.5 md:gap-2">
-            <span className="font-(family-name:--font-heading) text-[16px] leading-none md:text-[19px]">
-              D&amp;G
-            </span>
-            <span className="cl-mono text-[9px] tracking-[0.18em] uppercase md:text-[10.5px]">
-              Realtors
-            </span>
+          <div className="flex items-center gap-1.5 md:gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/dg-logo-dark.png"
+              alt="D&G Realtors"
+              className="h-6 w-auto shrink-0 object-contain md:h-7"
+              draggable={false}
+            />
           </div>
           <div className="cl-k mt-2 hidden text-[#dbbb8f] md:block">
             Property · Nairobi · since 2011
