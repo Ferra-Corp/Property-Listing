@@ -9,6 +9,7 @@ import {
   useSocialLinks,
 } from "../_lib/useSiteSettings"
 import { toWhatsAppDigits } from "../_lib/format"
+import { HapticsToggle } from "./haptics-toggle"
 
 const COLUMNS = [
   {
@@ -86,8 +87,8 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-10 bg-(--color-footer-bg) px-4 py-6 text-(--color-footer-text) md:px-10 md:pt-8.5 md:pb-7.5">
-      <div className="grid gap-9 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div>
+      <div className="grid gap-y-6 gap-x-6 grid-cols-2 md:gap-9 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="col-span-2 md:col-span-1">
           <div className="flex items-baseline gap-2">
             <span className="font-(family-name:--font-heading) text-[21px] leading-none text-(--color-footer-text) md:text-[23px]">
               D&amp;G
@@ -155,11 +156,14 @@ export function SiteFooter() {
         ))}
       </div>
 
-      <div className="mt-6.5 flex flex-col gap-2 border-t border-(--color-footer-border) pt-3.5 md:flex-row md:items-baseline md:justify-between">
+      <div className="mt-6.5 flex flex-col gap-3 border-t border-(--color-footer-border) pt-3.5 md:flex-row md:items-center md:justify-between">
         <div className="cl-k text-(--color-footer-muted-2)">
           Prices shown in {currency} · converted figures are indicative
         </div>
-        <div className="cl-k text-(--color-footer-muted-2)">© 2026</div>
+        <div className="flex items-center gap-3">
+          <HapticsToggle className="hidden md:inline-flex" />
+          <div className="cl-k text-(--color-footer-muted-2)">© 2026</div>
+        </div>
       </div>
     </footer>
   )

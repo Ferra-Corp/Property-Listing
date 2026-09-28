@@ -16,6 +16,8 @@ import { useInsightContext } from "../../../_lib/Context/Insight"
 import { useContactPhone } from "../../../_lib/useSiteSettings"
 import { buildWhatsAppLink, toWhatsAppDigits } from "../../../_lib/format"
 import { createLead } from "../../../_lib/Actions/Leads"
+import { useToast } from "../../../_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 import {
   toRowListing,
   useCurrencyConversion,
@@ -53,6 +55,7 @@ const NEED_MAP: Record<
 }
 
 export default function AgentDetailPage() {
+  const { toast } = useToast()
   const { slug } = useParams<{ slug: string }>(),
     { agents } = useAgentContext(),
     { listings } = useListingContext(),
@@ -67,8 +70,15 @@ export default function AgentDetailPage() {
 
   if (agents.length === 0)
     return (
-      <div className="px-3 py-16 text-center text-[13.5px] text-neutral-600 md:px-6">
-        Loading…
+      <div className="px-3 pt-6 md:px-6">
+        <div className="grid gap-4 md:grid-cols-[430px_1fr] md:gap-6">
+          <div className="cl-skeleton aspect-4/5 w-full rounded-xl md:h-117.5" />
+          <div className="grid gap-3 pt-2">
+            <div className="cl-skeleton h-5 w-1/3 rounded-full" />
+            <div className="cl-skeleton h-8 w-3/4 rounded-md" />
+            <div className="cl-skeleton mt-3 h-20 w-full rounded-md" />
+          </div>
+        </div>
       </div>
     )
 
@@ -138,9 +148,13 @@ export default function AgentDetailPage() {
 
       setStatus("success")
       form.reset()
+      haptic("success")
+      toast("Sent — an agent will be in touch shortly.", "success")
     } catch (submitError) {
       setStatus("error")
       setError((submitError as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     }
   }
 
@@ -392,6 +406,8 @@ export default function AgentDetailPage() {
               <Input
                 name="full_name"
                 placeholder="Your name"
+                autoComplete="name"
+                enterKeyHint="next"
                 className="rounded-xl"
                 required
               />
@@ -399,6 +415,9 @@ export default function AgentDetailPage() {
                 name="phone"
                 placeholder="Phone or WhatsApp"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
                 className="rounded-xl"
                 required
               />
@@ -406,6 +425,9 @@ export default function AgentDetailPage() {
                 name="email"
                 placeholder="Email (optional)"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                enterKeyHint="send"
                 className="rounded-xl md:col-span-2"
               />
               <Select name="need" defaultValue="" className="rounded-xl">

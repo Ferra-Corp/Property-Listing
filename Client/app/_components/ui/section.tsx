@@ -75,15 +75,25 @@ export function Disclosure({
 }) {
   return (
     <details
-      className={cn("border-b border-(--color-divider) py-3.25", className)}
+      className={cn(
+        "group border-b border-(--color-divider) py-3.25",
+        className
+      )}
     >
-      <summary className="flex cursor-pointer list-none justify-between gap-4 text-[14px] md:text-[15px]">
-        {question}
-        <span className="text-(--color-accent)">+</span>
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-[14px] md:text-[15px]">
+        <span className="min-w-0 flex-1">{question}</span>
+        <span
+          aria-hidden
+          className="flex size-6 flex-none items-center justify-center text-(--color-accent) transition-transform duration-200 ease-out group-open:rotate-45"
+        >
+          +
+        </span>
       </summary>
-      <p className="mt-2.5 mb-0 text-[13px] leading-[1.7] text-neutral-700">
-        {children}
-      </p>
+      <div className="grid grid-rows-[0fr] overflow-hidden opacity-0 transition-[grid-template-rows,opacity] duration-200 ease-out group-open:grid-rows-[1fr] group-open:opacity-100">
+        <p className="mt-2.5 mb-0 min-h-0 text-[13px] leading-[1.7] text-neutral-700">
+          {children}
+        </p>
+      </div>
     </details>
   )
 }

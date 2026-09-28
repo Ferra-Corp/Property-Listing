@@ -11,6 +11,8 @@ import { useContactPhone } from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink } from "../../_lib/format"
 import { createLead } from "../../_lib/Actions/Leads"
 import type { LeadIntent } from "../../_lib/Types/Lead"
+import { useToast } from "../../_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 
 const STANDARDS = [
   ["Visit and measure before listing", "Always"],
@@ -40,6 +42,7 @@ const ENQUIRY_MAP: Record<
 }
 
 export default function AgentsIndexPage() {
+  const { toast } = useToast()
   const { agents } = useAgentContext(),
     { listings } = useListingContext(),
     ADMIN_WHATSAPP_NUMBER = useContactPhone(),
@@ -86,9 +89,13 @@ export default function AgentsIndexPage() {
 
       setStatus("success")
       form.reset()
+      haptic("success")
+      toast("Sent — an agent will be in touch shortly.", "success")
     } catch (submitError) {
       setStatus("error")
       setError((submitError as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     }
   }
 
@@ -280,6 +287,8 @@ export default function AgentsIndexPage() {
           <Input
             name="full_name"
             placeholder="Your name"
+            autoComplete="name"
+            enterKeyHint="next"
             className="rounded-xl"
             required
           />
@@ -287,6 +296,9 @@ export default function AgentsIndexPage() {
             name="phone"
             placeholder="Phone or WhatsApp"
             type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            enterKeyHint="send"
             className="rounded-xl"
             required
           />

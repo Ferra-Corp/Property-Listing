@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { AnimatePresence, motion } from "motion/react"
 import { ButtonLink } from "../../../_components/ui/button"
 import { Chip } from "../../../_components/ui/filters"
 import { Plate } from "../../../_components/ui/plate"
@@ -132,6 +133,7 @@ export function ListingRow({
     listing.agentId,
     `Hi, I'm interested in ${listing.title} (Ref: ${listing.reference}). Is it still available?`
   )
+  const { currency } = useSelectedCurrency()
 
   return (
     <article
@@ -152,6 +154,7 @@ export function ListingRow({
           label={listing.plate}
           src={listing.plateImage}
           alt={listing.title}
+          sizes="(min-width: 1024px) 300px, (min-width: 768px) 40vw, 100vw"
         />
 
         {/* Subtle gradient overlay to ensure tags are always readable */}
@@ -205,11 +208,20 @@ export function ListingRow({
       </div>
 
       {/* figures — right margin on desktop, a baseline row on mobile */}
-      <div className="mt-4 flex items-end justify-between gap-3 pt-1 md:mt-0 md:block md:text-right">
-        <div>
-          <div className="cl-fig font-(family-name:--font-heading) text-[25px] leading-[1.1] md:text-[31px]">
-            {listing.price}
-          </div>
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-3 pt-1 md:mt-0 md:block md:text-right">
+        <div className="min-w-0">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={`${currency}-${listing.price}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              className="cl-fig font-(family-name:--font-heading) text-[25px] leading-[1.1] md:text-[31px]"
+            >
+              {listing.price}
+            </motion.div>
+          </AnimatePresence>
           <div className="cl-fig mt-1 text-[12px] text-neutral-700">
             {listing.priceUnit}
           </div>

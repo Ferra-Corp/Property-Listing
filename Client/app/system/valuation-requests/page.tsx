@@ -9,6 +9,8 @@ import { Disclosure } from "../../_components/ui/section"
 import { createValuationRequest } from "../../_lib/Actions/Valuation Requests"
 import { useContactPhone } from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink } from "../../_lib/format"
+import { useToast } from "../../_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 
 const TYPE_OPTIONS = [
   "Go-down / warehouse",
@@ -132,6 +134,7 @@ const FAQ = [
 ]
 
 export default function ValuationRequestPage() {
+  const { toast } = useToast()
   const [condition, setCondition] = React.useState<
       (typeof CONDITION_OPTIONS)[number]
     >(CONDITION_OPTIONS[0]),
@@ -169,6 +172,8 @@ export default function ValuationRequestPage() {
     if (!type) {
       setStatus("error")
       setError("Choose a property type")
+      haptic("error")
+      toast("Choose a property type", "error")
       return
     }
 
@@ -211,9 +216,13 @@ export default function ValuationRequestPage() {
       form.reset()
       setCondition(CONDITION_OPTIONS[0])
       setIntention(INTENTION_OPTIONS[0])
+      haptic("success")
+      toast("Sent — an agent will arrange a visit shortly.", "success")
     } catch (submitError) {
       setStatus("error")
       setError((submitError as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     }
   }
 
@@ -343,6 +352,7 @@ export default function ValuationRequestPage() {
                   name="floor_area"
                   placeholder="e.g. 12,000"
                   type="number"
+                  inputMode="numeric"
                 />
                 <Select name="floor_area_unit" className="w-26">
                   <option value="sqft">sq ft</option>
@@ -352,7 +362,7 @@ export default function ValuationRequestPage() {
             </FieldRow>
             <FieldRow label="Land area" optional="optional">
               <div className="flex gap-2">
-                <Input name="land_area" placeholder="e.g. 1.5" type="number" />
+                <Input name="land_area" placeholder="e.g. 1.5" type="number" inputMode="decimal" />
                 <Select name="land_area_unit" className="w-26">
                   <option value="acre">acres</option>
                   <option value="hectare">hectares</option>
@@ -365,7 +375,7 @@ export default function ValuationRequestPage() {
               optional="homes only"
               className="hidden md:flex"
             >
-              <Input name="bedrooms" placeholder="—" type="number" />
+              <Input name="bedrooms" placeholder="—" type="number" inputMode="numeric" />
             </FieldRow>
             <FieldRow
               label="Year built"
@@ -418,6 +428,7 @@ export default function ValuationRequestPage() {
                   name="owner_expectation"
                   placeholder="e.g. 120,000,000"
                   type="number"
+                  inputMode="numeric"
                 />
               </div>
             </FieldRow>
@@ -449,13 +460,16 @@ export default function ValuationRequestPage() {
           </div>
           <div className="mt-4 grid gap-3 md:mt-4.5 md:grid-cols-2 md:gap-4">
             <FieldRow label="Your name">
-              <Input name="full_name" placeholder="Full name" required />
+              <Input name="full_name" placeholder="Full name" autoComplete="name" enterKeyHint="next" required />
             </FieldRow>
             <FieldRow label="Phone">
               <Input
                 name="phone"
                 placeholder="+254 7•• ••• •••"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
                 required
               />
             </FieldRow>
@@ -468,10 +482,12 @@ export default function ValuationRequestPage() {
                 name="whatsapp_number"
                 placeholder="+254 7•• ••• •••"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
               />
             </FieldRow>
             <FieldRow label="Email" optional="optional">
-              <Input name="email" placeholder="you@example.com" type="email" />
+              <Input name="email" placeholder="you@example.com" type="email" inputMode="email" autoComplete="email" enterKeyHint="send" />
             </FieldRow>
             <FieldRow label="Where are you based?">
               <Select>

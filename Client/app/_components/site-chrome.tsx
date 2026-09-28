@@ -1,10 +1,31 @@
 "use client"
 
+import { useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { SiteHeader } from "./site-header"
 import { SiteFooter } from "./site-footer"
 import { MobileContactBar } from "./mobile-contact-bar"
 import { PageTransition } from "./page-transition"
+import { ToastProvider } from "./toast-provider"
+import { HapticsProvider } from "./haptics-provider"
+
+/** Sets a data-scrolled attribute on <html> once the viewport has scrolled
+ *  past a threshold, so the sticky header can render its firmer surface. */
+function ScrolledWatcher() {
+  useEffect(() => {
+    const root = document.documentElement
+    const update = () => {
+      root.toggleAttribute("data-scrolled", window.scrollY > 8)
+    }
+    update()
+    window.addEventListener("scroll", update, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", update)
+      root.removeAttribute("data-scrolled")
+    }
+  }, [])
+  return null
+}
 
 /**
  * The public marketing site's header/footer/mobile-bar/page-transition —
@@ -18,13 +39,18 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith("/admin")) return <>{children}</>
 
   return (
-    <div className="cl-root flex min-h-dvh flex-col">
-      <SiteHeader />
-      <main className="flex-1">
-        <PageTransition>{children}</PageTransition>
-      </main>
-      <SiteFooter />
-      <MobileContactBar />
-    </div>
+    <HapticsProvider>
+      <ToastProvider>
+        <div className="cl-root flex min-h-dvh flex-col">
+          <ScrolledWatcher />
+          <SiteHeader />
+          <main className="flex-1">
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <SiteFooter />
+          <MobileContactBar />
+        </div>
+      </ToastProvider>
+    </HapticsProvider>
   )
 }

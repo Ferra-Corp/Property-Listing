@@ -126,4 +126,65 @@
   html {
     @apply font-sans;
     }
+
+  /* Mobile polish — zoom, tap, motion */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    overflow-x: clip;
+  }
+  button, a, [role="button"], summary, label {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/*
+ * iOS Safari zooms the page whenever a focused input renders below 16px.
+ * Utility classes like text-[11px] / text-[13px] / md:text-sm on inputs would
+ * still trip this, so we force 16px on mobile only, with !important to beat
+ * Tailwind's utility layer. Desktop keeps whatever the design intended.
+ */
+@media (max-width: 767.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* MobileContactBar publishes its rendered height as --wa-bar-height on
+     <html>. Reserve matching bottom padding on the main scroll region so
+     content and submit buttons never sit under the CTA. */
+  main {
+    padding-bottom: var(--wa-bar-height, 0px);
+  }
+
+  /* Hide the sticky WA/Call bar while the on-screen keyboard is open. Set on
+     <html> by mobile-contact-bar's visualViewport listener. */
+  html[data-keyboard-open] .mobile-contact-bar {
+    transform: translateY(120%);
+    pointer-events: none;
+  }
+  .mobile-contact-bar {
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* Safe-area utilities. Additive — usable anywhere that needs to respect the
+   home-indicator or the notch. */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }

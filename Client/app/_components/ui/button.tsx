@@ -6,24 +6,30 @@ import { cn } from "cn"
 /**
  * Classical button — an outline, never a fill.
  * Variants map 1:1 to the design system's .btn-* classes.
+ *
+ * The base class adds a spring-in press scale + focus-visible ring; the
+ * primary variant paints a subtle sheen via .cl-btn-primary in classical.css.
  */
-export const buttonVariants = cva("cl-btn", {
-  variants: {
-    variant: {
-      primary: "cl-btn-primary",
-      secondary: "cl-btn-secondary",
-      ghost: "cl-btn-ghost",
-      bare: "",
+export const buttonVariants = cva(
+  "cl-btn transition-transform duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-accent) focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+  {
+    variants: {
+      variant: {
+        primary: "cl-btn-primary",
+        secondary: "cl-btn-secondary",
+        ghost: "cl-btn-ghost",
+        bare: "",
+      },
+      size: {
+        default: "",
+        icon: "cl-btn-icon",
+        sm: "px-2.5 py-1.5 text-[13px]",
+      },
+      block: { true: "cl-btn-block", false: "" },
     },
-    size: {
-      default: "",
-      icon: "cl-btn-icon",
-      sm: "px-2.5 py-1.5 text-[13px]",
-    },
-    block: { true: "cl-btn-block", false: "" },
-  },
-  defaultVariants: { variant: "secondary", size: "default", block: false },
-})
+    defaultVariants: { variant: "secondary", size: "default", block: false },
+  }
+)
 
 type Variants = VariantProps<typeof buttonVariants>
 

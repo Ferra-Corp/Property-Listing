@@ -26,8 +26,16 @@ export default function InsightDetailPage() {
 
   if (insights.length === 0)
     return (
-      <div className="px-4 py-16 text-center text-[13.5px] text-neutral-600 md:px-10">
-        Loading…
+      <div className="px-4 pt-8 md:px-10">
+        <div className="cl-skeleton h-5 w-1/4 rounded-full" />
+        <div className="cl-skeleton mt-4 h-10 w-3/4 rounded-md" />
+        <div className="cl-skeleton mt-3 h-4 w-1/3 rounded-full" />
+        <div className="cl-skeleton mt-6 aspect-16/10 w-full rounded-xl md:h-100" />
+        <div className="mt-6 grid gap-2">
+          <div className="cl-skeleton h-4 w-full rounded-full" />
+          <div className="cl-skeleton h-4 w-11/12 rounded-full" />
+          <div className="cl-skeleton h-4 w-10/12 rounded-full" />
+        </div>
       </div>
     )
 

@@ -10,6 +10,8 @@ import { SiteSearch } from "./site-search"
 import { MobileSearchDialog } from "./mobile-search-dialog"
 import { useCurrencyContext } from "../_lib/Context/Currencies"
 import { useSelectedCurrency } from "../_lib/Context/SelectedCurrency"
+import { haptic } from "@/lib/haptics"
+import { HapticsToggle } from "./haptics-toggle"
 
 const MENU = [
   { label: "Buy", href: "/system/listings?purpose=sale" },
@@ -54,7 +56,10 @@ function AnimatedCurrencySwitcher({
         return (
           <button
             key={option}
-            onClick={() => onChange(option)}
+            onClick={() => {
+              if (!isActive) haptic("selection")
+              onChange(option)
+            }}
             type="button"
             // Innermost elements get rounded-lg for perfect nesting geometry
             className={`relative flex items-center justify-center rounded-lg transition-colors hover:text-(--color-text) ${
@@ -99,9 +104,12 @@ function CurrencyPicker({
     <div className="relative flex-none md:hidden">
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          haptic("selection")
+          onChange(e.target.value)
+        }}
         aria-label="Currency"
-        className="cl-mono h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[11px] font-medium text-(--color-text) backdrop-blur-sm focus:outline-none"
+        className="cl-mono h-11 md:h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[16px] md:text-[11px] font-medium text-(--color-text) backdrop-blur-sm focus:outline-none"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -136,7 +144,7 @@ function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
-      className="flex size-9 flex-none cursor-pointer items-center justify-center rounded-full border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] text-(--color-text) shadow-(--shadow-sm) backdrop-blur-sm md:size-10"
+      className="flex size-11 md:size-10 flex-none cursor-pointer items-center justify-center rounded-full border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] text-(--color-text) shadow-(--shadow-sm) backdrop-blur-sm"
     >
       {mounted && (
         <AnimatePresence mode="wait" initial={false}>
@@ -198,14 +206,14 @@ export function SiteHeader() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         // Increased header radius to rounded-2xl for a softer, floating look
-        className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] py-2 pr-2 pl-3 shadow-(--shadow-sm) backdrop-blur-sm md:gap-3.5 md:py-2.5 md:pr-2.5 md:pl-4"
+        className="cl-header-surface flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_92%,transparent)] py-2 pr-2 pl-3 shadow-(--shadow-sm) backdrop-blur-sm transition-[background,box-shadow] duration-200 ease-out md:gap-3.5 md:py-2.5 md:pr-2.5 md:pl-4"
       >
         <div className="relative flex-none" ref={menuRef}>
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             // Increased to rounded-xl
-            className="flex size-7.5 cursor-pointer list-none items-center justify-center rounded-sm border border-(--color-divider) text-(--color-text) md:size-8.5"
+            className="flex size-11 md:size-8.5 cursor-pointer list-none items-center justify-center rounded-sm border border-(--color-divider) text-(--color-text)"
             aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
           >
@@ -243,6 +251,10 @@ export function SiteHeader() {
                     {item.label}
                   </Link>
                 ))}
+                <hr className="cl-hr mx-1 my-1.5" />
+                <div className="px-1.5 pt-0.5 pb-0.5 md:hidden">
+                  <HapticsToggle className="w-full" />
+                </div>
               </motion.nav>
             )}
           </AnimatePresence>
@@ -284,7 +296,7 @@ export function SiteHeader() {
           type="button"
           onClick={() => setIsSearchOpen(true)}
           // Also added rounded-xl to this icon button to maintain the consistent styling rule
-          className="cl-btn cl-btn-secondary cl-btn-icon size-7.5 flex-none rounded-xl md:hidden"
+          className="cl-btn cl-btn-secondary cl-btn-icon size-11 flex-none rounded-xl md:hidden"
           title="Search"
           aria-label="Search listings"
         >
@@ -304,7 +316,7 @@ export function SiteHeader() {
           href="/system/valuation-requests"
           variant="primary"
           size="icon"
-          className="size-7.5 flex-none transition-transform hover:scale-105 active:scale-95 md:hidden"
+          className="size-11 flex-none transition-transform hover:scale-105 active:scale-95 md:hidden"
           title="Sell or value"
         >
           <TrendingUp size={14} />

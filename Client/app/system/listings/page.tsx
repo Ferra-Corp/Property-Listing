@@ -487,7 +487,7 @@ function ListingsIndexContent() {
                 type="button"
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="cl-fig text-[13px] text-(--color-text) disabled:pointer-events-none disabled:text-neutral-500"
+                className="cl-fig min-h-11 px-2 md:min-h-0 md:px-0 text-[13px] text-(--color-text) disabled:pointer-events-none disabled:text-neutral-500"
               >
                 ← Prev
               </button>
@@ -507,7 +507,7 @@ function ListingsIndexContent() {
                       onClick={() => goToPage(entry)}
                       aria-current={entry === currentPage ? "page" : undefined}
                       className={
-                        "cl-fig flex size-7 items-center justify-center rounded-(--cl-radius-sm) text-[13px] transition-colors" +
+                        "cl-fig flex size-11 md:size-7 items-center justify-center rounded-(--cl-radius-sm) text-[13px] transition-colors" +
                         (entry === currentPage
                           ? " border border-(--color-text) text-(--color-text)"
                           : " text-neutral-600 hover:text-(--color-text)")
@@ -522,7 +522,7 @@ function ListingsIndexContent() {
                 type="button"
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === pageCount}
-                className="cl-fig text-[13px] text-(--color-text) disabled:pointer-events-none disabled:text-neutral-500"
+                className="cl-fig min-h-11 px-2 md:min-h-0 md:px-0 text-[13px] text-(--color-text) disabled:pointer-events-none disabled:text-neutral-500"
               >
                 Next →
               </button>

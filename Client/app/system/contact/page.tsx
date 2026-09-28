@@ -16,6 +16,8 @@ import {
   useOfficeAddress,
 } from "../../_lib/useSiteSettings"
 import { buildWhatsAppLink, toWhatsAppDigits } from "../../_lib/format"
+import { useToast } from "../../_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 
 const INTENT_OPTIONS = [
   "Renting or leasing",
@@ -140,6 +142,7 @@ const FAQ = [
 ]
 
 export default function ContactPage() {
+  const { toast } = useToast()
   const { agents } = useAgentContext(),
     ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     fallbackEmail = useContactEmail(),
@@ -247,9 +250,13 @@ export default function ContactPage() {
       setStatus("success")
       form.reset()
       setIntent(INTENT_OPTIONS[0])
+      haptic("success")
+      toast("Sent — an agent will be in touch shortly.", "success")
     } catch (submitError) {
       setStatus("error")
       setError((submitError as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     }
   }
 
@@ -342,13 +349,16 @@ export default function ContactPage() {
 
           <div className="mt-3 grid gap-3 md:mt-4.5 md:grid-cols-2 md:gap-4">
             <FieldRow label="Your name">
-              <Input name="full_name" placeholder="Full name" required />
+              <Input name="full_name" placeholder="Full name" autoComplete="name" enterKeyHint="next" required />
             </FieldRow>
             <FieldRow label="Phone">
               <Input
                 name="phone"
                 placeholder="+254 7•• ••• •••"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
                 required
               />
             </FieldRow>
@@ -361,10 +371,12 @@ export default function ContactPage() {
                 name="whatsapp_number"
                 placeholder="+254 7•• ••• •••"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
               />
             </FieldRow>
             <FieldRow label="Email" optional="optional">
-              <Input name="email" placeholder="you@example.com" type="email" />
+              <Input name="email" placeholder="you@example.com" type="email" inputMode="email" autoComplete="email" enterKeyHint="send" />
             </FieldRow>
             <FieldRow label="Where are you based?">
               <Select name="country" defaultValue={COUNTRY_OPTIONS[0]}>
@@ -415,8 +427,8 @@ export default function ContactPage() {
                   <option>GBP</option>
                   <option>AED</option>
                 </Select>
-                <Input name="budget_min" placeholder="From" type="number" />
-                <Input name="budget_max" placeholder="To" type="number" />
+                <Input name="budget_min" placeholder="From" type="number" inputMode="numeric" />
+                <Input name="budget_max" placeholder="To" type="number" inputMode="numeric" />
               </div>
             </FieldRow>
             <FieldRow

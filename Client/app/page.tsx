@@ -14,6 +14,8 @@ import { useInsightContext } from "./_lib/Context/Insight"
 import { useServiceContext } from "./_lib/Context/Service"
 import { buildWhatsAppLink } from "./_lib/format"
 import { useContactPhone } from "./_lib/useSiteSettings"
+import { useToast } from "./_components/toast-provider"
+import { haptic } from "@/lib/haptics"
 import {
   toRowListing,
   useCurrencyConversion,
@@ -113,6 +115,7 @@ const FAQ = [
 ]
 
 export default function HomePage() {
+  const { toast } = useToast()
   const { listings } = useListingContext(),
     { agents } = useAgentContext(),
     { insights: allInsights } = useInsightContext(),
@@ -188,6 +191,7 @@ export default function HomePage() {
 
     if (!kind) {
       setSubscribeError("Choose which space interests you.")
+      haptic("error")
       return
     }
 
@@ -206,8 +210,12 @@ export default function HomePage() {
       if (!request.ok) throw new Error(response.error)
 
       setSubscribed(true)
+      haptic("success")
+      toast("Thanks — you'll get an email when a match goes live.", "success")
     } catch (err) {
       setSubscribeError((err as Error).message)
+      haptic("error")
+      toast("Something went wrong. Please try again.", "error")
     } finally {
       setSubscribing(false)
     }
@@ -295,7 +303,9 @@ export default function HomePage() {
             variant="secondary"
             className="bg-(--color-bg)"
           >
-            Browse all {listings.length} listings
+            {listings.length > 0
+              ? `Browse all ${listings.length} listings`
+              : "New mandates coming soon"}
           </ButtonLink>
         </div>
       </section>
@@ -729,6 +739,9 @@ export default function HomePage() {
                 <Input
                   placeholder="Email address"
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  enterKeyHint="send"
                   required
                   value={subscribeEmail}
                   onChange={(e) => setSubscribeEmail(e.target.value)}
@@ -753,7 +766,9 @@ export default function HomePage() {
       <div className="h-6" />
       <p className="px-3 pb-2 text-center text-[13px] md:hidden">
         <Link href="/system/listings">
-          Browse all {listings.length} listings →
+          {listings.length > 0
+            ? `Browse all ${listings.length} listings →`
+            : "New mandates coming soon →"}
         </Link>
       </p>
     </>
