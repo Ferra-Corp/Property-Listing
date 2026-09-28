@@ -497,7 +497,7 @@ export default function ListingDetailPage() {
               {listing.purpose === "sale" ? "Asking price" : "Asking rent"}
             </div>
             <div className="cl-fig mt-2.5 flex items-baseline gap-2">
-              <span className="font-(family-name:--font-heading) text-[36px] leading-none md:text-[40px]">
+              <span className="text-[24px] leading-none font-normal md:text-[26px]">
                 {price}
               </span>
               <span className="text-[13px] text-neutral-700">{priceUnit}</span>

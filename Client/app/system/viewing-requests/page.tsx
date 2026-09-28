@@ -245,9 +245,11 @@ function ViewingRequestContent() {
           <div className="mt-4 grid gap-3 md:mt-4.5">
             {targetListing ? (
               <div className="cl-card flex-row items-center justify-between gap-3 py-3">
-                <div>
-                  <div className="text-[14px]">{targetListing.title}</div>
-                  <div className="cl-fig cl-k text-neutral-600) mt-0.5">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14px]">
+                    {targetListing.title}
+                  </div>
+                  <div className="cl-fig cl-k mt-0.5 truncate text-neutral-600">
                     {targetListing.location_label} ·{" "}
                     {targetListing.reference_code}
                     {targetListing.price
@@ -257,7 +259,7 @@ function ViewingRequestContent() {
                 </div>
                 <Link
                   href="/system/listings"
-                  className="cl-fig text-[12.5px] whitespace-nowrap"
+                  className="cl-fig flex-none text-[12.5px] whitespace-nowrap"
                 >
                   Change →
                 </Link>

@@ -217,7 +217,7 @@ export function ListingRow({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              className="cl-fig font-(family-name:--font-heading) text-[25px] leading-[1.1] md:text-[31px]"
+              className="cl-fig text-[20px] leading-[1.2] font-normal md:text-[22px]"
             >
               {listing.price}
             </motion.div>

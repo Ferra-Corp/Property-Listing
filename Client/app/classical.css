@@ -297,8 +297,11 @@
     gap: 6px;
     cursor: pointer;
     text-decoration: none;
-    font-family: var(--font-heading);
-    font-weight: var(--font-heading-weight);
+    /* Body sans at weight 700 so buttons read as clearly bold — the serif
+     * heading font at 600 was reading as soft, especially at small sizes
+     * on high-DPI screens. */
+    font-family: inherit;
+    font-weight: 700;
     font-size: 14px;
     line-height: 1.2;
     color: var(--color-text);
