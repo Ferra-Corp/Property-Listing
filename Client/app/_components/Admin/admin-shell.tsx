@@ -5,6 +5,7 @@ import Link from "next/link"
 import { cn } from "cn"
 import {
   AdminDock,
+  AdminGroupMenu,
   AdminGroupTabs,
   AdminThemeToggle,
   useAdminNav,
@@ -41,7 +42,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             draggable={false}
           />
         </Link>
-        <AdminGroupTabs items={activeGroup.items} />
+        {/* Full icon+label tab row from md: up, where there's room for
+            every page's name to stay legible; the hamburger below that,
+            where there isn't. One wrapper so the header's three-column
+            grid still sees a single item here. */}
+        <div className="flex min-w-0 justify-center">
+          <div className="hidden md:block">
+            <AdminGroupTabs items={activeGroup.items} />
+          </div>
+          <div className="md:hidden">
+            <AdminGroupMenu items={activeGroup.items} />
+          </div>
+        </div>
         <div className="flex justify-end">
           <AdminThemeToggle />
         </div>

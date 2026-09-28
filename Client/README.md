@@ -1,21 +1,15 @@
-# Next.js template
+# Client — D&G Realtors
 
-This is a Next.js template with shadcn/ui.
+The Next.js app (public site + admin panel + API proxy). See the [project README](../README.md) for the full picture — tech stack, features, environment variables, and how to run both this app and the Server together.
 
-## Adding components
-
-To add components to your app, run the following command:
+## This app specifically
 
 ```bash
-npx shadcn@latest add button
+npm install
+npm run dev         # http://localhost:3000
+npm run build        # production build
+npm run typecheck
+npm run lint
 ```
 
-This will place the ui components in the `components` directory.
-
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button";
-```
+Needs `.env.local` at this directory's root (not inside `app/`) with `NEXT_PUBLIC_API_URL` pointing at the Server — see the main README for the full variable list.

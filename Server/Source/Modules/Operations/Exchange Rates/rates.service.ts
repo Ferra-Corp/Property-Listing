@@ -1,13 +1,29 @@
 import { ServiceError } from "../../../Utilities/Http.js";
-import { Cache, CacheKeys, Resource } from "../../../../Configurations/Cache.js";
+import { Cache } from "../../../../Configurations/Cache.js";
 import type {
   createExchangeRateDTO,
   ExchangeRate,
   RateRepository,
   RateService,
+  RefreshRatesResult,
   UpdateExchangeRateDTO,
 } from "./rates.types.js";
 
+// Free, keyless — every rate the currency picker or a listing price could
+// ever need converts from this one base, so there's only ever one call to
+// make per refresh regardless of how many currencies are active.
+const PRIMARY_RATE_SOURCE = "open.er-api.com";
+const BASE_CURRENCY = "KES";
+
+type ProviderResponse = {
+  result?: string;
+  rates?: Record<string, number>;
+};
+
+// Deliberately uncached — see the same note on CurrencyServ. A stale rate
+// isn't just a display nit here, it's a wrong number shown as fact, so this
+// table always reads straight from Postgres. `cache` stays as a
+// constructor param for interface consistency with the other services.
 export class RateServ implements RateService {
   constructor(
     private repo: RateRepository,
@@ -33,11 +49,7 @@ export class RateServ implements RateService {
         throw new ServiceError(`${key} has an invalid value`, 400);
     }
 
-    const newRate = await this.repo.createRate(details);
-
-    await this.cache.invalidate(CacheKeys.all(Resource.ExchangeRate));
-
-    return newRate;
+    return this.repo.createRate(details);
   }
 
   async editRate(
@@ -71,24 +83,77 @@ export class RateServ implements RateService {
     if (Object.keys(filteredDetails).length == 0)
       throw new ServiceError("Nothing to update", 400);
 
-    const patchedRate = await this.repo.editRate(id, filteredDetails);
-
-    await this.cache.invalidate(CacheKeys.all(Resource.ExchangeRate));
-
-    return patchedRate;
+    return this.repo.editRate(id, filteredDetails);
   }
 
   async getRates(): Promise<ExchangeRate[]> {
-    return this.cache.remember(CacheKeys.all(Resource.ExchangeRate), () =>
-      this.repo.getRates(),
-    );
+    return this.repo.getRates();
   }
 
   async deleteRate(id: string): Promise<void> {
     if (!id) throw new ServiceError("Exchange rate id must be provided", 404);
 
     await this.repo.deleteRate(id);
+  }
 
-    await this.cache.invalidate(CacheKeys.all(Resource.ExchangeRate));
+  async refreshRates(
+    activeCurrencyCodes: string[],
+  ): Promise<RefreshRatesResult> {
+    const targets = activeCurrencyCodes.filter(
+      (code) => code !== BASE_CURRENCY,
+    );
+
+    if (targets.length === 0)
+      return { updated: [], skipped: [], source: PRIMARY_RATE_SOURCE };
+
+    let payload: ProviderResponse;
+
+    try {
+      const providerResponse = await fetch(
+        `https://open.er-api.com/v6/latest/${BASE_CURRENCY}`,
+      );
+
+      if (!providerResponse.ok)
+        throw new Error(`responded with ${providerResponse.status}`);
+
+      payload = (await providerResponse.json()) as ProviderResponse;
+    } catch (error) {
+      throw new ServiceError(
+        `Couldn't reach the exchange rate provider (${PRIMARY_RATE_SOURCE}): ${(error as Error).message}`,
+        502,
+      );
+    }
+
+    if (payload.result !== "success" || !payload.rates)
+      throw new ServiceError(
+        `The exchange rate provider (${PRIMARY_RATE_SOURCE}) didn't return usable rates`,
+        502,
+      );
+
+    const rates = payload.rates;
+    const today = new Date().toISOString().slice(0, 10);
+    const updated: ExchangeRate[] = [];
+    const skipped: string[] = [];
+
+    for (const target of targets) {
+      const rate = rates[target];
+
+      if (rate == null) {
+        skipped.push(target);
+        continue;
+      }
+
+      const savedRate = await this.repo.upsertRate({
+        base_currency: BASE_CURRENCY,
+        target_currency: target,
+        rate,
+        source: PRIMARY_RATE_SOURCE,
+        rate_date: today,
+      });
+
+      updated.push(savedRate);
+    }
+
+    return { updated, skipped, source: PRIMARY_RATE_SOURCE };
   }
 }

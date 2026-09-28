@@ -5,11 +5,12 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "motion/react"
 import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
+import { Menu, Moon, Sun } from "lucide-react"
 import {
   AgentsIcon,
   AnalyticsIcon,
   AuditIcon,
+  CurrencyIcon,
   DashboardIcon,
   InsightsIcon,
   LeadsIcon,
@@ -114,6 +115,12 @@ export const TERTIARY: Item[] = [
     permission: "Edit site setting",
   },
   {
+    href: "/admin/currencies",
+    label: "Currency & rates",
+    icon: CurrencyIcon,
+    permission: "Edit currency",
+  },
+  {
     href: "/admin/audit-log",
     label: "Audit log",
     icon: AuditIcon,
@@ -131,11 +138,6 @@ export const GROUPS: NavGroup[] = [
 
 function matchesItem(pathname: string, href: string): boolean {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href)
-}
-
-function useActive(href: string) {
-  const pathname = usePathname() ?? ""
-  return matchesItem(pathname, href)
 }
 
 function itemVisible(role: UserRole | undefined, item: Item): boolean {
@@ -213,6 +215,7 @@ function withLiveCounts(
 
 export function useAdminNav() {
   const pathname = usePathname() ?? ""
+  const router = useRouter()
   const { currentUser } = useUserContext()
   const liveCounts = useLiveCounts()
 
@@ -233,77 +236,29 @@ export function useAdminNav() {
 
   const activeGroupIndex = manualGroupIndex ?? routeGroupIndex
 
+  // Picking a wing from the dock used to only swap which wing's pages the
+  // top menu offered, leaving you on whatever page you already happened to
+  // be on — landing on the wing's own first page took a second, separate
+  // tap into the (now-open) top menu. This jumps straight there instead,
+  // same as picking that page directly would. Re-tapping the wing you're
+  // already in is left alone (no-op) rather than yanking you back to its
+  // first page and off whatever page inside it you're currently on.
+  function selectGroup(index: number) {
+    if (index === activeGroupIndex) return
+
+    setManualGroupIndex(index)
+    const firstHref = groups[index]?.items[0]?.href
+    if (firstHref) router.push(firstHref)
+  }
+
   return {
     groups,
     activeGroupIndex,
-    selectGroup: setManualGroupIndex,
+    selectGroup,
   }
 }
 
 // --- SUBCOMPONENTS ---
-
-function TopTabItem({
-  item: { href, label, icon: Icon, count, urgent },
-}: {
-  item: Item
-}) {
-  const active = useActive(href)
-
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      // Icon-only below md: the row was still cramped/scroll-only with
-      // every tab spelling its name out, and the page's own big <h1>
-      // title already says which page this is — the tab strip's job on a
-      // phone is just switching, so the icon (plus the aria-label, since
-      // `hidden` also removes the visible label from the a11y tree) carries
-      // that on its own. Desktop keeps the icon+label it already had.
-      title={label}
-      aria-label={label}
-      className={cn(
-        "relative flex flex-none items-center gap-2 rounded-full px-2.5 py-1.5 text-[13px] whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-(--color-admin-accent) md:px-3.5",
-        "text-(--color-admin-text-muted) hover:text-(--color-admin-text)",
-        "[&_svg]:flex-none [&_svg]:opacity-70 [&_svg]:transition-opacity hover:[&_svg]:opacity-100"
-      )}
-    >
-      {active && (
-        <motion.span
-          layoutId="admin-top-tab-active"
-          className="absolute inset-0 rounded-full bg-(--color-admin-active)"
-          transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
-        />
-      )}
-      <span
-        className={cn(
-          "relative z-10 flex items-center gap-2",
-          active && "font-semibold text-(--color-admin-text) [&_svg]:opacity-100"
-        )}
-      >
-        <Icon size={15} />
-        <span className="hidden truncate md:inline">{label}</span>
-        {count && (
-          <span
-            className={cn(
-              "font-mono text-[11px] font-semibold tracking-tight",
-              active
-                ? "text-(--color-admin-text-muted)"
-                : urgent
-                  ? "text-(--color-admin-accent-urgent)"
-                  : "text-(--color-admin-accent)"
-            )}
-          >
-            {/* "7 new" is fine with a label next to it (desktop); bare
-                next to just an icon (mobile) it reads as clipped text
-                rather than a badge, so mobile gets just the figure. */}
-            <span className="md:hidden">{count.split(" ")[0]}</span>
-            <span className="hidden md:inline">{count}</span>
-          </span>
-        )}
-      </span>
-    </Link>
-  )
-}
 
 export function AdminThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
@@ -451,6 +406,66 @@ function ProfileMenu() {
 
 // --- MAIN COMPONENTS ---
 
+/**
+ * One pill per page in the active wing, icon and label always both shown —
+ * this only ever renders at md: and up (AdminShell swaps it for
+ * AdminGroupMenu's hamburger below that), so it never has to squeeze down
+ * to icon-only the way it once did on a phone.
+ */
+function TopTabItem({
+  item: { href, label, icon: Icon, count, urgent },
+}: {
+  item: Item
+}) {
+  const pathname = usePathname() ?? ""
+  const active = matchesItem(pathname, href)
+
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "relative flex flex-none items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)",
+        "text-(--color-admin-text-muted) hover:text-(--color-admin-text)",
+        "[&_svg]:flex-none [&_svg]:opacity-70 [&_svg]:transition-opacity hover:[&_svg]:opacity-100"
+      )}
+    >
+      {active && (
+        <motion.span
+          layoutId="admin-top-tab-active"
+          className="absolute inset-0 rounded-full bg-(--color-admin-active)"
+          transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+        />
+      )}
+      <span
+        className={cn(
+          "relative z-10 flex items-center gap-2",
+          active && "font-medium text-(--color-admin-text) [&_svg]:opacity-100"
+        )}
+      >
+        <Icon size={15} />
+        <span className="truncate">{label}</span>
+        {count && (
+          <span
+            className={cn(
+              "font-mono text-[11px] font-semibold tracking-tight",
+              active
+                ? "text-(--color-admin-text-muted)"
+                : urgent
+                  ? "text-(--color-admin-accent-urgent)"
+                  : "text-(--color-admin-accent)"
+            )}
+          >
+            {count}
+          </span>
+        )}
+      </span>
+    </Link>
+  )
+}
+
+/** md: and up — see TopTabItem. Below that, AdminShell renders
+ * AdminGroupMenu's hamburger instead. */
 export function AdminGroupTabs({ items }: { items: Item[] }) {
   const pathname = usePathname() ?? ""
   const navRef = React.useRef<HTMLElement>(null)
@@ -458,19 +473,15 @@ export function AdminGroupTabs({ items }: { items: Item[] }) {
   // Deferred a frame: right on mount/navigation the browser hasn't always
   // finished layout for this row yet, so scrollIntoView's own measurement
   // of "is this already visible" can be wrong and silently no-op.
-  //
-  // Finds the active tab by index from `items`/`pathname` directly rather
-  // than reading `aria-current` back off the DOM — right after a fresh
-  // navigation that attribute isn't reliably committed yet even though the
-  // ref itself already is, which was silently turning this into a no-op.
   React.useEffect(() => {
-    const activeIndex = items.findIndex((item) => matchesItem(pathname, item.href))
+    const activeIndex = items.findIndex((item) =>
+      matchesItem(pathname, item.href)
+    )
     if (activeIndex === -1) return
 
     const frame = requestAnimationFrame(() => {
       const activeItem = navRef.current?.children[activeIndex] as
-        | HTMLElement
-        | undefined
+        HTMLElement | undefined
       activeItem?.scrollIntoView({
         block: "nearest",
         inline: "center",
@@ -484,18 +495,131 @@ export function AdminGroupTabs({ items }: { items: Item[] }) {
     <nav
       ref={navRef}
       aria-label="Section pages"
-      // justify-start on mobile: with more tabs than fit, justify-center
-      // clips both ends of the overflow and leaves them unreachable by
-      // scrolling — starting flush left keeps every tab reachable, same as
-      // the state-filter chip rows elsewhere. Desktop never overflows here,
-      // so it keeps the centered look.
-      // Its own glass tint (30%), layered inside the header wrapper's.
-      className="flex min-w-0 items-center justify-start gap-1 overflow-x-auto rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] p-1 shadow-(--shadow-sm) backdrop-blur-md md:justify-center"
+      // Kept overflow-x-auto as a defensive fallback in case a wing ever
+      // holds more pages than fit even at desktop width — harmless when it
+      // doesn't (nothing to scroll), and avoids a hard wrap otherwise.
+      className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] p-1 shadow-(--shadow-sm) backdrop-blur-md"
     >
       {items.map((item) => (
         <TopTabItem key={item.href} item={item} />
       ))}
     </nav>
+  )
+}
+
+/**
+ * Below md:, the tab row above has no room to keep every page's name
+ * legible, so this swaps in a hamburger instead, mirroring the public
+ * SiteHeader's own menu button: one compact trigger — showing the current
+ * page's own icon and name, so you don't lose that at a glance — that
+ * opens a dropdown listing every page in the active wing, each with its
+ * icon and full name always visible.
+ */
+export function AdminGroupMenu({ items }: { items: Item[] }) {
+  const pathname = usePathname() ?? ""
+  const [open, setOpen] = React.useState(false)
+  const menuRef = React.useRef<HTMLDivElement>(null)
+
+  const activeItem =
+    items.find((item) => matchesItem(pathname, item.href)) ?? items[0]
+
+  React.useEffect(() => {
+    setOpen(false)
+  }, [pathname])
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [])
+
+  return (
+    <div className="relative flex min-w-0 justify-center" ref={menuRef}>
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Open section menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={cn(
+          "flex min-w-0 items-center gap-2 rounded-full border border-(--color-admin-border) py-1.5 pr-3.5 pl-1.5 text-[13px] whitespace-nowrap text-(--color-admin-text) shadow-(--shadow-sm) backdrop-blur-md transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)",
+          open
+            ? "bg-(--color-admin-hover-active)"
+            : "bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] hover:bg-(--color-admin-hover)"
+        )}
+      >
+        <span className="flex size-6.5 flex-none items-center justify-center rounded-full bg-(--color-admin-active) text-(--color-admin-text)">
+          <Menu size={13} strokeWidth={1.8} />
+        </span>
+        {activeItem ? (
+          <span className="flex min-w-0 items-center gap-1.75 font-medium">
+            <activeItem.icon size={15} className="flex-none opacity-80" />
+            <span className="min-w-0 truncate">{activeItem.label}</span>
+          </span>
+        ) : null}
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.nav
+            aria-label="Section pages"
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+            className="absolute top-full left-1/2 z-30 mt-2 flex w-56 -translate-x-1/2 flex-col gap-0.5 rounded-xl border border-(--color-divider) bg-(--color-bg) p-1.5 shadow-(--shadow-md)"
+          >
+            {items.map((item) => {
+              const active = matchesItem(pathname, item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-3 py-2.25 text-[13.5px] transition-colors",
+                    active
+                      ? "bg-(--color-accent-2-100) font-medium text-(--color-accent-2-700)"
+                      : "text-(--color-text) hover:bg-neutral-100"
+                  )}
+                >
+                  <item.icon
+                    size={16}
+                    className={cn("flex-none", !active && "opacity-70")}
+                  />
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.count ? (
+                    <span
+                      className={cn(
+                        "font-mono text-[11px] font-semibold tracking-tight",
+                        item.urgent
+                          ? "text-(--color-accent-2)"
+                          : "text-(--color-accent)"
+                      )}
+                    >
+                      {item.count}
+                    </span>
+                  ) : null}
+                </Link>
+              )
+            })}
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 

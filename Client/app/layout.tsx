@@ -7,6 +7,7 @@ import "./classical.css"
 import { SiteChrome } from "./_components/site-chrome"
 import { PublicDataProviders } from "./_components/public-data-providers"
 import { ThemeProvider } from "@/components/theme-provider"
+import ReactLenis from "lenis/react"
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -21,7 +22,7 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  title: "Entity — commercial & upmarket residential property, Nairobi",
+  title: "D&G Realtors — Real Estate Agency",
   description:
     "Go-downs, offices, retail and yards across the Nairobi metropolitan area, alongside a short list of upmarket homes.",
 }
@@ -53,11 +54,16 @@ export default function SystemLayout({
       )}
     >
       <body>
-        <ThemeProvider>
-          <PublicDataProviders>
-            <SiteChrome>{children}</SiteChrome>
-          </PublicDataProviders>
-        </ThemeProvider>
+        <ReactLenis
+          root
+          options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}
+        >
+          <ThemeProvider>
+            <PublicDataProviders>
+              <SiteChrome>{children}</SiteChrome>
+            </PublicDataProviders>
+          </ThemeProvider>
+        </ReactLenis>
       </body>
     </html>
   )

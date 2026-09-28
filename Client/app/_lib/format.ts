@@ -59,6 +59,19 @@ type RateLike = {
   base_currency: string
   target_currency: string
   rate: number | string
+  rate_date?: string
+}
+
+/** Whichever of these carries the most recent rate_date — the admin's
+ * "refresh from source" keeps one row per day for an audit trail, so more
+ * than one can exist for the same pair over time. */
+function newestRate(candidates: RateLike[]): RateLike | null {
+  return candidates.reduce<RateLike | null>((newest, candidate) => {
+    if (!newest) return candidate
+    return new Date(candidate.rate_date ?? 0) > new Date(newest.rate_date ?? 0)
+      ? candidate
+      : newest
+  }, null)
 }
 
 /**
@@ -74,13 +87,19 @@ export function convertAmount(
 ): number | null {
   if (fromCurrency === toCurrency) return amount
 
-  const direct = rates.find(
-    (r) => r.base_currency === fromCurrency && r.target_currency === toCurrency
+  const direct = newestRate(
+    rates.filter(
+      (r) =>
+        r.base_currency === fromCurrency && r.target_currency === toCurrency
+    )
   )
   if (direct) return amount * Number(direct.rate)
 
-  const inverse = rates.find(
-    (r) => r.base_currency === toCurrency && r.target_currency === fromCurrency
+  const inverse = newestRate(
+    rates.filter(
+      (r) =>
+        r.base_currency === toCurrency && r.target_currency === fromCurrency
+    )
   )
   if (inverse) return amount / Number(inverse.rate)
 
