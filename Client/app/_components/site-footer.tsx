@@ -9,7 +9,6 @@ import {
   useSocialLinks,
 } from "../_lib/useSiteSettings"
 import { toWhatsAppDigits } from "../_lib/format"
-import { HapticsToggle } from "./haptics-toggle"
 
 const COLUMNS = [
   {
@@ -160,10 +159,7 @@ export function SiteFooter() {
         <div className="cl-k text-(--color-footer-muted-2)">
           Prices shown in {currency} · converted figures are indicative
         </div>
-        <div className="flex items-center gap-3">
-          <HapticsToggle className="hidden md:inline-flex" />
-          <div className="cl-k text-(--color-footer-muted-2)">© 2026</div>
-        </div>
+        <div className="cl-k text-(--color-footer-muted-2)">© 2026</div>
       </div>
     </footer>
   )
