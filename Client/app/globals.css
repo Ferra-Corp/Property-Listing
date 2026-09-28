@@ -132,8 +132,14 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
-  body {
+  html, body {
     overflow-x: clip;
+  }
+  /* Guardrail against media pushing a row past the viewport. Applies
+   * everywhere and only bites when an <img> or embed would otherwise
+   * overflow — inline width/height on set-sized elements still wins. */
+  img, svg, video, iframe, canvas {
+    max-width: 100%;
   }
   button, a, [role="button"], summary, label {
     touch-action: manipulation;
@@ -151,17 +157,19 @@
 
 /*
  * iOS Safari zooms the page whenever a focused input renders below 16px.
- * Utility classes like text-[11px] / text-[13px] / md:text-sm on inputs would
- * still trip this, so we force 16px on mobile only, with !important to beat
- * Tailwind's utility layer. Desktop keeps whatever the design intended.
+ * A viewport-width media query misses landscape phones (an iPhone 15 in
+ * landscape is ~932px wide, well past 768) and touchscreen laptops, so we
+ * key off pointer: coarse — every touch device, at any viewport size.
  */
-@media (max-width: 767.98px) {
+@media (pointer: coarse) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
   select,
   textarea {
     font-size: 16px !important;
   }
+}
 
+@media (max-width: 767.98px) {
   /* MobileContactBar publishes its rendered height as --wa-bar-height on
      <html>. Reserve matching bottom padding on the main scroll region so
      content and submit buttons never sit under the CTA. */
