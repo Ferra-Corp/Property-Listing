@@ -141,6 +141,38 @@
   img, svg, video, iframe, canvas {
     max-width: 100%;
   }
+
+  /*
+   * Automatic responsive shrinkage. The biggest single cause of "cut off
+   * on the right side" on narrow phones is flex/grid children defaulting
+   * to min-width: auto — that value refuses to shrink an item below its
+   * intrinsic content size, so a long headline or a wide card pushes a
+   * whole row past the viewport. Setting min-width: 0 on every element
+   * via :where() (zero specificity) lets contents wrap or truncate
+   * gracefully at any width; any element that genuinely needs a floor
+   * can still set an explicit min-width and win.
+   */
+  :where(*) {
+    min-width: 0;
+  }
+
+  /*
+   * Long unbreakable strings (URLs, reference codes, hashes, currency
+   * concatenations like "KES 5,000,000 · USD 38,500") wrap where they
+   * would otherwise blow past the container's right edge. break-word
+   * only breaks inside a word when nothing else fits — regular prose
+   * keeps its normal word-wrap.
+   */
+  :where(p, li, dd, dt, span, div, a, td, th, h1, h2, h3, h4, h5, h6) {
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Tables never force their parent wider than the viewport unless the
+   * parent has explicitly opted into horizontal scrolling. */
+  table {
+    max-width: 100%;
+  }
   button, a, [role="button"], summary, label {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
