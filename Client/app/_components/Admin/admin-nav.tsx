@@ -661,7 +661,7 @@ export function AdminDock({
             >
               <group.icon size={20} />
               {active && (
-                <span className="text-[13px] font-medium whitespace-nowrap">
+                <span className="text-[13px] font-semibold whitespace-nowrap">
                   {group.label}
                 </span>
               )}

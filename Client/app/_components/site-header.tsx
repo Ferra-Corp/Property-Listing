@@ -15,7 +15,6 @@ import {
 import { useCurrencyContext } from "../_lib/Context/Currencies"
 import { useSelectedCurrency } from "../_lib/Context/SelectedCurrency"
 import { haptic } from "@/lib/haptics"
-import { HapticsToggle } from "./haptics-toggle"
 
 const MENU = [
   { label: "Buy", href: "/system/listings?purpose=sale" },
@@ -259,10 +258,6 @@ export function SiteHeader() {
                     {item.label}
                   </Link>
                 ))}
-                <hr className="cl-hr mx-1 my-1.5" />
-                <div className="px-1.5 pt-0.5 pb-0.5 md:hidden">
-                  <HapticsToggle className="w-full" />
-                </div>
               </motion.nav>
             )}
           </AnimatePresence>

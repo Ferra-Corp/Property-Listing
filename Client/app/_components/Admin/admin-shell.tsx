@@ -29,18 +29,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) py-2.5 pr-4 pl-5 shadow-(--shadow-lg) md:top-3.5 md:mx-6 md:mt-3.5">
         <Link
           href="/admin"
-          className="flex flex-none items-baseline gap-2 transition-opacity hover:opacity-80"
+          className="flex min-w-0 flex-none items-center overflow-hidden transition-opacity hover:opacity-80"
+          aria-label="D&G Realtors — Admin"
         >
-          {/* Back to the fixed cream tokens — the header is solid and
-              permanently dark again, so the theme-reactive text color from
-              the transparent-header phase would go dark-on-dark in light
-              mode instead. */}
-          <span className="font-(family-name:--font-heading) text-[20px] leading-none text-(--color-admin-text) md:text-[22px]">
-            D&amp;G
-          </span>
-          <span className="cl-mono text-[10px] tracking-[0.18em] text-(--color-admin-text-muted) uppercase">
-            Realtors
-          </span>
+          {/* The admin header is permanently dark, so always the light-on-
+              dark variant — no theme swap needed for this one. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/dg-logo-dark.png"
+            alt="D&G Realtors"
+            className="h-7 w-auto shrink-0 object-contain md:h-8"
+            draggable={false}
+          />
         </Link>
         {/* Full icon+label tab row from md: up, where there's room for
             every page's name to stay legible; the hamburger below that,
