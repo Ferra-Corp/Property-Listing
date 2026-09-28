@@ -3,9 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Search } from "lucide-react"
 import { ButtonLink } from "../../_components/ui/button"
-import { Input, Select } from "../../_components/ui/field"
+import { Select } from "../../_components/ui/field"
 import { FilterChip } from "../../_components/ui/filters"
 import {
   EMPTY_LISTING_FILTERS,
@@ -380,18 +379,10 @@ function ListingsIndexContent() {
     <>
       {/* ── Masthead ── */}
       <section className="px-4 pt-5 md:px-10 md:pt-6.5">
-        {/* mobile-only query field — desktop carries it in the head bar */}
-        <label className="flex items-center gap-2 rounded-(--cl-radius-md) border border-(--color-divider) px-3 text-neutral-600 md:hidden">
-          <Search size={14} strokeWidth={2} className="flex-none" />
-          <Input
-            placeholder="Search listings…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="min-h-9.5 border-0 p-0 text-[13px]"
-          />
-        </label>
-
-        <div className="cl-k mt-4 text-neutral-600 md:mt-0">Listings</div>
+        {/* Query is set via the site header's own search (the ?q= URL
+            param is shared between the header field and the listings
+            page's filter), so there's no second search input here. */}
+        <div className="cl-k text-neutral-600">Listings</div>
         <div className="mt-2 flex flex-col gap-2 border-b-2 border-(--color-text) pb-3 md:mt-3 md:flex-row md:items-end md:justify-between md:gap-7.5 md:pb-3.5">
           <h1 className="m-0 max-w-[26ch] text-[27px] leading-[1.15] font-normal md:text-[40px] md:leading-[1.1]">
             Commercial &amp; residential listings, Nairobi metropolitan area
