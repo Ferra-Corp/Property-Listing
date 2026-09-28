@@ -440,7 +440,7 @@ function TopTabItem({
       <span
         className={cn(
           "relative z-10 flex items-center gap-2",
-          active && "font-medium text-(--color-admin-text) [&_svg]:opacity-100"
+          active && "text-(--color-admin-text) [&_svg]:opacity-100"
         )}
       >
         <Icon size={15} />
@@ -448,7 +448,7 @@ function TopTabItem({
         {count && (
           <span
             className={cn(
-              "font-mono text-[11px] font-semibold tracking-tight",
+              "font-mono text-[11px] tracking-tight",
               active
                 ? "text-(--color-admin-text-muted)"
                 : urgent
@@ -564,7 +564,7 @@ export function AdminGroupMenu({ items }: { items: Item[] }) {
           <Menu size={13} strokeWidth={1.8} />
         </span>
         {activeItem ? (
-          <span className="flex min-w-0 items-center gap-1.75 font-medium">
+          <span className="flex min-w-0 items-center gap-1.75">
             <activeItem.icon size={15} className="flex-none opacity-80" />
             <span className="min-w-0 truncate">{activeItem.label}</span>
           </span>
@@ -592,7 +592,7 @@ export function AdminGroupMenu({ items }: { items: Item[] }) {
                   className={cn(
                     "flex items-center gap-2.5 rounded-lg px-3 py-2.25 text-[13.5px] transition-colors",
                     active
-                      ? "bg-(--color-accent-2-100) font-medium text-(--color-accent-2-700)"
+                      ? "bg-(--color-accent-2-100) text-(--color-accent-2-700)"
                       : "text-(--color-text) hover:bg-neutral-100"
                   )}
                 >
@@ -604,7 +604,7 @@ export function AdminGroupMenu({ items }: { items: Item[] }) {
                   {item.count ? (
                     <span
                       className={cn(
-                        "font-mono text-[11px] font-semibold tracking-tight",
+                        "font-mono text-[11px] tracking-tight",
                         item.urgent
                           ? "text-(--color-accent-2)"
                           : "text-(--color-accent)"
@@ -661,7 +661,7 @@ export function AdminDock({
             >
               <group.icon size={20} />
               {active && (
-                <span className="text-[13px] font-semibold whitespace-nowrap">
+                <span className="text-[13px] whitespace-nowrap">
                   {group.label}
                 </span>
               )}

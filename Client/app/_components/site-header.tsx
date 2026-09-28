@@ -74,7 +74,7 @@ function AnimatedCurrencySwitcher({
                 transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
               />
             )}
-            <span className="relative z-10 font-semibold tracking-wide">
+            <span className="relative z-10 tracking-wide">
               {option}
             </span>
           </button>
@@ -107,7 +107,7 @@ function CurrencyPicker({
           onChange(e.target.value)
         }}
         aria-label="Currency"
-        className="cl-mono h-11 md:h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[16px] md:text-[11px] font-semibold text-(--color-text) backdrop-blur-sm focus:outline-none"
+        className="cl-mono h-11 md:h-7.5 appearance-none rounded-lg border border-(--color-divider) bg-neutral-100/70 py-0 pr-5.5 pl-2.5 text-[16px] md:text-[11px] text-(--color-text) backdrop-blur-sm focus:outline-none"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -231,7 +231,7 @@ export function SiteHeader() {
                 <Link
                   href="/system/valuation-requests"
                   onClick={() => setIsMenuOpen(false)}
-                  className="mb-1 flex items-center gap-2 rounded-lg bg-neutral-100 px-2.5 py-2 text-[13.5px] font-semibold text-(--color-text) transition-colors hover:bg-neutral-200 md:hidden"
+                  className="mb-1 flex items-center gap-2 rounded-lg bg-neutral-100 px-2.5 py-2 text-[13.5px] text-(--color-text) transition-colors hover:bg-neutral-200 md:hidden"
                 >
                   <TrendingUp size={14} />
                   Sell or value
@@ -242,7 +242,7 @@ export function SiteHeader() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="rounded-lg px-2.5 py-2 text-[13.5px] font-semibold text-(--color-text) transition-colors hover:bg-neutral-100"
+                    className="rounded-lg px-2.5 py-2 text-[13.5px] text-(--color-text) transition-colors hover:bg-neutral-100"
                   >
                     {item.label}
                   </Link>
@@ -253,7 +253,7 @@ export function SiteHeader() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="rounded-lg px-2.5 py-2 text-[13.5px] font-semibold text-(--color-text) transition-colors hover:bg-neutral-100"
+                    className="rounded-lg px-2.5 py-2 text-[13.5px] text-(--color-text) transition-colors hover:bg-neutral-100"
                   >
                     {item.label}
                   </Link>
@@ -326,7 +326,7 @@ export function SiteHeader() {
         <ButtonLink
           href="/system/valuation-requests"
           variant="primary"
-          className="hidden flex-none gap-1.75 font-semibold transition-transform hover:scale-[1.02] active:scale-95 md:inline-flex"
+          className="hidden flex-none gap-1.75 transition-transform hover:scale-[1.02] active:scale-95 md:inline-flex"
         >
           <TrendingUp size={14} />
           Sell or value
