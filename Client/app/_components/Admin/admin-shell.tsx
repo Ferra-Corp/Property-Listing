@@ -24,10 +24,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="grid min-h-dvh grid-rows-[auto_1fr_auto] bg-neutral-200">
-      {/* Transparent — no encompassing surface around the three columns.
-          The individual pieces (logo, tab strip / hamburger, theme toggle)
-          each carry their own definition instead. */}
-      <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-2.5 md:top-3.5 md:mx-6 md:mt-3.5">
+      {/* One pill around the whole row — mirrors the AdminDock below so the
+          top and bottom nav read as a matching pair. The tab strip inside
+          this pill has no inner box of its own (see AdminGroupTabs); the
+          active pill within it is the only fill on top of this surface. */}
+      <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) py-2 pr-4 pl-5 shadow-(--shadow-lg) md:top-3.5 md:mx-6 md:mt-3.5 md:py-2.5">
         <Link
           href="/admin"
           className="flex min-w-0 flex-none items-center overflow-hidden transition-opacity hover:opacity-80"

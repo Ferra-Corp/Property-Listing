@@ -277,10 +277,9 @@ export function AdminThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
-      // Sits directly on the now-transparent header with no panel behind
-      // it, so it carries its own border (a light glass tint, not a solid
-      // fill) purely for definition against whatever scrolls beneath it.
-      className="flex size-9 flex-none items-center justify-center rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_35%,transparent)] text-(--color-admin-text-muted) shadow-(--shadow-sm) backdrop-blur-md transition-colors duration-200 outline-none hover:bg-(--color-admin-hover) hover:text-(--color-admin-text) focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)"
+      // Sits on the header's own solid pill now — no double border, just
+      // a subtle hover fill and the icon.
+      className="flex size-9 flex-none items-center justify-center rounded-full text-(--color-admin-text-muted) transition-colors duration-200 outline-none hover:bg-(--color-admin-hover) hover:text-(--color-admin-text) focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)"
     >
       {mounted ? (
         <AnimatePresence mode="wait" initial={false}>
