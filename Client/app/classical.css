@@ -88,18 +88,19 @@
   --color-footer-link: #dbbb8f;
   --color-footer-link-hover: #ebd5b8;
 
-  /* Admin nav chrome (top bar + dock) — same reasoning as the footer above:
-     the admin rail is its own permanent dark aesthetic, independent of
-     whatever the public site's light/dark toggle is set to. */
-  --color-admin-bg: #3a2714;
+  /* Admin nav chrome (top bar + dock). These now follow the light/dark
+     toggle — the light defaults live here on .cl-root, the dark values
+     override below in .dark .cl-root. The active pill and accent stay
+     brand-warm across both because they read well on either background. */
+  --color-admin-bg: #f7f3e3;
   --color-admin-active: #6f1a07;
-  --color-admin-border: rgba(247, 243, 227, 0.18);
-  --color-admin-text: #f7f3e3;
-  --color-admin-text-muted: #ded7c4;
-  --color-admin-hover: rgba(247, 243, 227, 0.09);
-  --color-admin-hover-active: rgba(247, 243, 227, 0.14);
-  --color-admin-accent: #dbbb8f;
-  --color-admin-accent-urgent: #dc9484;
+  --color-admin-border: rgba(28, 23, 18, 0.14);
+  --color-admin-text: #1c1712;
+  --color-admin-text-muted: #6b5b45;
+  --color-admin-hover: rgba(28, 23, 18, 0.06);
+  --color-admin-hover-active: rgba(28, 23, 18, 0.10);
+  --color-admin-accent: #8b5a2b;
+  --color-admin-accent-urgent: #b04a3a;
 
   background: var(--color-bg);
   color: var(--color-text);
@@ -165,6 +166,18 @@
   --color-footer-muted-2: #7c7365;
   --color-footer-link: #c69a63;
   --color-footer-link-hover: #dbbb8f;
+
+  /* Admin nav chrome dark overrides — matches the original permanent
+     dark palette, now only applied when the theme is dark. */
+  --color-admin-bg: #3a2714;
+  --color-admin-active: #6f1a07;
+  --color-admin-border: rgba(247, 243, 227, 0.18);
+  --color-admin-text: #f7f3e3;
+  --color-admin-text-muted: #ded7c4;
+  --color-admin-hover: rgba(247, 243, 227, 0.09);
+  --color-admin-hover-active: rgba(247, 243, 227, 0.14);
+  --color-admin-accent: #dbbb8f;
+  --color-admin-accent-urgent: #dc9484;
 
   background: var(--color-bg);
   color: var(--color-text);

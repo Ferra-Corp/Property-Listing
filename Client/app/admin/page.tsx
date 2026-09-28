@@ -381,7 +381,7 @@ export default function AdminDashboard() {
 
   return (
     <PageIn>
-      <div className="max-w-[1280px] px-4 py-6 md:px-7 md:py-8">
+      <div className="w-full px-4 py-6 md:px-7 md:py-8">
         {/* ── Header / greeting ── */}
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>

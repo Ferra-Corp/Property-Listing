@@ -495,10 +495,11 @@ export function AdminGroupTabs({ items }: { items: Item[] }) {
     <nav
       ref={navRef}
       aria-label="Section pages"
-      // Kept overflow-x-auto as a defensive fallback in case a wing ever
-      // holds more pages than fit even at desktop width — harmless when it
-      // doesn't (nothing to scroll), and avoids a hard wrap otherwise.
-      className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto rounded-full border border-(--color-admin-border) bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] p-1 shadow-(--shadow-sm) backdrop-blur-md"
+      // No encompassing surface — the active pill (via layoutId in
+      // TopTabItem) is the only fill; the rest sits directly on the
+      // header background. overflow-x-auto stays as a defensive fallback
+      // for wings with more pages than the row can hold.
+      className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto"
     >
       {items.map((item) => (
         <TopTabItem key={item.href} item={item} />

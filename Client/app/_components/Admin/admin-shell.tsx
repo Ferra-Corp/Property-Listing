@@ -24,21 +24,29 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="grid min-h-dvh grid-rows-[auto_1fr_auto] bg-neutral-200">
-      {/* Solid, not glass — the deep shadow is what lifts it off the page
-          now, matching AdminDock below. */}
-      <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-(--color-admin-border) bg-(--color-admin-bg) py-2.5 pr-4 pl-5 shadow-(--shadow-lg) md:top-3.5 md:mx-6 md:mt-3.5">
+      {/* Transparent — no encompassing surface around the three columns.
+          The individual pieces (logo, tab strip / hamburger, theme toggle)
+          each carry their own definition instead. */}
+      <header className="sticky top-2.5 z-20 mx-3 mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-2.5 md:top-3.5 md:mx-6 md:mt-3.5">
         <Link
           href="/admin"
           className="flex min-w-0 flex-none items-center overflow-hidden transition-opacity hover:opacity-80"
           aria-label="D&G Realtors — Admin"
         >
-          {/* The admin header is permanently dark, so always the light-on-
-              dark variant — no theme swap needed for this one. */}
+          {/* Theme-reactive: light logo on the light nav bg, dark logo on
+              the dark nav bg. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/dg-logo-light.png"
+            alt="D&G Realtors"
+            className="h-7 w-auto shrink-0 object-contain md:h-8 dark:hidden"
+            draggable={false}
+          />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/dg-logo-dark.png"
             alt="D&G Realtors"
-            className="h-7 w-auto shrink-0 object-contain md:h-8"
+            className="hidden h-7 w-auto shrink-0 object-contain md:h-8 dark:block"
             draggable={false}
           />
         </Link>
