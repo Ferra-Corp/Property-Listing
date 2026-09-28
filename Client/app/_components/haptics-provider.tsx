@@ -44,11 +44,16 @@ export function HapticsProvider({ children }: { children: React.ReactNode }) {
       >
         <label ref={labelRef} htmlFor="dg-haptic-switch">
           Haptic trigger
-          {/* @ts-expect-error — `switch` is an iOS-only Safari 18 attribute
-              on <input type="checkbox">; TypeScript's DOM lib doesn't know
-              about it yet. Adding it changes iOS behaviour; other browsers
-              ignore it. */}
-          <input id="dg-haptic-switch" type="checkbox" switch="" tabIndex={-1} />
+          {/* `switch` is an iOS 18 Safari attribute on <input type="checkbox">
+              that hints the system to fire a haptic when the paired label
+              is activated. TypeScript's DOM lib doesn't know it yet, so we
+              spread it via a Record<string, string> cast. Ignored elsewhere. */}
+          <input
+            id="dg-haptic-switch"
+            type="checkbox"
+            tabIndex={-1}
+            {...({ switch: "" } as Record<string, string>)}
+          />
         </label>
       </span>
       {children}
