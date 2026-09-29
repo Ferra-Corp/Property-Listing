@@ -25,6 +25,26 @@ export const metadata: Metadata = {
   title: "D&G Realtors — Real Estate Agency",
   description:
     "Go-downs, offices, retail and yards across the Nairobi metropolitan area, alongside a short list of upmarket homes.",
+  // Browser tab icon uses the same D&G mark the header does. The two
+  // variants swap by browser-chrome theme: dg-logo-light.png is drawn for
+  // a light background (dark strokes), dg-logo-dark.png for a dark one
+  // (light strokes) — same naming convention the AdminShell logo uses.
+  icons: {
+    icon: [
+      {
+        url: "/dg-logo-light.png",
+        type: "image/png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/dg-logo-dark.png",
+        type: "image/png",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+    shortcut: "/dg-logo-light.png",
+    apple: "/dg-logo-light.png",
+  },
 }
 
 export const viewport: Viewport = {

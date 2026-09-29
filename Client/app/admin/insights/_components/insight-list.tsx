@@ -92,7 +92,7 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
   }
 
   return (
-    <div className="min-w-0 bg-(--color-bg)">
+    <div className="flex min-h-full min-w-0 flex-col bg-(--color-bg)">
       <PageHead
         title="Insights"
         meta={`${counts.published} in print · ${counts.draft} draft${counts.draft === 1 ? "" : "s"} · ${counts.archived} archived`}
@@ -151,8 +151,10 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
         </Select>
       </div>
 
-      {/* Desktop List */}
-      <div className="hidden px-6 pt-2 md:block">
+      {/* Desktop List — flex column so the bulk-actions bar can sit at
+          the bottom of the container (via mt-auto) instead of trailing
+          right underneath the last row with dead space below it. */}
+      <div className="hidden flex-1 flex-col px-6 pt-2 md:flex">
         {/* Classical Editorial Header */}
         <div className="grid grid-cols-[26px_minmax(0,1fr)_140px_120px_92px] items-end gap-4 border-b-[1.5px] border-(--color-text) pb-2.5">
           <div className="pl-1">
@@ -199,9 +201,9 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
           {sorted.map((insight, index) => (
             <RowIn key={insight.id} index={index}>
               <div
-                className={`group grid grid-cols-[26px_minmax(0,1fr)_140px_120px_92px] items-start gap-4 border-b border-(--color-divider) py-4 text-(--color-text) transition-colors duration-200 hover:bg-(--color-neutral-50) ${
+                className={`group grid grid-cols-[26px_minmax(0,1fr)_140px_120px_92px] items-start gap-4 border-b border-(--color-divider) py-4 text-(--color-text) transition-colors duration-200 hover:bg-(--color-neutral-100) ${
                   insight.id === selectedId
-                    ? "bg-(--color-neutral-50) shadow-[inset_3px_0_0_var(--color-text)]"
+                    ? "bg-(--color-neutral-100) shadow-[inset_3px_0_0_var(--color-text)]"
                     : "shadow-[inset_0_0_0_transparent]"
                 }`}
               >
@@ -278,12 +280,15 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
           ))}
         </div>
 
-        {/* Bulk Actions Footer */}
+        {/* Bulk Actions Footer — mt-auto anchors it to the bottom of the
+            list column so the "N selected" controls and "N of N shown"
+            count sit under the last row instead of floating in the middle
+            of empty space when the list is short. */}
         {canEdit ? (
           <div
-            className={`mt-4 mb-8 flex items-center gap-4 rounded-lg px-4 py-3.5 transition-all duration-300 ${
+            className={`mt-auto mb-6 flex items-center gap-4 rounded-lg px-4 py-3.5 transition-all duration-300 ${
               selected.size > 0
-                ? "border border-(--color-divider) bg-(--color-neutral-50) shadow-sm"
+                ? "border border-(--color-divider) bg-(--color-neutral-100) shadow-sm"
                 : "pointer-events-none opacity-60 grayscale"
             }`}
           >
@@ -338,7 +343,7 @@ export function InsightList({ selectedId }: { selectedId?: string }) {
           <RowIn key={insight.id} index={index}>
             <Link
               href={`/admin/insights/${insight.id}`}
-              className="group block border-b border-(--color-divider) px-4 py-4 text-(--color-text) transition-colors active:bg-(--color-neutral-50)"
+              className="group block border-b border-(--color-divider) px-4 py-4 text-(--color-text) transition-colors active:bg-(--color-neutral-100)"
             >
               <div className="flex gap-4">
                 <Plate

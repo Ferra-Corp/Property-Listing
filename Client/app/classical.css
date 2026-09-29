@@ -97,6 +97,11 @@
   --color-admin-border: rgba(28, 23, 18, 0.14);
   --color-admin-text: #1c1712;
   --color-admin-text-muted: #6b5b45;
+  /* Text/icon that sits on --color-admin-active. Kept cream in both themes
+     because the active pill background is the same dark burgundy either
+     way — using --color-admin-text there made the label near-invisible in
+     light mode (dark text on dark red). */
+  --color-admin-active-text: #f7f3e3;
   --color-admin-hover: rgba(28, 23, 18, 0.06);
   --color-admin-hover-active: rgba(28, 23, 18, 0.10);
   --color-admin-accent: #8b5a2b;
@@ -174,6 +179,7 @@
   --color-admin-border: rgba(247, 243, 227, 0.18);
   --color-admin-text: #f7f3e3;
   --color-admin-text-muted: #ded7c4;
+  --color-admin-active-text: #f7f3e3;
   --color-admin-hover: rgba(247, 243, 227, 0.09);
   --color-admin-hover-active: rgba(247, 243, 227, 0.14);
   --color-admin-accent: #dbbb8f;

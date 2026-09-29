@@ -439,7 +439,11 @@ function TopTabItem({
       <span
         className={cn(
           "relative z-10 flex items-center gap-2",
-          active && "text-(--color-admin-text) [&_svg]:opacity-100"
+          // The active pill's background (--color-admin-active) is deep
+          // burgundy in both themes; --color-admin-active-text stays cream
+          // in both so the label + icon read on it (dark text on dark red
+          // in light mode was near-invisible).
+          active && "text-(--color-admin-active-text) [&_svg]:opacity-100"
         )}
       >
         <Icon size={15} />
@@ -449,7 +453,7 @@ function TopTabItem({
             className={cn(
               "font-mono text-[11px] tracking-tight",
               active
-                ? "text-(--color-admin-text-muted)"
+                ? "text-(--color-admin-active-text) opacity-75"
                 : urgent
                   ? "text-(--color-admin-accent-urgent)"
                   : "text-(--color-admin-accent)"
@@ -560,7 +564,7 @@ export function AdminGroupMenu({ items }: { items: Item[] }) {
             : "bg-[color-mix(in_srgb,var(--color-admin-bg)_30%,transparent)] hover:bg-(--color-admin-hover)"
         )}
       >
-        <span className="flex size-6.5 flex-none items-center justify-center rounded-full bg-(--color-admin-active) text-(--color-admin-text)">
+        <span className="flex size-6.5 flex-none items-center justify-center rounded-full bg-(--color-admin-active) text-(--color-admin-active-text)">
           <Menu size={13} strokeWidth={1.8} />
         </span>
         {activeItem ? (
@@ -655,7 +659,7 @@ export function AdminDock({
               className={cn(
                 "flex h-11 flex-none items-center justify-center gap-2 rounded-full transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-(--color-admin-accent)",
                 active
-                  ? "bg-(--color-admin-active) px-4 text-(--color-admin-text)"
+                  ? "bg-(--color-admin-active) px-4 text-(--color-admin-active-text)"
                   : "w-11 text-(--color-admin-text-muted) hover:bg-(--color-admin-hover) hover:text-(--color-admin-text)"
               )}
             >

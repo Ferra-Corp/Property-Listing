@@ -16,36 +16,28 @@ export default function AdminInsightsPage() {
 
   return (
     <PageIn>
-      {/* The split waits for xl: (1280px) — same reasoning as
-          admin/leads/page.tsx: a fixed ~440px detail pane plus this list's
-          own desktop table need real room, which a tablet (iPad Mini
-          included) never has at md: (768px). Below xl: it's just the list
-          at full width. Padding/gap escalation shifted from md:/lg: to
-          xl:/2xl: to match — no point adding breathing room around a
-          split that isn't happening yet. */}
-      <div className="grid min-h-[calc(100vh-4rem)] bg-(--color-neutral-50) xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-6 xl:p-6 2xl:gap-8 2xl:p-8">
-        {/* Left Panel Container */}
-        <div className="min-w-0 overflow-hidden bg-(--color-bg) xl:rounded-2xl xl:border xl:border-(--color-divider) xl:shadow-sm">
+      {/* Split waits for xl: (1280px) — same reasoning as leads/valuations:
+          the fixed detail pane plus the list's own desktop table need
+          ~1150px+ side by side. Below xl: (tablet/phone) it's the list at
+          full width. Height is bounded by xl:h-[calc(100dvh-178px)] —
+          viewport minus the admin header/dock chrome — so each pane
+          scrolls independently instead of stretching the whole page into
+          a viewport-tall column of empty ivory. No outer bg override
+          either; the admin shell already sits on --color-bg. */}
+      <div className="grid xl:h-[calc(100dvh-178px)] xl:grid-cols-[minmax(0,1fr)_430px] xl:gap-4 xl:p-4">
+        <div className="min-w-0 xl:h-full xl:overflow-y-auto xl:rounded-(--cl-radius-lg) xl:border xl:border-(--color-divider) xl:bg-(--color-bg)">
           <InsightList selectedId={selected?.id} />
         </div>
-
-        {/*
-          Right Panel Container (Aside)
-          Removed the harsh `border-l` and replaced it with a fully contained,
-          elevated modern card look to emphasize the separation.
-        */}
-        <aside className="hidden min-w-0 overflow-hidden rounded-2xl border border-(--color-divider) bg-(--color-bg) shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] transition-all duration-300 xl:block">
+        <aside className="hidden min-w-0 xl:block xl:h-full xl:overflow-y-auto xl:rounded-(--cl-radius-lg) xl:border xl:border-(--color-divider) xl:bg-(--color-bg)">
           {selected ? (
             <PanelIn panelKey={selected.id}>
               <InsightPanel id={selected.id} />
             </PanelIn>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center p-12 text-center">
-              <span className="text-[13.5px] text-neutral-500 italic">
-                {loading
-                  ? "Loading…"
-                  : "Select an article to view its details."}
-              </span>
+            <div className="px-4 py-10 text-center text-[13.5px] text-neutral-600 md:px-5.5">
+              {loading
+                ? "Loading…"
+                : "Select an article to view its details."}
             </div>
           )}
         </aside>
