@@ -224,7 +224,7 @@ export function InsightPanel({ id }: { id: string }) {
           ) : null}
 
           {insight.summary ? (
-            <div className="mt-6 rounded-xl border border-(--color-divider) bg-(--color-neutral-50) p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mt-6 rounded-xl border border-(--color-divider) bg-(--color-neutral-100) p-5 shadow-sm transition-all hover:shadow-md">
               <K className="text-[10px] font-semibold tracking-widest text-neutral-500 uppercase">
                 Summary · shown under the title
               </K>
