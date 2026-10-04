@@ -128,11 +128,18 @@ type AuthorizedFetchResult = {
 async function attemptWithRefresh(
   tokens: { accessToken: string; refreshToken: string },
   url: string,
-  init: RequestInit
+  init: RequestInit,
+  /** The browser-side AbortSignal from the incoming NextRequest. Forwarded
+   * to the initial attempt and the retry so nginx stops seeing 499s when the
+   * client navigates away before the server responds. Deliberately NOT passed
+   * to the refresh fetch — aborting that mid-flight revokes the old session
+   * without delivering the new token pair, silently destroying a valid session. */
+  signal?: AbortSignal
 ): Promise<AuthorizedFetchResult> {
   const attempt = (accessToken: string) =>
     fetch(url, {
       ...init,
+      signal,
       headers: { ...init.headers, authorization: `Bearer ${accessToken}` },
     })
 
@@ -144,6 +151,7 @@ async function attemptWithRefresh(
   // days. A bare 401 this far in almost always just means the former
   // expired mid-session — spend the latter once, transparently, rather
   // than bounce an otherwise-valid session back to sign-in.
+  // No signal here — see JSDoc above.
   const refreshRequest = await fetch(`${ServerUrl}/api/auth/refresh`, {
     method: "POST",
     headers: { cookie: backendRefreshCookieHeader(tokens.refreshToken) },
@@ -156,7 +164,20 @@ async function attemptWithRefresh(
 
   if (!newAccessToken) return { response: first, rotatedCookies: null }
 
-  const retry = await attempt(newAccessToken)
+  // The retry carries the signal just like the first attempt — but we wrap
+  // it so that an AbortError (browser cancelled after the refresh already
+  // completed and the old session was revoked) doesn't silently lose the
+  // newly-issued token pair. If the retry throws for any reason we fall
+  // back to the original 401 response but still hand back rotatedCookies,
+  // so the caller can write the fresh cookies to the browser. The next
+  // request the browser makes will then succeed with the new access token
+  // instead of being met with a stale refresh token and a forced logout.
+  let retry: Response
+  try {
+    retry = await attempt(newAccessToken)
+  } catch {
+    return { response: first, rotatedCookies: setCookieHeaders }
+  }
 
   return { response: retry, rotatedCookies: setCookieHeaders }
 }
@@ -169,13 +190,17 @@ async function attemptWithRefresh(
  * a session dies after 15 minutes of activity instead of lasting the full
  * 30-day refresh window, forcing a re-login the rest of the session doesn't
  * expect.
+ *
+ * The browser's AbortSignal is forwarded so that when the client cancels
+ * (navigates away, component unmounts, etc.) the downstream fetch is also
+ * aborted — preventing nginx from logging 499s for dangling connections.
  */
 export async function authorizedFetch(
   request: NextRequest,
   url: string,
   init: RequestInit = {}
 ): Promise<AuthorizedFetchResult> {
-  return attemptWithRefresh(RequestTokens(request), url, init)
+  return attemptWithRefresh(RequestTokens(request), url, init, request.signal)
 }
 
 /**
@@ -184,6 +209,9 @@ export async function authorizedFetch(
  * the plain request, and if a present session's tokens are both dead (the
  * refresh failed too) it falls back to one final anonymous request rather
  * than surface a staff member's expired session as an error on a public page.
+ *
+ * The browser's AbortSignal is forwarded on all three fetch paths for the
+ * same reason as `authorizedFetch`.
  */
 export async function optionalAuthorizedFetch(
   request: NextRequest,
@@ -192,11 +220,12 @@ export async function optionalAuthorizedFetch(
 ): Promise<AuthorizedFetchResult> {
   const tokens = OptionalRequestTokens(request)
 
-  if (!tokens) return { response: await fetch(url, init), rotatedCookies: null }
+  if (!tokens)
+    return { response: await fetch(url, { ...init, signal: request.signal }), rotatedCookies: null }
 
-  const result = await attemptWithRefresh(tokens, url, init)
+  const result = await attemptWithRefresh(tokens, url, init, request.signal)
 
   if (result.response.status !== 401) return result
 
-  return { response: await fetch(url, init), rotatedCookies: null }
+  return { response: await fetch(url, { ...init, signal: request.signal }), rotatedCookies: null }
 }

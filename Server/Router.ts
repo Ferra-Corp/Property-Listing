@@ -42,7 +42,7 @@ const Router = (
       return sendResponseMessage(404, true, "Invalid api route", response);
   } catch (error) {
     return sendResponseMessage(
-      404,
+      500,
       true,
       `API Error: ${(error as Error).message}`,
       response,

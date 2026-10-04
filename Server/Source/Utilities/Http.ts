@@ -21,18 +21,42 @@ export async function getRequestBody(request: IncomingMessage) {
   return new Promise<Record<string, any>>((resolve, reject) => {
     let unparsedRequestBody: string = "";
 
+    /** Hard ceiling: reject if the full body hasn't arrived within 30 s.
+     * Prevents a stalled or slow-drip client from holding a connection
+     * slot open indefinitely. */
+    const timeout = setTimeout(() => {
+      reject(new Error("Request body read timed out"));
+    }, 30_000);
+
+    const cleanup = () => clearTimeout(timeout);
+
     request.on("data", (data: Buffer) => {
       unparsedRequestBody += data.toString();
     });
 
     request.on("end", () => {
+      cleanup();
       try {
         const parsedRequestBody = JSON.parse(unparsedRequestBody || "{}");
-
         resolve(parsedRequestBody);
       } catch (error) {
         reject(error);
       }
+    });
+
+    /** Stream error — e.g. malformed TCP framing, connection reset. */
+    request.on("error", (error: Error) => {
+      cleanup();
+      reject(error);
+    });
+
+    /** Client closed the connection before sending the full body.
+     * The "close" event fires before "end" in this case, so if "end"
+     * never arrives we reject rather than hang. */
+    request.on("close", () => {
+      cleanup();
+      if (!request.complete)
+        reject(new Error("Client disconnected before the request body was fully received"));
     });
   });
 }
