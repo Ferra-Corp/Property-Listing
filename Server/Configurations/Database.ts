@@ -17,15 +17,13 @@ export class Database {
     const client = await this.pool.connect();
 
     try {
-      await this.pool.query("BEGIN");
-
-      const sqlQuery = await this.pool.query(query, values);
-
-      await this.pool.query("COMMIT");
+      await client.query("BEGIN");
+      const sqlQuery = await client.query(query, values);
+      await client.query("COMMIT");
 
       return sqlQuery;
     } catch (error) {
-      await this.pool.query("ROLLBACK");
+      await client.query("ROLLBACK");
       throw error;
     } finally {
       client.release();
