@@ -16,3 +16,14 @@ httpServer.listen(PORT, () => {
 
 process.on("uncaughtException", (error) => ErrorMsg(error));
 process.on("unhandledRejection", (error) => ErrorMsg(error as Error));
+
+const shutdown = () => {
+  Info("SIGTERM/SIGINT received. Shutting down gracefully...");
+  httpServer.close(() => {
+    Info("HTTP server closed.");
+    process.exit(0);
+  });
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
