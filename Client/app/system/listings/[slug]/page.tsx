@@ -18,6 +18,7 @@ import {
 } from "../../../_lib/format"
 import { useContactPhone } from "../../../_lib/useSiteSettings"
 import { toRowListing, useCurrencyConversion } from "../_components/listing-row"
+import { PriceMotion } from "../../../_components/ui/price-motion"
 import type { ListingWithMedia } from "../../../_lib/Types/Listing"
 
 function buildHeadline(listing: ListingWithMedia) {
@@ -496,12 +497,12 @@ export default function ListingDetailPage() {
             <div className="cl-k text-neutral-600)">
               {listing.purpose === "sale" ? "Asking price" : "Asking rent"}
             </div>
-            <div className="cl-fig mt-2.5 flex items-baseline gap-2">
+            <PriceMotion className="cl-fig mt-2.5 flex items-baseline gap-2">
               <span className="text-[24px] leading-none font-normal md:text-[26px]">
                 {price}
               </span>
               <span className="text-[13px] text-neutral-700">{priceUnit}</span>
-            </div>
+            </PriceMotion>
             {agent ? (
               <div className="cl-fig mt-2 text-[12.5px] text-neutral-700">
                 Listed by{" "}
@@ -613,7 +614,9 @@ export default function ListingDetailPage() {
 
                     <div className="mt-auto pt-5">
                       <div className="cl-fig flex items-baseline gap-1 text-[13px] text-neutral-700">
-                        {item.price} {item.priceUnit}
+                        <PriceMotion>
+                          {item.price} {item.priceUnit}
+                        </PriceMotion>
                       </div>
                     </div>
                   </div>
@@ -627,12 +630,12 @@ export default function ListingDetailPage() {
       {/* ── Sticky figure + contact bar, small screens ── */}
       <div className="sticky bottom-16 z-10 border-t border-(--color-divider) bg-[color-mix(in_srgb,var(--color-bg)_90%,transparent)] px-3 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] backdrop-blur-md md:hidden">
         <div className="flex items-baseline justify-between">
-          <span className="cl-fig font-(family-name:--font-heading) text-[24px]">
+          <PriceMotion className="cl-fig font-(family-name:--font-heading) text-[24px]">
             {price}{" "}
             <span className="font-(family-name:--font-body) text-[12px] text-neutral-700">
               {priceUnit}
             </span>
-          </span>
+          </PriceMotion>
         </div>
       </div>
     </>

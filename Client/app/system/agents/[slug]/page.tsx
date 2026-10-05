@@ -22,7 +22,7 @@ import {
   toRowListing,
   useCurrencyConversion,
 } from "../../listings/_components/listing-row"
-
+import { PriceMotion } from "../../../_components/ui/price-motion"
 const STATUS_LABEL: Record<string, string> = {
   sold: "Sold",
   rented: "Let",
@@ -316,7 +316,9 @@ export default function AgentDetailPage() {
 
                         <div className="mt-auto pt-5">
                           <div className="cl-fig flex items-baseline gap-1 text-[13px] text-neutral-700">
-                            {mandate.price} {mandate.priceUnit}
+                            <PriceMotion>
+                              {mandate.price} {mandate.priceUnit}
+                            </PriceMotion>
                           </div>
                         </div>
                       </div>
@@ -343,8 +345,10 @@ export default function AgentDetailPage() {
                 >
                   <span>{item.title}</span>
                   <span className="cl-fig text-[11px] tracking-[0.16em] text-neutral-600 uppercase md:text-[13.5px] md:tracking-normal md:text-neutral-700 md:normal-case">
-                    {STATUS_LABEL[item.status] ?? item.status} · {item.price}{" "}
-                    {item.priceUnit}
+                    {STATUS_LABEL[item.status] ?? item.status} ·{" "}
+                    <PriceMotion>
+                      {item.price} {item.priceUnit}
+                    </PriceMotion>
                   </span>
                 </div>
               ))}

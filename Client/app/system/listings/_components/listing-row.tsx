@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { PriceMotion } from "../../../_components/ui/price-motion"
 import { AnimatePresence, motion } from "motion/react"
 import { ButtonLink } from "../../../_components/ui/button"
 import { Chip } from "../../../_components/ui/filters"
@@ -210,18 +211,9 @@ export function ListingRow({
       {/* figures — right margin on desktop, a baseline row on mobile */}
       <div className="mt-4 flex flex-wrap items-end justify-between gap-3 pt-1 md:mt-0 md:block md:text-right">
         <div className="min-w-0">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={`${currency}-${listing.price}`}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              className="cl-fig text-[20px] leading-[1.2] font-normal md:text-[22px]"
-            >
-              {listing.price}
-            </motion.div>
-          </AnimatePresence>
+          <PriceMotion className="cl-fig text-[20px] leading-[1.2] font-normal md:text-[22px]">
+            {listing.price}
+          </PriceMotion>
           <div className="cl-fig mt-1 text-[12px] text-neutral-700">
             {listing.priceUnit}
           </div>

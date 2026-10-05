@@ -20,6 +20,7 @@ import {
   toRowListing,
   useCurrencyConversion,
 } from "./system/listings/_components/listing-row"
+import { PriceMotion } from "./_components/ui/price-motion"
 import type { ListingPurpose } from "./_lib/Types/Listing"
 
 const PURPOSE_OPTIONS = ["Lease", "Buy", "Rent"] as const
@@ -443,7 +444,9 @@ export default function HomePage() {
 
                     <div className="mt-auto pt-5">
                       <div className="cl-fig text-neutral-700) flex items-baseline gap-1 text-[13px]">
-                        {item.price} {item.priceUnit}
+                        <PriceMotion>
+                          {item.price} {item.priceUnit}
+                        </PriceMotion>
                       </div>
                     </div>
                   </div>
@@ -575,8 +578,10 @@ export default function HomePage() {
                   <span>{item.title}</span>
                 </div>
                 <div className="cl-fig cl-k text-neutral-600) mt-1.5 md:mt-0">
-                  {STATUS_LABEL[item.status] ?? item.status} · {item.price}{" "}
-                  {item.priceUnit}
+                  {STATUS_LABEL[item.status] ?? item.status} ·{" "}
+                  <PriceMotion>
+                    {item.price} {item.priceUnit}
+                  </PriceMotion>
                 </div>
               </div>
             ))}

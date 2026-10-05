@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "migrations": "npx tsx ./Migrations/Migration.ts && npx tsx ./Migrations/Seed.ts",
     "seed:demo": "npx tsx ./Migrations/SeedDemo.ts",
-    "dev": "npx tsx --watch ./Server.ts"
+    "dev": "npx tsx --watch ./Server.ts",
+    "start": "npx tsx ./Server.ts"
   },
   "keywords": [],
   "author": "",
