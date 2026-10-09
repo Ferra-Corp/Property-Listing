@@ -222,6 +222,7 @@ export default function ListingDetailPage() {
   // Intelligent Image Grid Layout Logic (adapts to match the 1 large / 4 small reference)
   const visiblePlates = plates ? plates.slice(0, 5) : []
   const plateCount = visiblePlates.length
+  const isSingleSlide = plateCount <= 1
 
   let gridContainerClass = "grid grid-cols-1 h-[300px] md:h-[500px]"
   if (plateCount === 2) {
@@ -273,7 +274,13 @@ export default function ListingDetailPage() {
                 key={media?.id ?? "placeholder"}
                 type="button"
                 onClick={() => plates && plates.length > 0 && setIsModalOpen(true)}
-                className="relative h-full w-[85vw] flex-none snap-center overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-text)"
+                className={cn(
+                  "relative h-full flex-none snap-center overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-text)",
+                  // 85vw lets the next photo peek in at the edge, which is
+                  // the cue that the strip swipes. With nothing next to peek,
+                  // that just leaves a dead gap, so a lone photo fills the row.
+                  isSingleSlide ? "w-full" : "w-[85vw]"
+                )}
                 aria-label={media?.alt_text ?? `Photo ${index + 1}`}
               >
                 {media && isVideo(media) ? (
@@ -291,7 +298,7 @@ export default function ListingDetailPage() {
                     label={media?.alt_text ?? listing.title}
                     src={media?.url ?? null}
                     alt={media?.alt_text ?? listing.title}
-                    sizes="85vw"
+                    sizes={isSingleSlide ? "100vw" : "85vw"}
                     priority={index === 0}
                   />
                 )}
