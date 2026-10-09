@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { cn } from "cn"
@@ -143,15 +144,20 @@ export default function ListingDetailPage() {
     }).catch(() => {})
   }, [status, listing])
 
-  // Lock body scroll when the media modal is open
+  // Lock body scroll while the media modal is open, and let Escape close it.
   React.useEffect(() => {
-    if (isModalOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = ""
+    if (!isModalOpen) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsModalOpen(false)
     }
+
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", onKeyDown)
+
     return () => {
       document.body.style.overflow = ""
+      window.removeEventListener("keydown", onKeyDown)
     }
   }, [isModalOpen])
 
@@ -367,57 +373,73 @@ export default function ListingDetailPage() {
         )}
       </section>
 
-      {/* ── Custom Fullscreen Media Modal ── */}
-      {isModalOpen && plates && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm">
-          {/* Close Button */}
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 md:top-8 md:right-8"
-            aria-label="Close media view"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+      {/* ── Custom Fullscreen Media Modal ──
+          Portalled to <body>: rendered in place it sits inside the page
+          transition wrapper (a transformed element), and `fixed` inside a
+          transform is positioned against that wrapper instead of the
+          viewport — so the overlay took the height of the whole page and
+          had nothing of its own to scroll. The overlay itself is the
+          scroller, rather than a nested `h-full` box whose height depended
+          on the parent resolving. `data-lenis-prevent` tells Lenis (the
+          smooth-scroll on the root, see app/layout.tsx) to leave wheel and
+          touch events here alone; otherwise it captures them and scrolls the
+          locked page behind instead of this overlay. */}
+      {isModalOpen && plates
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Listing media"
+              data-lenis-prevent
+              className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/95 backdrop-blur-sm"
             >
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
-            </svg>
-          </button>
-
-          {/* Scrollable Media Container */}
-          <div className="h-full w-full max-w-5xl overflow-y-auto p-4 py-16 md:p-8">
-            <div className="flex flex-col gap-6 md:gap-10">
-              {plates.map((media) => (
-                <div
-                  key={media.id}
-                  className="flex w-full items-center justify-center overflow-hidden rounded-xl bg-neutral-900/50"
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="fixed top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 md:top-8 md:right-8"
+                aria-label="Close media view"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  {isVideo(media) ? (
-                    <video
-                      src={media.url}
-                      controls
-                      className="max-h-[85vh] w-full object-contain"
-                    />
-                  ) : (
-                    <img
-                      src={media.url}
-                      alt={media.alt_text ?? listing.title}
-                      className="max-h-[85vh] w-full object-contain"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+
+              <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 py-16 md:gap-10 md:p-8 md:py-16">
+                {plates.map((media) => (
+                  <div
+                    key={media.id}
+                    className="flex w-full items-center justify-center overflow-hidden rounded-xl bg-neutral-900/50"
+                  >
+                    {isVideo(media) ? (
+                      <video
+                        src={media.url}
+                        controls
+                        className="max-h-[85vh] w-full object-contain"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={media.url}
+                        alt={media.alt_text ?? listing.title}
+                        className="max-h-[85vh] w-full object-contain"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
 
       <div className="grid items-start gap-8 px-3 pt-6 pb-10 md:grid-cols-[1fr_320px] md:gap-14 md:px-6 md:pt-10 md:pb-11.5">
         {/* ── The description ── */}
