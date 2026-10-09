@@ -4,6 +4,7 @@ export type Testimonial = {
   quote: string
   rating: number
   company_name: string | null
+  company_profile_image_url: string | null
   profile_picture: string | null
   is_active: boolean
   created_at: string
@@ -16,6 +17,7 @@ export type createTestimonialDTO = {
   quote: string
   rating?: number
   company_name?: string | null
+  company_profile_image_url?: string | null
   profile_picture?: string | null
   is_active?: boolean
 }

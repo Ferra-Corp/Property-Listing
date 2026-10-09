@@ -17,6 +17,7 @@ type Draft = {
   quote: string
   rating: number
   company_name: string
+  company_profile_image_url: string
   profile_picture: string
   is_active: boolean
 }
@@ -27,6 +28,7 @@ function draftFrom(testimonial?: Testimonial): Draft {
     quote: testimonial?.quote ?? "",
     rating: testimonial?.rating ?? 5,
     company_name: testimonial?.company_name ?? "",
+    company_profile_image_url: testimonial?.company_profile_image_url ?? "",
     profile_picture: testimonial?.profile_picture ?? "",
     is_active: testimonial?.is_active ?? true,
   }
@@ -49,7 +51,8 @@ export function TestimonialForm({
     ),
     [saving, setSaving] = React.useState(false),
     [error, setError] = React.useState<string | null>(null),
-    [uploading, setUploading] = React.useState(false)
+    [uploading, setUploading] = React.useState(false),
+    [uploadingLogo, setUploadingLogo] = React.useState(false)
 
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((d) => ({ ...d, [key]: value }))
@@ -65,6 +68,19 @@ export function TestimonialForm({
       setError((err as Error).message)
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function handleLogoUpload(file: File) {
+    setUploadingLogo(true)
+    setError(null)
+    try {
+      const result = await uploadImage(file, "testimonial")
+      set("company_profile_image_url", result.url)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setUploadingLogo(false)
     }
   }
 
@@ -84,6 +100,7 @@ export function TestimonialForm({
         quote: draft.quote.trim(),
         rating: draft.rating,
         company_name: draft.company_name.trim() || null,
+        company_profile_image_url: draft.company_profile_image_url || null,
         profile_picture: draft.profile_picture || null,
         is_active: draft.is_active,
       }
@@ -170,6 +187,55 @@ export function TestimonialForm({
               onChange={(e) => set("company_name", e.target.value)}
               className="text-[13.5px]"
             />
+          </FormField>
+
+          <FormField
+            label="Company logo"
+            hint="Optional — shown in the homepage logo band"
+          >
+            <div className="flex items-center gap-4">
+              <span className="flex h-16 w-32 flex-none items-center justify-center overflow-hidden rounded-(--cl-radius-md) border border-(--color-divider) p-2">
+                {draft.company_profile_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={draft.company_profile_image_url}
+                    alt={draft.company_name || "Company logo"}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <span className="cl-k text-neutral-600">No logo</span>
+                )}
+              </span>
+              <div className="flex flex-col gap-2.5">
+                <label className="cl-btn cl-btn-secondary inline-flex w-fit cursor-pointer items-center">
+                  {uploadingLogo
+                    ? "Uploading…"
+                    : draft.company_profile_image_url
+                      ? "Replace logo"
+                      : "Upload logo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingLogo}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleLogoUpload(file)
+                      e.target.value = ""
+                    }}
+                  />
+                </label>
+                {draft.company_profile_image_url ? (
+                  <button
+                    type="button"
+                    onClick={() => set("company_profile_image_url", "")}
+                    className="w-fit text-[12.5px] text-(--color-accent-2) underline underline-offset-2"
+                  >
+                    Remove logo
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </FormField>
 
           <FormField label="Profile picture" hint="Optional">

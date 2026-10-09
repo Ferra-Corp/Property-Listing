@@ -14,12 +14,13 @@ export class TestimonialRepo implements TestimonialRepository {
   async createTestimonial(details: createTestimonialDTO): Promise<Testimonial> {
     try {
       const sqlString: string =
-          "INSERT INTO testimonials(name,quote,rating,company_name,profile_picture,is_active) VALUES($1,$2,$3,$4,$5,$6) RETURNING *",
+          "INSERT INTO testimonials(name,quote,rating,company_name,company_profile_image_url,profile_picture,is_active) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *",
         sqlQuery = await this.db.query(sqlString, [
           details.name,
           details.quote,
           details.rating ?? 5,
           details.company_name ?? null,
+          details.company_profile_image_url ?? null,
           details.profile_picture ?? null,
           details.is_active ?? true,
         ]),

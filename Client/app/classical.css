@@ -647,6 +647,42 @@
   .cl-btn-primary > * { position: relative; z-index: 1; }
 }
 
+/* Homepage client-logo band. Only loops when the logos overflow (the
+   component sets data-scrolling): the track holds two identical sets, so
+   sliding left by exactly half repeats with no jump. Paused on hover, and a
+   plain scrollable row for anyone who prefers reduced motion. */
+@keyframes cl-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.cl-marquee {
+  overflow: hidden;
+}
+.cl-marquee[data-scrolling] {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.cl-marquee-track {
+  animation: cl-marquee var(--cl-marquee-duration, 40s) linear infinite;
+}
+.cl-marquee:hover .cl-marquee-track,
+.cl-marquee:focus-within .cl-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cl-marquee[data-scrolling] {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .cl-marquee-track {
+    animation: none;
+  }
+  .cl-marquee-track [data-marquee-clone] {
+    display: none;
+  }
+}
+
 /* Backdrop-filter fallback — some Android WebViews don't ship it. */
 @supports not (backdrop-filter: blur(1px)) {
   .cl-root .backdrop-blur-sm {

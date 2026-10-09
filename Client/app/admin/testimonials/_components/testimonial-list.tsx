@@ -88,7 +88,19 @@ export function TestimonialList() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="text-[14.5px]">{t.name}</span>
-                  {t.company_name ? <K>{t.company_name}</K> : null}
+                  {t.company_name || t.company_profile_image_url ? (
+                    <span className="flex items-center gap-2">
+                      {t.company_profile_image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={t.company_profile_image_url}
+                          alt=""
+                          className="h-5 w-auto max-w-16 object-contain"
+                        />
+                      ) : null}
+                      {t.company_name ? <K>{t.company_name}</K> : null}
+                    </span>
+                  ) : null}
                   <Stars rating={t.rating} className="text-[13px]" />
                   <Status tone={statusTone(t)}>{statusLabel(t)}</Status>
                 </div>

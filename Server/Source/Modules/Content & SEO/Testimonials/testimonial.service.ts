@@ -18,6 +18,7 @@ const UPDATABLE_TESTIMONIAL_FIELDS: (keyof UpdateTestimonialDTO)[] = [
   "quote",
   "rating",
   "company_name",
+  "company_profile_image_url",
   "profile_picture",
   "is_active",
 ];
@@ -26,6 +27,7 @@ const UPDATABLE_TESTIMONIAL_FIELDS: (keyof UpdateTestimonialDTO)[] = [
 // "leave it alone".
 const NULLABLE_TESTIMONIAL_FIELDS: (keyof UpdateTestimonialDTO)[] = [
   "company_name",
+  "company_profile_image_url",
   "profile_picture",
 ];
 

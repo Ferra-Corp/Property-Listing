@@ -7,6 +7,7 @@ CREATE TABLE testimonials (
   quote            TEXT         NOT NULL,
   rating           SMALLINT     NOT NULL DEFAULT 5 CHECK (rating BETWEEN 1 AND 5),
   company_name     TEXT,
+  company_profile_image_url TEXT,
   profile_picture  TEXT,
   is_active        BOOLEAN      NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,

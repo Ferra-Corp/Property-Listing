@@ -14,6 +14,7 @@ import { useInsightContext } from "./_lib/Context/Insight"
 import { useServiceContext } from "./_lib/Context/Service"
 import { useTestimonialContext } from "./_lib/Context/Testimonial"
 import { Avatar, Stars } from "./_components/ui/testimonial"
+import { LogoMarquee } from "./_components/ui/logo-marquee"
 import { buildWhatsAppLink } from "./_lib/format"
 import { useContactPhone } from "./_lib/useSiteSettings"
 import { useToast } from "./_components/toast-provider"
@@ -130,6 +131,22 @@ export default function HomePage() {
       ADMIN_WHATSAPP_NUMBER,
       "Hi, I'd like some help finding a property."
     )
+
+  // One logo per distinct image — several testimonials from the same company
+  // shouldn't repeat its logo in the band.
+  const clientLogos = [
+    ...new Map(
+      testimonials
+        .filter((t) => t.company_profile_image_url)
+        .map((t) => [
+          t.company_profile_image_url as string,
+          {
+            src: t.company_profile_image_url as string,
+            name: t.company_name ?? t.name,
+          },
+        ])
+    ).values(),
+  ]
 
   const published = listings.filter((l) => l.status === "published"),
     featured = [...published]
@@ -691,6 +708,16 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {/* ── Client logos ── */}
+      {clientLogos.length > 0 ? (
+        <section className="pt-8 md:pt-9.5">
+          <div className="px-3 md:px-6">
+            <SectionHead title="Trusted by" />
+          </div>
+          <LogoMarquee logos={clientLogos} className="mt-4 md:mt-5" />
         </section>
       ) : null}
 
