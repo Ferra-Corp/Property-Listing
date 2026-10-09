@@ -8,10 +8,11 @@ import ListingContextProvider from "../_lib/Context/Listing"
 import AgentContextProvider from "../_lib/Context/Agent"
 import InsightContextProvider from "../_lib/Context/Insight"
 import ServiceContextProvider from "../_lib/Context/Service"
+import TestimonialContextProvider from "../_lib/Context/Testimonial"
 import SettingContextProvider from "../_lib/Context/Site Setting"
 
 /**
- * These 8 contexts are shared by the public site AND the admin dashboard
+ * These contexts are shared by the public site AND the admin dashboard
  * (e.g. Site Settings and the Leads queue both read useSettingContext) —
  * so they can't be gated out of all of /admin, only out of /admin/auth,
  * which has no session yet and nothing to do with any of this data.
@@ -33,7 +34,9 @@ export function PublicDataProviders({
             <AgentContextProvider>
               <InsightContextProvider>
                 <ServiceContextProvider>
-                  <SettingContextProvider>{children}</SettingContextProvider>
+                  <TestimonialContextProvider>
+                    <SettingContextProvider>{children}</SettingContextProvider>
+                  </TestimonialContextProvider>
                 </ServiceContextProvider>
               </InsightContextProvider>
             </AgentContextProvider>

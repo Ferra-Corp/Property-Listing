@@ -14,13 +14,10 @@ export default function LinkExpiredPage() {
   return (
     <AuthShell
       compact
-      plateLabel="Photograph · a bolted gate · 3:4"
       title="This link no longer works."
       lead="Links last an hour and can be used once. Asking for another takes a moment and costs nothing."
-      facts={[
-        { label: "The desk", value: "+254 20 ••• 4400 · Mon–Fri 08:30–17:30" },
-      ]}
-      footNote="An invitation that has lapsed is re-sent from the Agents page"
+      desk
+      footNote="For a lapsed invitation, ask an admin to send you a new one"
     >
       <StateMark tone="warn">
         <svg
@@ -45,7 +42,7 @@ export default function LinkExpiredPage() {
       <p className="mt-3 mb-0 text-[13.5px] leading-[1.75] text-neutral-700 md:text-[14px]">
         It may already have been used, or more than an hour has passed since it
         was sent. If you didn&apos;t ask for a reset, your password is unchanged
-        — ring the desk if that concerns you.
+        — contact the office if that concerns you.
       </p>
 
       <div className="mt-4.5 grid gap-2 md:flex md:flex-wrap">

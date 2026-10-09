@@ -12,6 +12,8 @@ import { useListingContext } from "./_lib/Context/Listing"
 import { useAgentContext } from "./_lib/Context/Agent"
 import { useInsightContext } from "./_lib/Context/Insight"
 import { useServiceContext } from "./_lib/Context/Service"
+import { useTestimonialContext } from "./_lib/Context/Testimonial"
+import { Avatar, Stars } from "./_components/ui/testimonial"
 import { buildWhatsAppLink } from "./_lib/format"
 import { useContactPhone } from "./_lib/useSiteSettings"
 import { useToast } from "./_components/toast-provider"
@@ -121,6 +123,7 @@ export default function HomePage() {
     { agents } = useAgentContext(),
     { insights: allInsights } = useInsightContext(),
     { services } = useServiceContext(),
+    { testimonials } = useTestimonialContext(),
     convertTo = useCurrencyConversion(),
     ADMIN_WHATSAPP_NUMBER = useContactPhone(),
     whatsappHref = buildWhatsAppLink(
@@ -686,6 +689,41 @@ export default function HomePage() {
                   {insight.read_minutes} min read
                 </div>
               </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* ── Testimonials ── */}
+      {testimonials.length > 0 ? (
+        <section className="px-3 pt-8 md:px-6 md:pt-9">
+          <SectionHead
+            title="What our clients say"
+            href="/system/testimonials"
+            linkLabel="All testimonials"
+          />
+          <div className="mt-3.5 grid gap-5 md:mt-4.5 md:grid-cols-3 md:gap-x-8.5">
+            {testimonials.slice(0, 3).map((t) => (
+              <figure
+                key={t.id}
+                className="m-0 flex flex-col border-t-2 border-(--color-accent) pt-3"
+              >
+                <Stars rating={t.rating} className="text-[14px]" />
+                <blockquote className="text-neutral-700) mt-2.5 mb-0 flex-1 text-[13.5px] leading-[1.7]">
+                  “{t.quote}”
+                </blockquote>
+                <figcaption className="mt-3.5 flex items-center gap-3">
+                  <Avatar name={t.name} src={t.profile_picture} />
+                  <div>
+                    <div className="text-[14px]">{t.name}</div>
+                    {t.company_name ? (
+                      <div className="cl-k text-neutral-600) mt-0.5">
+                        {t.company_name}
+                      </div>
+                    ) : null}
+                  </div>
+                </figcaption>
+              </figure>
             ))}
           </div>
         </section>

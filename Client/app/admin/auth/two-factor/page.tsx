@@ -97,14 +97,12 @@ export default function TwoFactorPage() {
 
   return (
     <AuthShell
-      plateLabel="Photograph · a go-down yard at first light · 3:2"
       title="Two things, not one."
-      lead="Publishing a listing puts the firm's licence behind it. Anyone who may publish signs in with a password and a figure from their own device — so a lost password is never enough on its own."
-      quote="Every change lands in the ledger, against a name."
+      lead="This account has a second step switched on. Along with your password, signing in needs the six figures from the authenticator on your phone — so a lost password is never enough on its own."
       facts={
         contact.ready
           ? [
-              { label: "Lost the device?", value: "Call or email the desk" },
+              { label: "Lost the device?", value: "Contact the office" },
               deskFact(contact),
             ]
           : []

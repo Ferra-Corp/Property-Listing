@@ -15,18 +15,16 @@ export default async function InvitePage({
 
   return (
     <AuthShell
-      plateLabel="Photograph · the front office at opening · 3:2"
       title="Welcome to the register."
-      lead="An account has been made for you. Set a password and it is yours — everything you do under it from here on carries your name in the ledger."
-      quote="One account, one hand. Never share it, not even for an afternoon."
+      lead="An account has been made for you. Set a password and it is yours — changes you make under it are recorded against your name in the audit log."
       facts={[
         { label: "Link lasts", value: "One hour · one use" },
-        { label: "The desk", value: "+254 20 ••• 4400 · ext. 200" },
       ]}
+      desk
       footNote={
         <>
           Not expecting this?{" "}
-          <Link href="/system/contact">Tell the desk</Link> and do not use
+          <Link href="/system/contact">Tell the office</Link> and do not use
           this link.
         </>
       }

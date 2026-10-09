@@ -23,7 +23,7 @@ export type UploadedImage = {
  */
 export async function uploadImage(
   file: File,
-  context: "insight" | "service" | "listing" | "agent" = "insight"
+  context: "insight" | "service" | "listing" | "agent" | "testimonial" = "insight"
 ): Promise<UploadedImage> {
   const signRequest = await fetch("/system/api/v1/uploads", {
       method: "POST",

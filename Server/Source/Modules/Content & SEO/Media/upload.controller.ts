@@ -24,13 +24,14 @@ import {
  * can never obtain a valid signature of their own — Cloudinary itself
  * refuses any upload whose params don't match it.
  */
-type UploadContext = "insight" | "service" | "listing" | "agent";
+type UploadContext = "insight" | "service" | "listing" | "agent" | "testimonial";
 
 const CONTEXT_FOLDER: Record<UploadContext, string> = {
   insight: "insights/covers",
   service: "services/covers",
   listing: "listings/photos",
   agent: "agents/photos",
+  testimonial: "testimonials/photos",
 };
 
 // "agent" has no fine-grained permission of its own yet — editing an agent
@@ -43,6 +44,7 @@ const CONTEXT_PERMISSION: Record<
 > = {
   insight: "Create insight",
   service: "Create service",
+  testimonial: "Create testimonial",
   listing: "Create listing",
 };
 
@@ -56,6 +58,7 @@ export const UploadController = async (
         const body = await getRequestBody(request),
           context: UploadContext =
             body.context === "service" ||
+            body.context === "testimonial" ||
             body.context === "listing" ||
             body.context === "agent"
               ? body.context

@@ -346,7 +346,7 @@ export default function ListingDetailPage() {
         {plates && plates.length > 5 && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="absolute right-6 bottom-5 z-20 flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-[13.5px] font-medium text-neutral-900 shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-transform hover:scale-105 active:scale-95 md:right-10 md:bottom-6"
+            className="absolute right-6 bottom-5 z-20 flex items-center gap-2 rounded-lg border border-(--color-divider) bg-(--color-bg)/90 px-4 py-2.5 text-[13.5px] font-medium text-(--color-text) shadow-[0_4px_12px_rgba(0,0,0,0.15)] backdrop-blur-md transition-transform hover:scale-105 active:scale-95 md:right-10 md:bottom-6"
           >
             <svg
               width="16"

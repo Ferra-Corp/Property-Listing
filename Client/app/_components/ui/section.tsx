@@ -1,4 +1,7 @@
+"use client"
+
 import * as React from "react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { cn } from "cn"
 
@@ -63,7 +66,12 @@ export function IndexRow({
   )
 }
 
-/** A question in the FAQ list — native <details>, no script. */
+/**
+ * A question in the FAQ list. Not a native <details>: its closed content is
+ * `display: none`, so there is nothing for a CSS transition to run on and it
+ * snaps open and shut. State-driven instead, with the height animated by
+ * motion (honouring reduced-motion) and the usual button/region ARIA wiring.
+ */
 export function Disclosure({
   question,
   children,
@@ -73,27 +81,53 @@ export function Disclosure({
   children: React.ReactNode
   className?: string
 }) {
+  const [open, setOpen] = React.useState(false),
+    panelId = React.useId(),
+    reduceMotion = useReducedMotion()
+
   return (
-    <details
-      className={cn(
-        "group border-b border-(--color-divider) py-3.25",
-        className
-      )}
+    <div
+      className={cn("border-b border-(--color-divider) py-3.25", className)}
     >
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-[14px] md:text-[15px]">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((value) => !value)}
+        className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-4 text-left text-[14px] md:text-[15px]"
+      >
         <span className="min-w-0 flex-1">{question}</span>
         <span
           aria-hidden
-          className="flex size-6 flex-none items-center justify-center text-(--color-accent) transition-transform duration-200 ease-out group-open:rotate-45"
+          className={cn(
+            "flex size-6 flex-none items-center justify-center text-(--color-accent) transition-transform duration-200 ease-out",
+            open && "rotate-45"
+          )}
         >
           +
         </span>
-      </summary>
-      <div className="grid grid-rows-[0fr] overflow-hidden opacity-0 transition-[grid-template-rows,opacity] duration-200 ease-out group-open:grid-rows-[1fr] group-open:opacity-100">
-        <p className="mt-2.5 mb-0 min-h-0 text-[13px] leading-[1.7] text-neutral-700">
-          {children}
-        </p>
-      </div>
-    </details>
+      </button>
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            id={panelId}
+            role="region"
+            key="answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              duration: reduceMotion ? 0 : 0.25,
+              ease: "easeOut",
+            }}
+            className="overflow-hidden"
+          >
+            <p className="mt-2.5 mb-0 text-[13px] leading-[1.7] text-neutral-700">
+              {children}
+            </p>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
   )
 }

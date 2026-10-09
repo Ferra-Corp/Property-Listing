@@ -29,6 +29,7 @@ export const Resource = {
   Tag: "Tag",
   InsightTag: "InsightTag",
   Service: "Service",
+  Testimonial: "Testimonial",
   Subscriber: "Subscriber",
 } as const;
 

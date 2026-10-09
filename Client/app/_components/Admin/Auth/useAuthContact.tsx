@@ -12,6 +12,23 @@ import type { Fact } from "./auth-shell"
 
 type Contact = { phone: string; email: string; address: string }
 
+let settingsPending: Promise<SiteSetting[]> | null = null
+
+function loadSettings(): Promise<SiteSetting[]> {
+  settingsPending ??= fetch("/system/api/v1/settings").then(
+    async (request) => {
+      const response = await request.json()
+      if (!request.ok || !Array.isArray(response)) throw new Error()
+      return response as SiteSetting[]
+    }
+  )
+  // A failed read must be retryable on the next mount.
+  settingsPending.catch(() => {
+    settingsPending = null
+  })
+  return settingsPending
+}
+
 /**
  * The firm's real contact details for the admin sign-in screens. These pages
  * sit under /admin/auth, where no data contexts are mounted (there is no
@@ -36,13 +53,8 @@ export function useAuthContact(): { ready: boolean } & Contact {
   React.useEffect(() => {
     let cancelled = false
 
-    ;(async () => {
-      try {
-        const request = await fetch("/system/api/v1/settings"),
-          response: SiteSetting[] = await request.json()
-
-        if (!request.ok || !Array.isArray(response)) throw new Error()
-
+    loadSettings()
+      .then((response) => {
         const read = (key: string, fallback: string) => {
           const raw = response.find((setting) => setting.key === key)?.value
             ?.value
@@ -58,12 +70,12 @@ export function useAuthContact(): { ready: boolean } & Contact {
               address: read("contact.office_address", DEFAULT_OFFICE_ADDRESS),
             },
           })
-      } catch {
+      })
+      .catch(() => {
         // Settings unreachable — the site-wide defaults are still the
         // firm's real fallback contact, so show those rather than nothing.
         if (!cancelled) setState((previous) => ({ ...previous, ready: true }))
-      }
-    })()
+      })
 
     return () => {
       cancelled = true

@@ -17,6 +17,11 @@ export type permission_group =
   | "Edit service"
   | "Delete service"
 
+  // Testimonials
+  | "Create testimonial"
+  | "Edit testimonial"
+  | "Delete testimonial"
+
   // Tags
   | "Create tag"
   | "Edit tag"
@@ -84,6 +89,9 @@ const ALL_PERMISSIONS: permission_group[] = [
   "Create service",
   "Edit service",
   "Delete service",
+  "Create testimonial",
+  "Edit testimonial",
+  "Delete testimonial",
   "Create tag",
   "Edit tag",
   "Delete tag",
@@ -131,6 +139,9 @@ const ROLE_PERMISSIONS: Record<UserRole, permission_group[]> = {
     "Create service",
     "Edit service",
     "Delete service",
+    "Create testimonial",
+    "Edit testimonial",
+    "Delete testimonial",
     "Create tag",
     "Edit tag",
     "Delete tag",

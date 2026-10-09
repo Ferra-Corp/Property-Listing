@@ -17,6 +17,9 @@ export type Permission =
   | "Create service"
   | "Edit service"
   | "Delete service"
+  | "Create testimonial"
+  | "Edit testimonial"
+  | "Delete testimonial"
   | "Create tag"
   | "Edit tag"
   | "Delete tag"
@@ -59,6 +62,9 @@ const ALL_PERMISSIONS: Permission[] = [
   "Create service",
   "Edit service",
   "Delete service",
+  "Create testimonial",
+  "Edit testimonial",
+  "Delete testimonial",
   "Create tag",
   "Edit tag",
   "Delete tag",
@@ -105,6 +111,9 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "Create service",
     "Edit service",
     "Delete service",
+    "Create testimonial",
+    "Edit testimonial",
+    "Delete testimonial",
     "Create tag",
     "Edit tag",
     "Delete tag",

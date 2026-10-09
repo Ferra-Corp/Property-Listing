@@ -17,6 +17,7 @@ import {
   ListingsIcon,
   ProfileIcon,
   ServicesIcon,
+  TestimonialsIcon,
   SettingsIcon,
   SubscribersIcon,
   ValuationsIcon,
@@ -95,6 +96,11 @@ export const SECONDARY: Item[] = [
   { href: "/admin/agents", label: "Staff", icon: AgentsIcon },
   { href: "/admin/insights", label: "Insights", icon: InsightsIcon },
   { href: "/admin/services", label: "Services", icon: ServicesIcon },
+  {
+    href: "/admin/testimonials",
+    label: "Testimonials",
+    icon: TestimonialsIcon,
+  },
   {
     href: "/admin/subscribers",
     label: "Subscribers",

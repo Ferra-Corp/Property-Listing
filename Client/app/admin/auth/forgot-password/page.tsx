@@ -61,13 +61,12 @@ function ForgotPasswordForm() {
     return (
       <AuthShell
         compact
-        plateLabel="Photograph · the post tray · 3:4"
         title="Sent, if the address is one of ours."
         lead="We do not say which addresses are on file — that would tell a stranger who works here."
         facts={[
           {
             label: "Nothing arrives?",
-            value: "Check the junk folder, then ring the desk",
+            value: "Check the junk folder, then contact the office",
           },
         ]}
         back={{
@@ -120,12 +119,9 @@ function ForgotPasswordForm() {
   return (
     <AuthShell
       compact
-      plateLabel="Photograph · keys on the desk · 3:4"
       title="It happens. Give us the address."
       lead="A link goes to the work address on your account. Nothing changes until you follow it."
-      facts={[
-        { label: "The desk", value: "+254 20 ••• 4400 · Mon–Fri 08:30–17:30" },
-      ]}
+      desk
       back={{ href: "/admin/auth/sign-in", label: "Back to sign in" }}
       footNote="The link lasts one hour and can be used once"
     >

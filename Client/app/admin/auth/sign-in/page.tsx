@@ -11,12 +11,11 @@ import {
   PaneHead,
 } from "../../../_components/Admin/Auth/auth-shell"
 import {
-  Lines,
   officeFact,
   useAuthContact,
 } from "../../../_components/Admin/Auth/useAuthContact"
+import { useAuthStats, type AuthStats } from "../../../_components/Admin/Auth/useAuthPublicData"
 import { PasswordField } from "../../../_components/Admin/Auth/password-field"
-import { formatPhoneDisplay } from "../../../_lib/format"
 import { safeAdminPath, writeMfaChallenge } from "../_lib/mfa-challenge"
 
 export default function SignInPage() {
@@ -27,8 +26,27 @@ export default function SignInPage() {
   )
 }
 
+/** The panel's standing line, from live public figures — never a number
+ * that isn't true. Counts that are zero (or still loading) are left out. */
+function leadFrom(stats: AuthStats): string {
+  const parts = [
+    stats.publishedListings > 0 &&
+      `${stats.publishedListings} live listing${stats.publishedListings === 1 ? "" : "s"}`,
+    stats.agents > 0 &&
+      `${stats.agents} agent${stats.agents === 1 ? "" : "s"}`,
+  ].filter(Boolean)
+
+  const kept =
+    "every enquiry, viewing and valuation, kept in one place, and every change to it recorded against a name."
+
+  return parts.length > 0
+    ? `${parts.join(" and ")}, plus ${kept}`
+    : `Every listing, ${kept}`
+}
+
 function SignInForm() {
   const contact = useAuthContact(),
+    stats = useAuthStats(),
     router = useRouter(),
     searchParams = useSearchParams(),
     [email, setEmail] = React.useState(""),
@@ -76,22 +94,22 @@ function SignInForm() {
 
   return (
     <AuthShell
-      plateLabel="Photograph · the firm's staircase, Industrial Area · 3:2"
       title="The register, the diary and the ledger."
-      lead="Eighty-four instructions, nine agents and every enquiry that has come through the door since 2011 — all of it kept in one place, and every change to it recorded against a name."
-      quote="Walk a site twice. Once with the owner, once alone."
-      facts={
-        contact.ready
-          ? [
-              officeFact(contact),
-              {
-                label: "Phone",
-                value: <Lines lines={[formatPhoneDisplay(contact.phone)]} />,
-              },
-              { label: "Email", value: contact.email },
-            ]
-          : []
+      lead={leadFrom(stats)}
+      quote={
+        stats.testimonial ? (
+          <>
+            “{stats.testimonial.quote}”
+            <span className="cl-k mt-2 block text-[#dbbb8f]">
+              {[stats.testimonial.name, stats.testimonial.company_name]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          </>
+        ) : undefined
       }
+      facts={contact.ready ? [officeFact(contact)] : []}
+      desk
       topRight={
         <div className="flex items-center gap-2.5">
           <Link href="/" className="cl-k text-neutral-600">
@@ -105,15 +123,14 @@ function SignInForm() {
       }
       footNote={
         <>
-          Sign-ins are recorded against your name ·{" "}
-          <Link href="/system/about">How the firm handles your data</Link>
+          Changes you make are recorded against your name in the audit log
         </>
       }
     >
       <form onSubmit={handleSubmit}>
         <PaneHead kicker="Staff only" title="Sign in to the admin">
-          Use the work address the firm issued you. Accounts are added on the
-          Agents page — there is nothing to register here.
+          Use the work address the firm issued you. Accounts are issued by the
+          admin.
         </PaneHead>
 
         {justReset || justInvited ? (

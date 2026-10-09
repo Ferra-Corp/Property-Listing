@@ -121,9 +121,8 @@ function PairAuthenticatorForm() {
 
   return (
     <AuthShell
-      plateLabel="Photograph · the strongroom door · 3:2"
       title="Your own device, once."
-      lead="Pair a phone to your account and it becomes the second half of your sign-in. It is asked of anyone who may publish a listing or approve a valuation — the licence stands behind both."
+      lead="Pair a phone to your account and it becomes the second half of your sign-in. Once paired, every sign-in asks for a code from it as well as your password."
       facts={
         contact.ready
           ? [
@@ -142,7 +141,6 @@ function PairAuthenticatorForm() {
           : []
       }
       back={{ href: next, label: "Back to the admin" }}
-      footNote="Pairing is recorded in the ledger"
     >
       {loading ? (
         <div className="cl-k text-neutral-600">

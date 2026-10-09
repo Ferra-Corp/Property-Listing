@@ -5,6 +5,7 @@ import Link from "next/link"
 import { cn } from "cn"
 import { Plate } from "../../ui/plate"
 import { useRandomListingPlate } from "./useRandomListingPlate"
+import { deskFact, useAuthContact } from "./useAuthContact"
 
 export type Fact = { label: string; value: React.ReactNode }
 
@@ -14,27 +15,25 @@ export type Fact = { label: string; value: React.ReactNode }
  * room. Right: one task and nothing else.
  */
 export function AuthShell({
-  plateLabel,
-  mobilePlateLabel,
   kicker,
   title,
   lead,
   quote,
-  facts = [],
+  facts: ownFacts = [],
+  desk,
   back,
   topRight,
   footNote,
   compact,
   children,
 }: {
-  /** shown until (and unless) a real listing photo loads in */
-  plateLabel: string
-  mobilePlateLabel?: string
   kicker?: React.ReactNode
   title: React.ReactNode
   lead?: React.ReactNode
   quote?: React.ReactNode
   facts?: Fact[]
+  /** append the firm's real phone and email from Site settings as a fact */
+  desk?: boolean
   /** shown top-left of the right pane, and in the phone band */
   back?: { href: string; label: string }
   topRight?: React.ReactNode
@@ -43,7 +42,10 @@ export function AuthShell({
   compact?: boolean
   children: React.ReactNode
 }) {
-  const listingPlate = useRandomListingPlate()
+  const listingPlate = useRandomListingPlate(),
+    contact = useAuthContact(),
+    facts =
+      desk && contact.ready ? [...ownFacts, deskFact(contact)] : ownFacts
 
   return (
     <div className="grid min-h-dvh grid-rows-[auto_1fr] md:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] md:grid-rows-1">
@@ -75,15 +77,18 @@ export function AuthShell({
           <div className="pointer-events-none absolute inset-0 z-[-6] bg-black/60" />
         ) : null}
 
-        {/* Caption sits above the plate (real photo or placeholder hatch)
-            but below the pane's own foreground content — capped narrower
-            than the wordmark's row so a long listing title wraps onto its
-            own lines instead of crowding into it. */}
-        <div className="pointer-events-none absolute inset-0 z-[-5] grid items-start justify-items-end p-3 md:p-4">
-          <span className="cl-mono max-w-[52%] text-right text-[10px] leading-normal tracking-[0.14em] uppercase opacity-80 md:max-w-[46%] md:text-[11px]">
-            {listingPlate?.caption ?? plateLabel}
-          </span>
-        </div>
+        {/* Caption names the real listing in the photo; with no photo there
+            is nothing true to caption, so none is shown. Sits above the
+            plate but below the pane's own foreground content — capped
+            narrower than the wordmark's row so a long listing title wraps
+            onto its own lines instead of crowding into it. */}
+        {listingPlate ? (
+          <div className="pointer-events-none absolute inset-0 z-[-5] grid items-start justify-items-end p-3 md:p-4">
+            <span className="cl-mono max-w-[52%] text-right text-[10px] leading-normal tracking-[0.14em] uppercase opacity-80 md:max-w-[46%] md:text-[11px]">
+              {listingPlate.caption}
+            </span>
+          </div>
+        ) : null}
 
         {/* Both left-aligned on mobile: this row used to push the wordmark
             all the way to the far right with a spacer, straight into the
@@ -105,7 +110,7 @@ export function AuthShell({
             />
           </div>
           <div className="cl-k mt-2 hidden text-[#dbbb8f] md:block">
-            Property · Nairobi · since 2011
+            Property · Nairobi
           </div>
         </div>
 

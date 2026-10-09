@@ -44,6 +44,8 @@ import { TagRepo } from "../Modules/Content & SEO/Tags/tag.repository.js";
 import { TagServ } from "../Modules/Content & SEO/Tags/tag.service.js";
 import { ServiceRepo } from "../Modules/Content & SEO/Services/service.repository.js";
 import { ServiceServ } from "../Modules/Content & SEO/Services/service.service.js";
+import { TestimonialRepo } from "../Modules/Content & SEO/Testimonials/testimonial.repository.js";
+import { TestimonialServ } from "../Modules/Content & SEO/Testimonials/testimonial.service.js";
 import { SubscriberRepo } from "../Modules/Demand/Subscribers/subscriber.repository.js";
 import { SubscriberServ } from "../Modules/Demand/Subscribers/subscriber.service.js";
 
@@ -72,6 +74,7 @@ export const logRepo = new LogRepo(db),
   tagRepo = new TagRepo(db),
   insightTagRepo = new InsightTagRepo(db),
   serviceRepo = new ServiceRepo(db),
+  testimonialRepo = new TestimonialRepo(db),
   subscriberRepo = new SubscriberRepo(db);
 
 export const logService = new LogServ(logRepo),
@@ -101,4 +104,5 @@ export const logService = new LogServ(logRepo),
   insightListingService = new InsightListingServ(insightListingRepo, cache),
   tagService = new TagServ(tagRepo, cache),
   insightTagService = new InsightTagServ(insightTagRepo, cache),
-  serviceService = new ServiceServ(serviceRepo, cache);
+  serviceService = new ServiceServ(serviceRepo, cache),
+  testimonialService = new TestimonialServ(testimonialRepo, cache);

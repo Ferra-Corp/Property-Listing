@@ -21,6 +21,7 @@ import { InsightListingController } from "./Source/Modules/Content & SEO/Insight
 import { InsightTagController } from "./Source/Modules/Content & SEO/Insights/Tags/tag.controller.js";
 import { TagController } from "./Source/Modules/Content & SEO/Tags/tag.controller.js";
 import { ServiceController } from "./Source/Modules/Content & SEO/Services/service.controller.js";
+import { TestimonialController } from "./Source/Modules/Content & SEO/Testimonials/testimonial.controller.js";
 import { UploadController } from "./Source/Modules/Content & SEO/Media/upload.controller.js";
 import { SubscriberController } from "./Source/Modules/Demand/Subscribers/subscriber.controller.js";
 
@@ -120,6 +121,10 @@ export const Routes: Route[] = [
   {
     name: "services",
     controller: ServiceController,
+  },
+  {
+    name: "testimonials",
+    controller: TestimonialController,
   },
   {
     name: "uploads",

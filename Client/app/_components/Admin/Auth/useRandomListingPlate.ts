@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import type { ListingWithThumbnail } from "../../../_lib/Types/Listing"
+import { loadAuthPublicData } from "./useAuthPublicData"
 
 export type ListingPlate = {
   src: string
@@ -25,32 +25,23 @@ export function useRandomListingPlate(): ListingPlate | null {
   React.useEffect(() => {
     let cancelled = false
 
-    ;(async () => {
-      try {
-        const listingsRequest = await fetch("/system/api/v1/listing"),
-          listings: ListingWithThumbnail[] = listingsRequest.ok
-            ? await listingsRequest.json()
-            : []
+    loadAuthPublicData().then(({ listings }) => {
+      const withPhotos = listings.filter(
+        (listing) => listing.status === "published" && listing.thumbnail_url
+      )
 
-        const withPhotos = listings.filter(
-          (listing) => listing.status === "published" && listing.thumbnail_url
-        )
+      if (cancelled || withPhotos.length === 0) return
 
-        if (cancelled || withPhotos.length === 0) return
+      const pick = withPhotos[Math.floor(Math.random() * withPhotos.length)]
 
-        const pick = withPhotos[Math.floor(Math.random() * withPhotos.length)]
-
-        setPlate({
-          src: pick.thumbnail_url as string,
-          alt: pick.title,
-          caption: pick.location_label
-            ? `${pick.title} · ${pick.location_label}`
-            : pick.title,
-        })
-      } catch {
-        // Network hiccup — the shell just keeps its placeholder caption.
-      }
-    })()
+      setPlate({
+        src: pick.thumbnail_url as string,
+        alt: pick.title,
+        caption: pick.location_label
+          ? `${pick.title} · ${pick.location_label}`
+          : pick.title,
+      })
+    })
 
     return () => {
       cancelled = true
