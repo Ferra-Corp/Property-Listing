@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation"
 import { AdminShell } from "./admin-shell"
 import { ToastProvider } from "./motion"
+import { SessionWatcher } from "./session-watcher"
 import UserContextProvider from "../../_lib/Context/User"
 import LogContextProvider from "../../_lib/Context/Audit"
 import LeadContextProvider from "../../_lib/Context/Lead"
@@ -30,6 +31,9 @@ export function AdminShellGate({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
+      {/* Before the data providers on purpose: effects run in tree order, so
+          the fetch watcher is installed before any context's first request. */}
+      <SessionWatcher />
       <UserContextProvider>
         <LogContextProvider>
           <LeadContextProvider>

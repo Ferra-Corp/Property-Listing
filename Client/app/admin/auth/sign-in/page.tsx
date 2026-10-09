@@ -56,6 +56,7 @@ function SignInForm() {
 
   const justReset = searchParams.get("reset") === "1",
     justInvited = searchParams.get("invited") === "1",
+    sessionEnded = searchParams.get("expired") === "1",
     next = safeAdminPath(searchParams.get("next"))
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -132,6 +133,15 @@ function SignInForm() {
           Use the work address the firm issued you. Accounts are issued by the
           admin.
         </PaneHead>
+
+        {sessionEnded && !justReset && !justInvited ? (
+          <div className="mt-4">
+            <Notice tone="quiet">
+              Your session has ended. Sign in again to carry on where you left
+              off.
+            </Notice>
+          </div>
+        ) : null}
 
         {justReset || justInvited ? (
           <div className="mt-4">
